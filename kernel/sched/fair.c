@@ -6151,6 +6151,23 @@ static inline int select_idle_smt(struct task_struct *p, int target)
 
 #endif /* CONFIG_SCHED_SMT */
 
+static int __select_idle_cpu(struct task_struct *p, struct sched_domain *sd,
+			     int target, int nr, int *ploops)
+{
+	int cpu;
+
+	for_each_cpu_wrap(cpu, sched_domain_span(sd), target) {
+		if ((*ploops)++ >= nr)
+			return -1;
+		if (!cpumask_test_cpu(cpu, &p->cpus_allowed))
+			continue;
+		if (available_idle_cpu(cpu))
+			break;
+	}
+
+	return cpu;
+}
+
 /*
  * Scan the LLC domain for idle CPUs; this is dynamically regulated by
  * comparing the average scan cost (tracked in sd->avg_scan_cost) against the
@@ -6207,16 +6224,7 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 
 	time = local_clock();
 
-	for_each_cpu_wrap(cpu, sched_domain_span(sd), target) {
-		if (loops++ >= nr) {
-			cpu = -1;
-			break;
-		}
-		if (!cpumask_test_cpu(cpu, &p->cpus_allowed))
-			continue;
-		if (available_idle_cpu(cpu))
-			break;
-	}
+	cpu = __select_idle_cpu(p, sd, target, nr, &loops);
 
 	time = local_clock() - time;
 
