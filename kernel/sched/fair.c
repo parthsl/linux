@@ -6250,9 +6250,6 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 	}
 	avg_cost = this_sd->avg_scan_cost + 1;
 
-	if (sched_feat(SIS_AVG_CPU) && avg_idle < avg_cost)
-		return -1;
-
 	if (sched_feat(SIS_PROP)) {
 		u64 span_avg = sd->span_weight * avg_idle;
 		if (span_avg > sis_min_cores * avg_cost)
