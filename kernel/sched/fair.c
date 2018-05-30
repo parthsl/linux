@@ -6156,11 +6156,11 @@ static inline int select_idle_smt(struct task_struct *p, int target)
  */
 static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int target)
 {
+	int cpu, loops = 0, nr = INT_MAX;
 	struct sched_domain *this_sd;
 	u64 avg_cost, avg_idle;
 	u64 time, cost;
 	s64 delta;
-	int cpu, nr = INT_MAX;
 
 	this_sd = rcu_dereference(*this_cpu_ptr(&sd_llc));
 	if (!this_sd)
@@ -6187,8 +6187,10 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 	time = local_clock();
 
 	for_each_cpu_wrap(cpu, sched_domain_span(sd), target) {
-		if (!--nr)
-			return -1;
+		if (loops++ >= nr) {
+			cpu = -1;
+			break;
+		}
 		if (!cpumask_test_cpu(cpu, &p->cpus_allowed))
 			continue;
 		if (available_idle_cpu(cpu))
@@ -6196,6 +6198,7 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 	}
 
 	time = local_clock() - time;
+	time = div_u64(time, loops);
 	cost = this_sd->avg_scan_cost;
 	delta = (s64)(time - cost) / 8;
 	this_sd->avg_scan_cost += delta;
