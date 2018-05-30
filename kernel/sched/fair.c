@@ -6135,6 +6135,41 @@ static int select_idle_smt(struct task_struct *p, int target)
 	return -1;
 }
 
+static int __select_idle_core(struct task_struct *p, struct sched_domain *sd,
+			      int target, int nr, int *ploops)
+{
+	int best_busy = INT_MAX, best_cpu = -1;
+	int core, cpu;
+
+	for_each_cpu_wrap(core, sched_domain_cores(sd), target) {
+		int first_idle = -1;
+		int busy = 0;
+
+		if ((*ploops)++ >= nr)
+			break;
+
+		for (cpu = core; cpu < nr_cpumask_bits; cpu = cpumask_next(cpu, cpu_smt_mask(core))) {
+			if (!available_idle_cpu(cpu))
+				busy++;
+			else if (first_idle < 0 && cpumask_test_cpu(cpu, &p->cpus_allowed))
+				first_idle = cpu;
+		}
+
+		if (first_idle < 0)
+			continue;
+
+		if (!busy)
+			return first_idle;
+
+		if (busy < best_busy) {
+			best_busy = busy;
+			best_cpu = first_idle;
+		}
+	}
+
+	return best_cpu;
+}
+
 #else /* CONFIG_SCHED_SMT */
 
 #define sched_smt_weight	1
@@ -6226,6 +6261,11 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 
 	time = local_clock();
 
+#ifdef CONFIG_SCHED_SMT
+	if (sched_feat(SIS_FOLD) && static_branch_likely(&sched_smt_present))
+		cpu = __select_idle_core(p, sd, target, nr, &loops);
+	else
+#endif
 	cpu = __select_idle_cpu(p, sd, target, nr * sched_smt_weight, &loops);
 
 	time = local_clock() - time;
@@ -6287,6 +6327,14 @@ static int select_idle_sibling(struct task_struct *p, int prev, int target)
 	sd = rcu_dereference(per_cpu(sd_llc, target));
 	if (!sd)
 		return target;
+
+	if (sched_feat(SIS_FOLD)) {
+		i = select_idle_cpu(p, sd, target);
+		if ((unsigned)i < nr_cpumask_bits)
+			target = i;
+
+		return target;
+	}
 
 	i = select_idle_core(p, sd, target);
 	if ((unsigned)i < nr_cpumask_bits)
