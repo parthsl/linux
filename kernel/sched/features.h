@@ -56,9 +56,6 @@ SCHED_FEAT(TTWU_QUEUE, true)
  * When doing wakeups, attempt to limit superfluous scans of the LLC domain.
  */
 SCHED_FEAT(SIS_PROP, true)
-
-SCHED_FEAT(SIS_AGE, true)
-SCHED_FEAT(SIS_ONCE, true)
 SCHED_FEAT(SIS_FOLD, true)
 
 /*
