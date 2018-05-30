@@ -6166,11 +6166,30 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 	if (!this_sd)
 		return -1;
 
-	/*
-	 * Due to large variance we need a large fuzz factor; hackbench in
-	 * particularly is sensitive here.
-	 */
-	avg_idle = this_rq()->avg_idle / 512;
+	if (sched_feat(SIS_AGE)) {
+		unsigned long now = jiffies;
+		struct rq *this_rq = this_rq();
+
+		/*
+		 * If we're busy, the assumption that the last idle period
+		 * predicts the future is flawed; age away the remaining
+		 * predicted idle time.
+		 */
+		if (unlikely(this_rq->wake_stamp < now)) {
+			while (this_rq->wake_stamp < now && this_rq->wake_avg) {
+				this_rq->wake_stamp++;
+				this_rq->wake_avg >>= 1;
+			}
+		}
+
+		avg_idle = this_rq->wake_avg;
+	} else {
+		/*
+		 * Due to large variance we need a large fuzz factor; hackbench
+		 * in particularly is sensitive here.
+		 */
+		avg_idle = this_rq()->avg_idle / 512;
+	}
 	avg_cost = this_sd->avg_scan_cost + 1;
 
 	if (sched_feat(SIS_AVG_CPU) && avg_idle < avg_cost)

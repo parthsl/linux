@@ -58,6 +58,8 @@ SCHED_FEAT(TTWU_QUEUE, true)
 SCHED_FEAT(SIS_AVG_CPU, false)
 SCHED_FEAT(SIS_PROP, true)
 
+SCHED_FEAT(SIS_AGE, true)
+
 /*
  * Issue a WARN when we do multiple update_rq_clock() calls
  * in a single rq->lock section. Default disabled because the
