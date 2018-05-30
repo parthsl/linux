@@ -6217,6 +6217,21 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 	}
 
 	time = local_clock() - time;
+
+	if (sched_feat(SIS_ONCE)) {
+		struct rq *this_rq = this_rq();
+
+		/*
+		 * We need to consider the cost of all wakeups between
+		 * consequtive idle periods. We can only use the predicted
+		 * idle time once.
+		 */
+		if (this_rq->wake_avg > time)
+			this_rq->wake_avg -= time;
+		else
+			this_rq->wake_avg = 0;
+	}
+
 	time = div_u64(time, loops);
 	cost = this_sd->avg_scan_cost;
 	delta = (s64)(time - cost) / 8;
