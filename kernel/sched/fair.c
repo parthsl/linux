@@ -6167,6 +6167,8 @@ static int __select_idle_core(struct task_struct *p, struct sched_domain *sd,
 		}
 	}
 
+	set_idle_cores(target, 0);
+
 	return best_cpu;
 }
 
@@ -6262,7 +6264,8 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 	time = local_clock();
 
 #ifdef CONFIG_SCHED_SMT
-	if (sched_feat(SIS_FOLD) && static_branch_likely(&sched_smt_present))
+	if (sched_feat(SIS_FOLD) && static_branch_likely(&sched_smt_present) &&
+	    test_idle_cores(target, false))
 		cpu = __select_idle_core(p, sd, target, nr, &loops);
 	else
 #endif
