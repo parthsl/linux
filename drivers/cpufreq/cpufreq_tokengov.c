@@ -21,30 +21,15 @@
 
 
 static unsigned int pool;
+static unsigned int pool_turn;
+enum pool_mode{greedy, fair};
+enum pool_mode pool_mode;
+
+static unsigned int npolicies;
+
 static int debug;
 
 static DEFINE_MUTEX(gov_dbs_tokenpool_mutex);
-
-struct thread_communication {
-	int recv;
-	int requested;
-	struct mutex rwlock;
-};
-
-struct tg_policy_dbs_info {
-	struct policy_dbs_info policy_dbs;
-	unsigned int local;
-};
-
-struct per_policy_ds {
-	unsigned int my_tokens;
-	unsigned int spare_tokens;
-	unsigned int forward_request_flag;
-	unsigned int policy_id;
-	struct thread_communication my_tc;
-	struct thread_communication *left_neighbour;
-	struct thread_communication *right_neighbour;
-};
 
 struct tg_topology {
 	unsigned int smt_mode;
@@ -52,13 +37,22 @@ struct tg_topology {
 	unsigned int nr_policies;
 };
 
-static struct per_policy_ds *tg_data;
+struct tgdbs {
+	unsigned int my_tokens;
+};
+
+struct tgdbs * tg_data;
+
 static struct tg_topology P9;
 
-static int npolicies;
 static unsigned int barrier;
 
 static int* cpu_to_policy_map;
+
+struct tg_policy_dbs_info {
+	struct policy_dbs_info policy_dbs;
+	unsigned int local;
+};
 
 static inline struct tg_policy_dbs_info *to_dbs_info(struct policy_dbs_info *policy_dbs)
 {
@@ -75,127 +69,43 @@ static void tg_update(struct cpufreq_policy *policy)
 	unsigned int load = dbs_update(policy);
 	unsigned int required_tokens = 0;
 	unsigned int freq_next, min_f, max_f;
-	unsigned int cpuid = policy->cpu;
-	unsigned int policy_id = cpu_to_policy_map[cpuid];
-	struct per_policy_ds *tgg = tg_data;
-
-	struct per_policy_ds *tgdbs = &tgg[policy_id];
-	int need_tokens;
+	unsigned int policy_id = cpu_to_policy_map[policy->cpu];
+	unsigned int need_tokens;
+	unsigned int *my_tokens = &tg_data[policy_id].my_tokens;
 
 	/* Calculate the next frequency proportional to load */
 
 	min_f = policy->cpuinfo.min_freq;
 	max_f = policy->cpuinfo.max_freq;
 
-	if(policy->cpu==0){
-		mutex_lock(&gov_dbs_tokenpool_mutex);
-		tgdbs->my_tokens += pool;
-		pool = 0;
-		mutex_unlock(&gov_dbs_tokenpool_mutex);
-	}
 	if(debug)
-		printk("Cpu=%d token=%d\n",policy->cpu, tgdbs->my_tokens);
+		printk("Cpu=%d token=%d\n",policy->cpu,*my_tokens);
 
 	required_tokens = load;
 
-	//take available tokens from thread_communication struct
+	//if token_pool reached to me, then only  i will doante/accept tokens
+	if(pool_turn == policy_id){
+		if(required_tokens < *my_tokens){//donate
+			pool += (*my_tokens - required_tokens);
+			*my_tokens -= (*my_tokens - required_tokens);
+		}
+		else{
+			need_tokens = (required_tokens - *my_tokens);
+			if(pool > need_tokens){
+				*my_tokens += need_tokens;
+				pool -= need_tokens;
+			}
+			else{
+				*my_tokens += pool;
+				pool = 0;
+			}
+		}
+		pool_turn = (pool_turn + 1)%npolicies;
+	}
 	
-	mutex_lock(&tgdbs->my_tc.rwlock);
-	if(tgdbs->my_tc.recv > 0){
-		tgdbs->spare_tokens+= tgdbs->my_tc.recv;
-		tgdbs->my_tc.recv = 0;
-		tgdbs->forward_request_flag = 0;
-	}
-	mutex_unlock(&tgdbs->my_tc.rwlock);
-
-	if(required_tokens < tgdbs->my_tokens)//I have un-needed tokens. adding to spare
-	{
-		tgdbs->spare_tokens += (tgdbs->my_tokens - required_tokens);
-		tgdbs->my_tokens -= (tgdbs->my_tokens-required_tokens);
-		tgdbs->forward_request_flag = 0;
-	}
-	else if(required_tokens > tgdbs->my_tokens)//i want tokens
-	{
-		need_tokens = required_tokens - tgdbs->my_tokens;
-		if(tgdbs->spare_tokens > 0){//and have spares
-			if(tgdbs->spare_tokens>=need_tokens){
-				tgdbs->spare_tokens -= need_tokens;
-				tgdbs->my_tokens += need_tokens;
-				need_tokens = 0;
-			}
-			else{//not having sufficient spares
-				tgdbs->my_tokens += tgdbs->spare_tokens;
-				need_tokens -= tgdbs->spare_tokens;
-				tgdbs->spare_tokens = 0;
-			}
-		}
-
-		if(need_tokens>0){//still needs some tokens. so requesting neighbour
-			mutex_lock(&tgdbs->right_neighbour->rwlock);
-			tgdbs->right_neighbour->requested += need_tokens;
-			mutex_unlock(&tgdbs->right_neighbour->rwlock);
-			tgdbs->forward_request_flag = 1;
-		}
-	}
-
-
 	/* Set new frequency based on avaialble tokens */
-	freq_next = min_f + (tgdbs->my_tokens) * (max_f - min_f) / 100;
+	freq_next = min_f + (*my_tokens) * (max_f - min_f) / 100;
 	__cpufreq_driver_target(policy, freq_next, CPUFREQ_RELATION_C);
-
-	/*
-	 * Serving request of others
-	 */
-
-	mutex_lock(&tgdbs->my_tc.rwlock);
-	need_tokens = tgdbs->my_tc.requested;
-	mutex_unlock(&tgdbs->my_tc.rwlock);
-
-	if(need_tokens > 0){
-		if(tgdbs->spare_tokens>0){//have spare ones
-			if(tgdbs->spare_tokens >= need_tokens){//and is sufficient
-
-				mutex_lock(&tgdbs->left_neighbour->rwlock);
-				tgdbs->left_neighbour->recv += need_tokens;
-				mutex_unlock(&tgdbs->left_neighbour->rwlock);
-
-				mutex_lock(&tgdbs->my_tc.rwlock);
-				tgdbs->my_tc.requested -= need_tokens;
-				mutex_unlock(&tgdbs->my_tc.rwlock);
-
-				tgdbs->spare_tokens -= need_tokens;
-				need_tokens = 0;
-			}
-			else{//in-sufficient spares
-
-				mutex_lock(&tgdbs->left_neighbour->rwlock);
-				tgdbs->left_neighbour->recv += tgdbs->spare_tokens;
-				mutex_unlock(&tgdbs->left_neighbour->rwlock);
-
-				mutex_lock(&tgdbs->my_tc.rwlock);
-				tgdbs->my_tc.requested -= tgdbs->spare_tokens;
-				mutex_unlock(&tgdbs->my_tc.rwlock);
-
-				need_tokens -= tgdbs->spare_tokens;
-				tgdbs->spare_tokens = 0;
-			}
-		}
-		if(need_tokens>0){//still needs some tokens.
-			if(tgdbs->forward_request_flag){//unable to server as I too want the tokens
-
-				mutex_lock(&tgdbs->my_tc.rwlock);
-				tgdbs->my_tc.requested = 0;
-				mutex_unlock(&tgdbs->my_tc.rwlock);
-			}
-			else{//forwarding the request
-
-				mutex_lock(&tgdbs->right_neighbour->rwlock);
-				tgdbs->right_neighbour->requested += need_tokens;
-				mutex_unlock(&tgdbs->right_neighbour->rwlock);
-				tgdbs->forward_request_flag = true;
-			}
-		}
-	}
 }
 
 static unsigned int tg_dbs_update(struct cpufreq_policy *policy)
@@ -229,14 +139,12 @@ static ssize_t store_central_pool(struct gov_attr_set *attr_set, const char *buf
 
 static ssize_t show_central_pool(struct gov_attr_set *attr_set, char *buf)
 {
-	int i=0, offset=0;
-
-	for(i=0;i<P9.nr_policies;i++)
+	int i;
+	for(i=0;i<npolicies;i++)
 	{
-		offset = sprintf(buf+offset, "%d", tg_data[i].my_tokens);
-		pr_info("policy=%d:%d spare=%d\n",tg_data[i].policy_id, tg_data[i].my_tokens, tg_data[i].spare_tokens);
+		printk("policy=%d:%d\n",i,tg_data[i].my_tokens );
 	}
-	return sprintf(buf+offset, "%u\n", pool);
+	return sprintf(buf, "tokens in pool=%u, turn going for policy %u out of total %upolicies\n", pool, pool_turn, npolicies);
 }
 
 
@@ -264,8 +172,8 @@ static void tg_free(struct policy_dbs_info *policy_dbs)
 
 static int tg_init(struct dbs_data *dbs_data)
 {
-	dbs_data->tuners = tg_data;
-	pool = 200; //Two can be at max freq
+	dbs_data->tuners = &pool;
+	pool = 10; //Two can be at max freq
 	barrier = 0;
 	return 0;
 }
@@ -284,23 +192,14 @@ static void build_P9_topology(struct cpufreq_policy *policy){
 		P9.smt_mode++;
 
 	//setup nr_cpus
-	P9.nr_cpus = npolicies * P9.smt_mode;
-	P9.nr_policies = npolicies;
+	P9.nr_cpus = P9.nr_policies * P9.smt_mode;
+	npolicies = P9.nr_policies;
 
 	cpu_to_policy_map = kzalloc(sizeof(int),GFP_KERNEL);
 
 	iter = 0;
 	list_for_each_entry(iterator, &policy->policy_list, policy_list){
-		unsigned int policy_id = iterator->cpu/P9.smt_mode;
 		cpu_to_policy_map[iterator->cpu] = iter;
-		tg_data[iter].policy_id = iter;
-		tg_data[policy_id].my_tc.recv = 0;
-		tg_data[policy_id].my_tc.requested = 0;
-		tg_data[policy_id].right_neighbour = &tg_data[(policy_id+1)%npolicies].my_tc;
-		tg_data[policy_id].left_neighbour = &tg_data[(policy_id+npolicies-1)%npolicies].my_tc;
-		tg_data[policy_id].my_tokens = 0;
-		tg_data[policy_id].spare_tokens = 0;
-		tg_data[policy_id].forward_request_flag = 0;
 		iter++;
 	}
 }
@@ -308,28 +207,23 @@ static void build_P9_topology(struct cpufreq_policy *policy){
 static void tg_start(struct cpufreq_policy *policy)
 {
 	struct cpufreq_policy* iterator;
-	int i;
-	npolicies = 0;
+	P9.nr_policies = 0;
 
 	if(policy->cpu==0)
 	{
 		list_for_each_entry(iterator, &policy->policy_list, policy_list){
-			npolicies++;
+			P9.nr_policies++;
 		}
 
-		tg_data = kzalloc(sizeof(struct per_policy_ds*)*npolicies, GFP_KERNEL);
+		tg_data = kzalloc(sizeof(struct per_policy_ds*)*P9.nr_policies, GFP_KERNEL);
 
 		build_P9_topology(policy);
-		for(i=0;i<npolicies;i++)
-		{
-			mutex_init(&tg_data[i].my_tc.rwlock); 
-		}
-
+		pool_turn = 0;
 		barrier=1;
 	}
 	while(barrier==0);
 
-	pr_info("I'm cpu =%d with policy_id=%d\n",policy->cpu, tg_data[cpu_to_policy_map[policy->cpu]].policy_id);
+	pr_info("I'm cpu=%d policies=%u\n",policy->cpu, npolicies);
 }
 
 static struct dbs_governor tg_dbs_gov = {
