@@ -1,0 +1,143 @@
+Bottom: de651d58cb23b002bc9aecb7bfbef37dde74dff8
+Top:    7e7fa6bfc67845c1bd66636f130cee3c30a64ef7
+Author: Peter Zijlstra <peterz@infradead.org>
+Date:   2018-05-30 16:22:43 +0200
+
+sched/fair: Fold the select_idle_sibling() scans
+
+Currently select_idle_sibling() does 3 separate scans:
+
+ - searches for an idle core
+ - searches for an idle cpu
+ - searches for an idle thread
+
+The core scan is gates by there actually having been an idle core, it
+has a worst case issue where we'll always scan the entire LLC to
+establish there is no idle core left anymore before gating.
+
+The cpu scan is done proportional to the remaining average idle time.
+
+And since the cpu scan might not actually see our own sibling threads
+(if they're enumerated far away in the CPU space), check if there's an
+idle sibling thread.
+
+Rohit suggested we could maybe do all 3 in a single proportional
+search.
+
+This uses the new SMT topology bits previously introduced to do the
+core/smt iteration. And relies on the select_idle_cpu()'s change to nr
+cores.
+
+Basically we iterate @nr cores and select the first idle thread of the
+core with the least amount of busy threads that first in the task
+affinity mask.
+
+ORIG
+
+1:        0.559639567 seconds time elapsed    ( +-  1.44% )
+2:        0.630091207 seconds time elapsed    ( +-  2.93% )
+5:        2.329768398 seconds time elapsed    ( +-  1.21% )
+10:       3.920248646 seconds time elapsed    ( +-  2.39% )
+20:       6.501776759 seconds time elapsed    ( +-  1.02% )
+40:      10.482109619 seconds time elapsed    ( +-  2.16% )
+
+FOLD
+
+1:        0.568188455 seconds time elapsed    ( +-  0.40% )
+2:        0.643264625 seconds time elapsed    ( +-  1.27% )
+5:        2.385378263 seconds time elapsed    ( +-  1.12% )
+10:       3.808555491 seconds time elapsed    ( +-  1.46% )
+20:       6.431994272 seconds time elapsed    ( +-  1.21% )
+40:       9.423539507 seconds time elapsed    ( +-  2.07% )
+
+Suggested-by: Rohit Jain <rohit.k.jain@oracle.com>
+Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
+
+
+---
+
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index c4de4ab77caa..687d735b9789 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -6135,6 +6135,41 @@ static int select_idle_smt(struct task_struct *p, int target)
+ 	return -1;
+ }
+ 
++static int __select_idle_core(struct task_struct *p, struct sched_domain *sd,
++			      int target, int nr, int *ploops)
++{
++	int best_busy = INT_MAX, best_cpu = -1;
++	int core, cpu;
++
++	for_each_cpu_wrap(core, sched_domain_cores(sd), target) {
++		int first_idle = -1;
++		int busy = 0;
++
++		if ((*ploops)++ >= nr)
++			break;
++
++		for (cpu = core; cpu < nr_cpumask_bits; cpu = cpumask_next(cpu, cpu_smt_mask(core))) {
++			if (!available_idle_cpu(cpu))
++				busy++;
++			else if (first_idle < 0 && cpumask_test_cpu(cpu, &p->cpus_allowed))
++				first_idle = cpu;
++		}
++
++		if (first_idle < 0)
++			continue;
++
++		if (!busy)
++			return first_idle;
++
++		if (busy < best_busy) {
++			best_busy = busy;
++			best_cpu = first_idle;
++		}
++	}
++
++	return best_cpu;
++}
++
+ #else /* CONFIG_SCHED_SMT */
+ 
+ #define sched_smt_weight	1
+@@ -6226,6 +6261,11 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
+ 
+ 	time = local_clock();
+ 
++#ifdef CONFIG_SCHED_SMT
++	if (sched_feat(SIS_FOLD) && static_branch_likely(&sched_smt_present))
++		cpu = __select_idle_core(p, sd, target, nr, &loops);
++	else
++#endif
+ 	cpu = __select_idle_cpu(p, sd, target, nr * sched_smt_weight, &loops);
+ 
+ 	time = local_clock() - time;
+@@ -6288,6 +6328,14 @@ static int select_idle_sibling(struct task_struct *p, int prev, int target)
+ 	if (!sd)
+ 		return target;
+ 
++	if (sched_feat(SIS_FOLD)) {
++		i = select_idle_cpu(p, sd, target);
++		if ((unsigned)i < nr_cpumask_bits)
++			target = i;
++
++		return target;
++	}
++
+ 	i = select_idle_core(p, sd, target);
+ 	if ((unsigned)i < nr_cpumask_bits)
+ 		return i;
+diff --git a/kernel/sched/features.h b/kernel/sched/features.h
+index c8103288c2bb..353f95627d27 100644
+--- a/kernel/sched/features.h
++++ b/kernel/sched/features.h
+@@ -60,6 +60,7 @@ SCHED_FEAT(SIS_PROP, true)
+ 
+ SCHED_FEAT(SIS_AGE, true)
+ SCHED_FEAT(SIS_ONCE, true)
++SCHED_FEAT(SIS_FOLD, false)
+ 
+ /*
+  * Issue a WARN when we do multiple update_rq_clock() calls

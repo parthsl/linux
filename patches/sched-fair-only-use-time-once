@@ -1,0 +1,76 @@
+Bottom: 8e49c4c51ee92488ad9fcc3a3fd6a207995a10a6
+Top:    8a545618359cf175a6e8f10666f7cc6d4c1bc278
+Author: Peter Zijlstra <peterz@infradead.org>
+Date:   2018-05-30 16:22:39 +0200
+
+sched/fair: Only use time once
+
+The goal is to not spend more time scanning for idle CPUs than we're
+idle for. Otherwise we're inhibiting work.
+
+This means that we need to consider the cost over all the wakeups
+between consequtive idle periods.
+
+Combined AGE+ONCE work better than the old code:
+
+ORIG
+
+1:        0.559639567 seconds time elapsed    ( +-  1.44% )
+2:        0.630091207 seconds time elapsed    ( +-  2.93% )
+5:        2.329768398 seconds time elapsed    ( +-  1.21% )
+10:       3.920248646 seconds time elapsed    ( +-  2.39% )
+20:       6.501776759 seconds time elapsed    ( +-  1.02% )
+40:      10.482109619 seconds time elapsed    ( +-  2.16% )
+
+AGE+ONCE
+
+1:        0.546238431 seconds time elapsed    ( +-  0.84% )
+2:        0.620581405 seconds time elapsed    ( +-  1.26% )
+5:        2.161288964 seconds time elapsed    ( +-  1.90% )
+10:       3.514636966 seconds time elapsed    ( +-  1.82% )
+20:       6.228234657 seconds time elapsed    ( +-  0.67% )
+40:       9.755615438 seconds time elapsed    ( +-  2.20% )
+
+Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
+
+
+---
+
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index 1112f31ea32d..aa2f9fc961d7 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -6217,6 +6217,21 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
+ 	}
+ 
+ 	time = local_clock() - time;
++
++	if (sched_feat(SIS_ONCE)) {
++		struct rq *this_rq = this_rq();
++
++		/*
++		 * We need to consider the cost of all wakeups between
++		 * consequtive idle periods. We can only use the predicted
++		 * idle time once.
++		 */
++		if (this_rq->wake_avg > time)
++			this_rq->wake_avg -= time;
++		else
++			this_rq->wake_avg = 0;
++	}
++
+ 	time = div_u64(time, loops);
+ 	cost = this_sd->avg_scan_cost;
+ 	delta = (s64)(time - cost) / 8;
+diff --git a/kernel/sched/features.h b/kernel/sched/features.h
+index eef0b561092b..c8103288c2bb 100644
+--- a/kernel/sched/features.h
++++ b/kernel/sched/features.h
+@@ -59,6 +59,7 @@ SCHED_FEAT(SIS_AVG_CPU, false)
+ SCHED_FEAT(SIS_PROP, true)
+ 
+ SCHED_FEAT(SIS_AGE, true)
++SCHED_FEAT(SIS_ONCE, true)
+ 
+ /*
+  * Issue a WARN when we do multiple update_rq_clock() calls

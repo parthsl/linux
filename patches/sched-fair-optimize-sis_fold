@@ -1,0 +1,84 @@
+Bottom: 7e7fa6bfc67845c1bd66636f130cee3c30a64ef7
+Top:    73c29d4c25a968c08713bf3de42d23e67852eba8
+Author: Peter Zijlstra <peterz@infradead.org>
+Date:   2018-05-30 16:22:44 +0200
+
+sched/fair: Optimize SIS_FOLD
+
+Tracing showed that the per-cpu scanning cost of __select_idle_core()
+(~120ns) was significantly higher than that of __select_idle_cpu()
+(~40ns).
+
+This means that, even when reduced to the minimal scan, we're still 3x
+more expensive than the simple search.
+
+perf annotate suggested this was mostly due to cache-misses on the
+additional cpumasks used.
+
+However, we can mitigate this by only doing the more expensive search
+when there is a good chance it is beneficial. After all, when there
+are no idle cores to be had, there's no point in looking for any
+(SMT>2 might want to try without this).
+
+Clearing has_idle_cores early (without an exhaustive search) should be
+fine because we're eager to set it when a core goes idle again.
+
+FOLD
+
+1:        0.568188455 seconds time elapsed    ( +-  0.40% )
+2:        0.643264625 seconds time elapsed    ( +-  1.27% )
+5:        2.385378263 seconds time elapsed    ( +-  1.12% )
+10:       3.808555491 seconds time elapsed    ( +-  1.46% )
+20:       6.431994272 seconds time elapsed    ( +-  1.21% )
+40:       9.423539507 seconds time elapsed    ( +-  2.07% )
+
+FOLD+
+
+1:        0.554694881 seconds time elapsed    ( +-  0.42% )
+2:        0.632730119 seconds time elapsed    ( +-  1.84% )
+5:        2.230432464 seconds time elapsed    ( +-  1.17% )
+10:       3.549957778 seconds time elapsed    ( +-  1.55% )
+20:       6.118364255 seconds time elapsed    ( +-  0.72% )
+40:       9.515406550 seconds time elapsed    ( +-  1.74% )
+
+Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
+
+
+---
+
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index 687d735b9789..66bba8fa3067 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -6167,6 +6167,8 @@ static int __select_idle_core(struct task_struct *p, struct sched_domain *sd,
+ 		}
+ 	}
+ 
++	set_idle_cores(target, 0);
++
+ 	return best_cpu;
+ }
+ 
+@@ -6262,7 +6264,8 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
+ 	time = local_clock();
+ 
+ #ifdef CONFIG_SCHED_SMT
+-	if (sched_feat(SIS_FOLD) && static_branch_likely(&sched_smt_present))
++	if (sched_feat(SIS_FOLD) && static_branch_likely(&sched_smt_present) &&
++	    test_idle_cores(target, false))
+ 		cpu = __select_idle_core(p, sd, target, nr, &loops);
+ 	else
+ #endif
+diff --git a/kernel/sched/features.h b/kernel/sched/features.h
+index 353f95627d27..8d2c7487b24c 100644
+--- a/kernel/sched/features.h
++++ b/kernel/sched/features.h
+@@ -60,7 +60,7 @@ SCHED_FEAT(SIS_PROP, true)
+ 
+ SCHED_FEAT(SIS_AGE, true)
+ SCHED_FEAT(SIS_ONCE, true)
+-SCHED_FEAT(SIS_FOLD, false)
++SCHED_FEAT(SIS_FOLD, true)
+ 
+ /*
+  * Issue a WARN when we do multiple update_rq_clock() calls

@@ -1,0 +1,63 @@
+Bottom: 8a545618359cf175a6e8f10666f7cc6d4c1bc278
+Top:    3e715095ec394472eef89bbde8a303b0cb7ac56e
+Author: Peter Zijlstra <peterz@infradead.org>
+Date:   2018-05-30 16:22:41 +0200
+
+sched/fair: Re-arrange select_idle_cpu()
+
+In preparation of the next patch, move the actual scanning of the LLC
+out of the whole proportional/cost metric stuff, so we can change it
+out in a next patch.
+
+Should not actually change anything.
+
+Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
+
+
+---
+
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index aa2f9fc961d7..0070ec254a51 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -6149,6 +6149,23 @@ static inline int select_idle_smt(struct task_struct *p, int target)
+ 
+ #endif /* CONFIG_SCHED_SMT */
+ 
++static int __select_idle_cpu(struct task_struct *p, struct sched_domain *sd,
++			     int target, int nr, int *ploops)
++{
++	int cpu;
++
++	for_each_cpu_wrap(cpu, sched_domain_span(sd), target) {
++		if ((*ploops)++ >= nr)
++			return -1;
++		if (!cpumask_test_cpu(cpu, &p->cpus_allowed))
++			continue;
++		if (available_idle_cpu(cpu))
++			break;
++	}
++
++	return cpu;
++}
++
+ /*
+  * Scan the LLC domain for idle CPUs; this is dynamically regulated by
+  * comparing the average scan cost (tracked in sd->avg_scan_cost) against the
+@@ -6205,16 +6222,7 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
+ 
+ 	time = local_clock();
+ 
+-	for_each_cpu_wrap(cpu, sched_domain_span(sd), target) {
+-		if (loops++ >= nr) {
+-			cpu = -1;
+-			break;
+-		}
+-		if (!cpumask_test_cpu(cpu, &p->cpus_allowed))
+-			continue;
+-		if (available_idle_cpu(cpu))
+-			break;
+-	}
++	cpu = __select_idle_cpu(p, sd, target, nr, &loops);
+ 
+ 	time = local_clock() - time;

@@ -1,0 +1,40 @@
+Bottom: 73c29d4c25a968c08713bf3de42d23e67852eba8
+Top:    1ac82cf4bf22361a67320a893d98b50a05e71440
+Author: Peter Zijlstra <peterz@infradead.org>
+Date:   2018-05-30 16:22:45 +0200
+
+sched/fair: Remove SIS_AVG_PROP
+
+Hasn't been used in forever and doesn't give nice numbers anyway.
+
+Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
+
+
+---
+
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index 66bba8fa3067..b8d3b8e6b8ba 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -6250,9 +6250,6 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
+ 	}
+ 	avg_cost = this_sd->avg_scan_cost + 1;
+ 
+-	if (sched_feat(SIS_AVG_CPU) && avg_idle < avg_cost)
+-		return -1;
+-
+ 	if (sched_feat(SIS_PROP)) {
+ 		u64 span_avg = sd->span_weight * avg_idle;
+ 		if (span_avg > sis_min_cores * avg_cost)
+diff --git a/kernel/sched/features.h b/kernel/sched/features.h
+index 8d2c7487b24c..3956c2316ad9 100644
+--- a/kernel/sched/features.h
++++ b/kernel/sched/features.h
+@@ -55,7 +55,6 @@ SCHED_FEAT(TTWU_QUEUE, true)
+ /*
+  * When doing wakeups, attempt to limit superfluous scans of the LLC domain.
+  */
+-SCHED_FEAT(SIS_AVG_CPU, false)
+ SCHED_FEAT(SIS_PROP, true)
+ 
+ SCHED_FEAT(SIS_AGE, true)

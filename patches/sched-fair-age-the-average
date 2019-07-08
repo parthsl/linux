@@ -1,0 +1,110 @@
+Bottom: 43bc6e20b3af4071a7c417bbea7421da0b809257
+Top:    8e49c4c51ee92488ad9fcc3a3fd6a207995a10a6
+Author: Peter Zijlstra <peterz@infradead.org>
+Date:   2018-05-30 16:22:38 +0200
+
+sched/fair: Age the average idle time
+
+Currently select_idle_cpu()'s proportional scheme uses the average
+idle time *for when we are idle*, that is temporally challenged.
+
+When we're not at all idle, we'll happily continue using whatever
+value we did see when we did go idle. To fix this, introduce a seprate
+average idle and age it (the existing value still makes sense for
+things like new-idle balancing, which happens when we do go idle).
+
+Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
+
+
+---
+
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 4778c48a7fda..4e12fd1be7a8 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -1721,6 +1721,9 @@ static void ttwu_do_wakeup(struct rq *rq, struct task_struct *p, int wake_flags,
+ 		if (rq->avg_idle > max)
+ 			rq->avg_idle = max;
+ 
++		rq->wake_stamp = jiffies;
++		rq->wake_avg = rq->avg_idle / 2;
++
+ 		rq->idle_stamp = 0;
+ 	}
+ #endif
+@@ -6073,6 +6076,8 @@ void __init sched_init(void)
+ 		rq->online = 0;
+ 		rq->idle_stamp = 0;
+ 		rq->avg_idle = 2*sysctl_sched_migration_cost;
++		rq->wake_stamp = jiffies;
++		rq->wake_avg = rq->avg_idle;
+ 		rq->max_idle_balance_cost = sysctl_sched_migration_cost;
+ 
+ 		INIT_LIST_HEAD(&rq->cfs_tasks);
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index 9f2c353b22d8..1112f31ea32d 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -6166,11 +6166,30 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
+ 	if (!this_sd)
+ 		return -1;
+ 
+-	/*
+-	 * Due to large variance we need a large fuzz factor; hackbench in
+-	 * particularly is sensitive here.
+-	 */
+-	avg_idle = this_rq()->avg_idle / 512;
++	if (sched_feat(SIS_AGE)) {
++		unsigned long now = jiffies;
++		struct rq *this_rq = this_rq();
++
++		/*
++		 * If we're busy, the assumption that the last idle period
++		 * predicts the future is flawed; age away the remaining
++		 * predicted idle time.
++		 */
++		if (unlikely(this_rq->wake_stamp < now)) {
++			while (this_rq->wake_stamp < now && this_rq->wake_avg) {
++				this_rq->wake_stamp++;
++				this_rq->wake_avg >>= 1;
++			}
++		}
++
++		avg_idle = this_rq->wake_avg;
++	} else {
++		/*
++		 * Due to large variance we need a large fuzz factor; hackbench
++		 * in particularly is sensitive here.
++		 */
++		avg_idle = this_rq()->avg_idle / 512;
++	}
+ 	avg_cost = this_sd->avg_scan_cost + 1;
+ 
+ 	if (sched_feat(SIS_AVG_CPU) && avg_idle < avg_cost)
+diff --git a/kernel/sched/features.h b/kernel/sched/features.h
+index 858589b83377..eef0b561092b 100644
+--- a/kernel/sched/features.h
++++ b/kernel/sched/features.h
+@@ -58,6 +58,8 @@ SCHED_FEAT(TTWU_QUEUE, true)
+ SCHED_FEAT(SIS_AVG_CPU, false)
+ SCHED_FEAT(SIS_PROP, true)
+ 
++SCHED_FEAT(SIS_AGE, true)
++
+ /*
+  * Issue a WARN when we do multiple update_rq_clock() calls
+  * in a single rq->lock section. Default disabled because the
+diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
+index efa686eeff26..fd90633cda72 100644
+--- a/kernel/sched/sched.h
++++ b/kernel/sched/sched.h
+@@ -900,6 +900,9 @@ struct rq {
+ 	u64			idle_stamp;
+ 	u64			avg_idle;
+ 
++	unsigned long		wake_stamp;
++	u64			wake_avg;
++
+ 	/* This is used to determine avg_idle's max value */
+ 	u64			max_idle_balance_cost;
+ #endif

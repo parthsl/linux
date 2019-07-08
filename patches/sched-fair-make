@@ -1,0 +1,57 @@
+Bottom: 3e715095ec394472eef89bbde8a303b0cb7ac56e
+Top:    de651d58cb23b002bc9aecb7bfbef37dde74dff8
+Author: Peter Zijlstra <peterz@infradead.org>
+Date:   2018-05-30 16:22:42 +0200
+
+sched/fair: Make select_idle_cpu() proportional to cores
+
+Instead of calculating how many (logical) CPUs to scan, compute how
+many cores to scan.
+
+This changes behaviour for anything !SMT2.
+
+Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
+
+
+---
+
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index 0070ec254a51..c4de4ab77caa 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -6137,6 +6137,8 @@ static int select_idle_smt(struct task_struct *p, int target)
+ 
+ #else /* CONFIG_SCHED_SMT */
+ 
++#define sched_smt_weight	1
++
+ static inline int select_idle_core(struct task_struct *p, struct sched_domain *sd, int target)
+ {
+ 	return -1;
+@@ -6166,6 +6168,8 @@ static int __select_idle_cpu(struct task_struct *p, struct sched_domain *sd,
+ 	return cpu;
+ }
+ 
++#define sis_min_cores		2
++
+ /*
+  * Scan the LLC domain for idle CPUs; this is dynamically regulated by
+  * comparing the average scan cost (tracked in sd->avg_scan_cost) against the
+@@ -6214,15 +6218,15 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
+ 
+ 	if (sched_feat(SIS_PROP)) {
+ 		u64 span_avg = sd->span_weight * avg_idle;
+-		if (span_avg > 4*avg_cost)
++		if (span_avg > sis_min_cores * avg_cost)
+ 			nr = div_u64(span_avg, avg_cost);
+ 		else
+-			nr = 4;
++			nr = sis_min_cores;
+ 	}
+ 
+ 	time = local_clock();
+ 
+-	cpu = __select_idle_cpu(p, sd, target, nr, &loops);
++	cpu = __select_idle_cpu(p, sd, target, nr * sched_smt_weight, &loops);
+ 
+ 	time = local_clock() - time;
