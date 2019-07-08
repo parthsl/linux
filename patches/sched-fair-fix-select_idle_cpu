@@ -1,0 +1,57 @@
+Bottom: dc6c1561c32ab07b82b01351f53857b3e32f14de
+Top:    43bc6e20b3af4071a7c417bbea7421da0b809257
+Author: Peter Zijlstra <peterz@infradead.org>
+Date:   2018-05-30 16:22:37 +0200
+
+sched/fair: Fix select_idle_cpu()s cost accounting
+
+We compute the average cost of the total scan, but then use it as a
+per-cpu scan cost when computing the scan proportion. Fix this by
+properly computing a per-cpu scan cost.
+
+This also fixes a bug where we would terminate early (!--nr, case) and
+not account that cost at all.
+
+Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
+
+
+---
+
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index fdab7eb6f351..9f2c353b22d8 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -6156,11 +6156,11 @@ static inline int select_idle_smt(struct task_struct *p, int target)
+  */
+ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int target)
+ {
++	int cpu, loops = 0, nr = INT_MAX;
+ 	struct sched_domain *this_sd;
+ 	u64 avg_cost, avg_idle;
+ 	u64 time, cost;
+ 	s64 delta;
+-	int cpu, nr = INT_MAX;
+ 
+ 	this_sd = rcu_dereference(*this_cpu_ptr(&sd_llc));
+ 	if (!this_sd)
+@@ -6187,8 +6187,10 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
+ 	time = local_clock();
+ 
+ 	for_each_cpu_wrap(cpu, sched_domain_span(sd), target) {
+-		if (!--nr)
+-			return -1;
++		if (loops++ >= nr) {
++			cpu = -1;
++			break;
++		}
+ 		if (!cpumask_test_cpu(cpu, &p->cpus_allowed))
+ 			continue;
+ 		if (available_idle_cpu(cpu))
+@@ -6196,6 +6198,7 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
+ 	}
+ 
+ 	time = local_clock() - time;
++	time = div_u64(time, loops);
+ 	cost = this_sd->avg_scan_cost;
+ 	delta = (s64)(time - cost) / 8;
+ 	this_sd->avg_scan_cost += delta;
