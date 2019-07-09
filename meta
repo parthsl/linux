@@ -1,17 +1,17 @@
 Version: 1
-Previous: 069720ec98333338cad9092404863d1cc038b504
-Head: 347df4023d9e79942b3e30a8034485f498be058a
+Previous: f8e0eaf5c8b8ff0eca7803f715005e6e3f9ca3fd
+Head: bcee6460929a06ee9b418a9de0f2947c86fd0c90
 Applied:
   sched-fair-fix-select_idle_cpu: 0374cce824b7dc8ba8032ce6a4a2265214a93df4
   sched-fair-age-the-average: 8124c521c2fd93290c291e6593ff08c3d56cb123
   sched-fair-only-use-time-once: ff3f7c8c9b41d0ba00e5a62586e49244dc76f7db
   sched-topology-introduce: 0f1b3955c62e8c65867b657c577dd83c530c9683
   sched-fair-re-arrange: 347df4023d9e79942b3e30a8034485f498be058a
+  sched-fair-make: 8152f0b14da785db3c090b8c30f6b0b07d2c7c2d
+  sched-fair-fold-the: aa50a787df832c51f00606cee5f14cf5eefff2ea
+  sched-fair-optimize-sis_fold: 133e06773c395444950f7d58966c240fd6ed2120
+  sched-fair-remove-sis_avg_prop: 30c91dfb1cc9a0eba69be077a43e372a2d51b7a9
+  sched-fair-remove-sis_age: 656c1d01c290e37e54cc1421b046483bb59dc031
+  sched-fair-remove-sis_fold: bcee6460929a06ee9b418a9de0f2947c86fd0c90
 Unapplied:
-  sched-fair-make: e810ef55fef6aca5bcf100d140b5a7755d7cb4c3
-  sched-fair-fold-the: 0ecf5039de14b1f417bb9e628a098e3e735b1ae9
-  sched-fair-optimize-sis_fold: 8d800c9b228400287d27ec24124af5927733499b
-  sched-fair-remove-sis_avg_prop: 7f40565a270d43c017ab00b533d59a25c256294e
-  sched-fair-remove-sis_age: 9d41b2c18c28b9c642efa899f0e7cefdc10190c9
-  sched-fair-remove-sis_fold: ca968c562398b619bcd689ea4082be1f57552cf8
 Hidden:
