@@ -1,0 +1,13 @@
+Bottom: b0f58941e490c7bce3871100cb2c9b13b023a309
+Top:    b0f58941e490c7bce3871100cb2c9b13b023a309
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2019-07-09 11:54:34 +0530
+
+sched/fair: Remove SIS_FOLD
+
+Since the new code works, remove the old.
+
+
+---
+
+
