@@ -164,7 +164,7 @@ static inline struct cpumask *sched_domain_span(struct sched_domain *sd)
 }
 
 #ifdef CONFIG_SCHED_SMT
-static inliner struct cpumask *sched_domain_cores(struct sched_domain *sd)
+static inline struct cpumask *sched_domain_cores(struct sched_domain *sd)
 {
 	return to_cpumask(sd->shared->core_mask);
 }
