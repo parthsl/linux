@@ -1,5 +1,5 @@
 Bottom: b0f58941e490c7bce3871100cb2c9b13b023a309
-Top:    fe0cdecc214254185fc2b69fde41844205035588
+Top:    1a20a1fb4126a24bc74afc0d42a8967e461c4afd
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2019-07-09 11:54:34 +0530
 
@@ -134,3 +134,20 @@ index 211ee2621179..5bd477fd663b 100644
  
  	return target;
  }
+diff --git a/kernel/sched/features.h b/kernel/sched/features.h
+index a451b3d4ecd1..d291bba357ba 100644
+--- a/kernel/sched/features.h
++++ b/kernel/sched/features.h
+@@ -53,10 +53,10 @@ SCHED_FEAT(NONTASK_CAPACITY, true)
+ SCHED_FEAT(TTWU_QUEUE, true)
+ 
+ /*
+- * When doing wakeups, attempt to limit superfluous scans of the LLC domain.
++ * When doing wakeups, attempt to limit scanning cost of the LLC proportional to
++ * the average idle time.
+  */
+ SCHED_FEAT(SIS_PROP, true)
+-SCHED_FEAT(SIS_FOLD, true)
+ 
+ /*
+  * Issue a WARN when we do multiple update_rq_clock() calls
