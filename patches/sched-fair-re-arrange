@@ -1,5 +1,5 @@
-Bottom: 8a545618359cf175a6e8f10666f7cc6d4c1bc278
-Top:    3e715095ec394472eef89bbde8a303b0cb7ac56e
+Bottom: 409029c6c4cb7348e8d33ea0427be567c42ad4cc
+Top:    53468f90ac902bfc86e2a97353f8b9544ec1ade8
 Author: Peter Zijlstra <peterz@infradead.org>
 Date:   2018-05-30 16:22:41 +0200
 
@@ -17,10 +17,10 @@ Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
 ---
 
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index aa2f9fc961d7..0070ec254a51 100644
+index 57e5cdf10b12..351390c1e09b 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
-@@ -6149,6 +6149,23 @@ static inline int select_idle_smt(struct task_struct *p, int target)
+@@ -6151,6 +6151,23 @@ static inline int select_idle_smt(struct task_struct *p, int target)
  
  #endif /* CONFIG_SCHED_SMT */
  
@@ -44,7 +44,7 @@ index aa2f9fc961d7..0070ec254a51 100644
  /*
   * Scan the LLC domain for idle CPUs; this is dynamically regulated by
   * comparing the average scan cost (tracked in sd->avg_scan_cost) against the
-@@ -6205,16 +6222,7 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
+@@ -6207,16 +6224,7 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
  
  	time = local_clock();
  
