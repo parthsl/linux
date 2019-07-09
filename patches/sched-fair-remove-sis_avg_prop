@@ -1,5 +1,5 @@
-Bottom: 73c29d4c25a968c08713bf3de42d23e67852eba8
-Top:    1ac82cf4bf22361a67320a893d98b50a05e71440
+Bottom: 7d61e1806a7604fb0f6df839cd0485bc94caaf4a
+Top:    7943e82f8cb4d00bac7cb811b0217e006be669c7
 Author: Peter Zijlstra <peterz@infradead.org>
 Date:   2018-05-30 16:22:45 +0200
 
@@ -13,10 +13,10 @@ Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
 ---
 
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 66bba8fa3067..b8d3b8e6b8ba 100644
+index f5506623d1c1..393d02c043a7 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
-@@ -6250,9 +6250,6 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
+@@ -6252,9 +6252,6 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
  	}
  	avg_cost = this_sd->avg_scan_cost + 1;
  
