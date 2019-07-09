@@ -72,6 +72,8 @@ struct sched_domain_shared {
 	atomic_t	ref;
 	atomic_t	nr_busy_cpus;
 	int		has_idle_cores;
+
+	unsigned long core_mask[0];
 };
 
 struct sched_domain {
@@ -160,6 +162,13 @@ static inline struct cpumask *sched_domain_span(struct sched_domain *sd)
 {
 	return to_cpumask(sd->span);
 }
+
+#ifdef CONFIG_SCHED_SMT
+static inline struct cpumask *sched_domain_cores(struct sched_domain *sd)
+{
+	return to_cpumask(sd->shared->core_mask);
+}
+#endif
 
 extern void partition_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
 				    struct sched_domain_attr *dattr_new);
