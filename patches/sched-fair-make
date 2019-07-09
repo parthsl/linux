@@ -1,5 +1,5 @@
-Bottom: 3e715095ec394472eef89bbde8a303b0cb7ac56e
-Top:    de651d58cb23b002bc9aecb7bfbef37dde74dff8
+Bottom: 53468f90ac902bfc86e2a97353f8b9544ec1ade8
+Top:    d66c9902249624346c050766a20f4ae6297eaf91
 Author: Peter Zijlstra <peterz@infradead.org>
 Date:   2018-05-30 16:22:42 +0200
 
@@ -16,10 +16,10 @@ Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
 ---
 
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 0070ec254a51..c4de4ab77caa 100644
+index 351390c1e09b..f87360489a5f 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
-@@ -6137,6 +6137,8 @@ static int select_idle_smt(struct task_struct *p, int target)
+@@ -6139,6 +6139,8 @@ static int select_idle_smt(struct task_struct *p, int target)
  
  #else /* CONFIG_SCHED_SMT */
  
@@ -28,7 +28,7 @@ index 0070ec254a51..c4de4ab77caa 100644
  static inline int select_idle_core(struct task_struct *p, struct sched_domain *sd, int target)
  {
  	return -1;
-@@ -6166,6 +6168,8 @@ static int __select_idle_cpu(struct task_struct *p, struct sched_domain *sd,
+@@ -6168,6 +6170,8 @@ static int __select_idle_cpu(struct task_struct *p, struct sched_domain *sd,
  	return cpu;
  }
  
@@ -37,7 +37,7 @@ index 0070ec254a51..c4de4ab77caa 100644
  /*
   * Scan the LLC domain for idle CPUs; this is dynamically regulated by
   * comparing the average scan cost (tracked in sd->avg_scan_cost) against the
-@@ -6214,15 +6218,15 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
+@@ -6216,15 +6220,15 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
  
  	if (sched_feat(SIS_PROP)) {
  		u64 span_avg = sd->span_weight * avg_idle;
