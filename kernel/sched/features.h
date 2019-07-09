@@ -53,10 +53,10 @@ SCHED_FEAT(NONTASK_CAPACITY, true)
 SCHED_FEAT(TTWU_QUEUE, true)
 
 /*
- * When doing wakeups, attempt to limit superfluous scans of the LLC domain.
+ * When doing wakeups, attempt to limit scanning cost of the LLC proportional to
+ * the average idle time.
  */
 SCHED_FEAT(SIS_PROP, true)
-SCHED_FEAT(SIS_FOLD, true)
 
 /*
  * Issue a WARN when we do multiple update_rq_clock() calls
