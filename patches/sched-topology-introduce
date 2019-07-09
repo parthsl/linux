@@ -1,5 +1,5 @@
 Bottom: 8a545618359cf175a6e8f10666f7cc6d4c1bc278
-Top:    0454a9cf9f04da045152500cc6cd1711efef5208
+Top:    be1d148f40c29b47de60fb983dc385cfd8e431c2
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2019-07-09 11:16:38 +0530
 
@@ -34,3 +34,17 @@ index 57c7ed3fe465..cc3c4b621cab 100644
 +
  extern void partition_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
  				    struct sched_domain_attr *dattr_new);
+ 
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index aa2f9fc961d7..57e5cdf10b12 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -6027,6 +6027,8 @@ static inline int find_idlest_cpu(struct sched_domain *sd, struct task_struct *p
+ DEFINE_STATIC_KEY_FALSE(sched_smt_present);
+ EXPORT_SYMBOL_GPL(sched_smt_present);
+ 
++__read_mostly int sched_smt_weight = 1;
++
+ static inline void set_idle_cores(int cpu, int val)
+ {
+ 	struct sched_domain_shared *sds;
