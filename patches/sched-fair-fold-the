@@ -1,5 +1,5 @@
-Bottom: de651d58cb23b002bc9aecb7bfbef37dde74dff8
-Top:    7e7fa6bfc67845c1bd66636f130cee3c30a64ef7
+Bottom: d66c9902249624346c050766a20f4ae6297eaf91
+Top:    89a73adf42816ce65dcbc17e37ae3a5620bdd19d
 Author: Peter Zijlstra <peterz@infradead.org>
 Date:   2018-05-30 16:22:43 +0200
 
@@ -57,10 +57,10 @@ Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
 ---
 
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index c4de4ab77caa..687d735b9789 100644
+index f87360489a5f..904dc52de6da 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
-@@ -6135,6 +6135,41 @@ static int select_idle_smt(struct task_struct *p, int target)
+@@ -6137,6 +6137,41 @@ static int select_idle_smt(struct task_struct *p, int target)
  	return -1;
  }
  
@@ -102,7 +102,7 @@ index c4de4ab77caa..687d735b9789 100644
  #else /* CONFIG_SCHED_SMT */
  
  #define sched_smt_weight	1
-@@ -6226,6 +6261,11 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
+@@ -6228,6 +6263,11 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
  
  	time = local_clock();
  
@@ -114,7 +114,7 @@ index c4de4ab77caa..687d735b9789 100644
  	cpu = __select_idle_cpu(p, sd, target, nr * sched_smt_weight, &loops);
  
  	time = local_clock() - time;
-@@ -6288,6 +6328,14 @@ static int select_idle_sibling(struct task_struct *p, int prev, int target)
+@@ -6290,6 +6330,14 @@ static int select_idle_sibling(struct task_struct *p, int prev, int target)
  	if (!sd)
  		return target;
  
