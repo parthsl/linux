@@ -1,5 +1,5 @@
-Bottom: 1ac82cf4bf22361a67320a893d98b50a05e71440
-Top:    7ccc17b83c21a4b487d0a41c1a362a886d8c5077
+Bottom: 7943e82f8cb4d00bac7cb811b0217e006be669c7
+Top:    b0f58941e490c7bce3871100cb2c9b13b023a309
 Author: Peter Zijlstra <peterz@infradead.org>
 Date:   2018-05-30 16:22:46 +0200
 
@@ -18,10 +18,10 @@ Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
 ---
 
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index b8d3b8e6b8ba..d8a634dc23ba 100644
+index 393d02c043a7..211ee2621179 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
-@@ -6217,16 +6217,18 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
+@@ -6219,16 +6219,18 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
  	int cpu, loops = 0, nr = INT_MAX;
  	struct sched_domain *this_sd;
  	u64 avg_cost, avg_idle;
@@ -44,7 +44,7 @@ index b8d3b8e6b8ba..d8a634dc23ba 100644
  
  		/*
  		 * If we're busy, the assumption that the last idle period
-@@ -6241,24 +6243,16 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
+@@ -6243,24 +6245,16 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
  		}
  
  		avg_idle = this_rq->wake_avg;
@@ -73,7 +73,7 @@ index b8d3b8e6b8ba..d8a634dc23ba 100644
  
  #ifdef CONFIG_SCHED_SMT
  	if (sched_feat(SIS_FOLD) && static_branch_likely(&sched_smt_present) &&
-@@ -6268,26 +6262,25 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
+@@ -6270,26 +6264,25 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
  #endif
  	cpu = __select_idle_cpu(p, sd, target, nr * sched_smt_weight, &loops);
  
