@@ -1,5 +1,5 @@
-Bottom: 7e7fa6bfc67845c1bd66636f130cee3c30a64ef7
-Top:    73c29d4c25a968c08713bf3de42d23e67852eba8
+Bottom: 89a73adf42816ce65dcbc17e37ae3a5620bdd19d
+Top:    7d61e1806a7604fb0f6df839cd0485bc94caaf4a
 Author: Peter Zijlstra <peterz@infradead.org>
 Date:   2018-05-30 16:22:44 +0200
 
@@ -47,10 +47,10 @@ Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
 ---
 
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 687d735b9789..66bba8fa3067 100644
+index 904dc52de6da..f5506623d1c1 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
-@@ -6167,6 +6167,8 @@ static int __select_idle_core(struct task_struct *p, struct sched_domain *sd,
+@@ -6169,6 +6169,8 @@ static int __select_idle_core(struct task_struct *p, struct sched_domain *sd,
  		}
  	}
  
@@ -59,7 +59,7 @@ index 687d735b9789..66bba8fa3067 100644
  	return best_cpu;
  }
  
-@@ -6262,7 +6264,8 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
+@@ -6264,7 +6266,8 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
  	time = local_clock();
  
  #ifdef CONFIG_SCHED_SMT

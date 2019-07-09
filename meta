@@ -1,6 +1,6 @@
 Version: 1
-Previous: 4a624b8ec30173f176c44cbe8b3448584ba00666
-Head: 0ecf5039de14b1f417bb9e628a098e3e735b1ae9
+Previous: a7cfeb26204c6fdb0b5928556bbb1727d14a8b67
+Head: 8d800c9b228400287d27ec24124af5927733499b
 Applied:
   sched-fair-fix-select_idle_cpu: 0374cce824b7dc8ba8032ce6a4a2265214a93df4
   sched-fair-age-the-average: 8124c521c2fd93290c291e6593ff08c3d56cb123
@@ -9,8 +9,8 @@ Applied:
   sched-fair-re-arrange: f8ec9cd28bf8efa05d845788138368b1ce379f25
   sched-fair-make: e810ef55fef6aca5bcf100d140b5a7755d7cb4c3
   sched-fair-fold-the: 0ecf5039de14b1f417bb9e628a098e3e735b1ae9
+  sched-fair-optimize-sis_fold: 8d800c9b228400287d27ec24124af5927733499b
 Unapplied:
-  sched-fair-optimize-sis_fold: 273b15016dc44a8f079d8858e6ee7e2ef0a27206
   sched-fair-remove-sis_avg_prop: ee99413a04be350b92c9d0b78495dfb67cca2f0f
   sched-fair-remove-sis_age: 1afa5da0d475b050de34dd00daed58e27f60142a
 Hidden:
