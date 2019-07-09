@@ -1,5 +1,5 @@
 Bottom: 8a545618359cf175a6e8f10666f7cc6d4c1bc278
-Top:    f876a45f283ff11c613aa49504a82472ba352f98
+Top:    0454a9cf9f04da045152500cc6cd1711efef5208
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2019-07-09 11:16:38 +0530
 
@@ -9,7 +9,7 @@ sched/topology: Introduce sched_domain_cores()
 ---
 
 diff --git a/include/linux/sched/topology.h b/include/linux/sched/topology.h
-index 57c7ed3fe465..cf041c6ec4ba 100644
+index 57c7ed3fe465..cc3c4b621cab 100644
 --- a/include/linux/sched/topology.h
 +++ b/include/linux/sched/topology.h
 @@ -72,6 +72,8 @@ struct sched_domain_shared {
@@ -21,3 +21,16 @@ index 57c7ed3fe465..cf041c6ec4ba 100644
  };
  
  struct sched_domain {
+@@ -161,6 +163,13 @@ static inline struct cpumask *sched_domain_span(struct sched_domain *sd)
+ 	return to_cpumask(sd->span);
+ }
+ 
++#ifdef CONFIG_SCHED_SMT
++static inliner struct cpumask *sched_domain_cores(struct sched_domain *sd)
++{
++	return to_cpumask(sd->shared->core_mask);
++}
++#endif
++
+ extern void partition_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
+ 				    struct sched_domain_attr *dattr_new);
