@@ -1,6 +1,16 @@
 Version: 1
-Previous: None
+Previous: 9c0d6a3a21bcde0c4ca28416b6ede4eb329246cb
 Head: 732cd75b8c920d3727e69957b14faa7c2d7c3b75
 Applied:
+  pm-introduce-an-energy-model: 27871f7a8a341ef5c636a337856369acf8013e4e
+  sched-topology-reference-the: 6aa140fa4508933a6ac6717d65a403eb904d6c02
+  sched-topology-add-lowest-cpu: 011b27bb5d3139e8b5fe9ceff1fc7f6dc3145071
+  sched-topology-disable-eas-on: b68a4c0dba3b1e1dda1ede49f3c2fc72d3b54567
+  sched-topology-make-energy: 531b5c9f5cd05ead53324f419b32685a22eebe8b
+  sched-toplogy-introduce-the: 1f74de8798c93ce14801cc4e772603e51c841c33
+  sched-fair-clean-up: 630246a06ae2a7a12d1fce85f1e5681032982791
+  sched-fair-add-over: 2802bf3cd936fe2c8033a696d375a4d9d3974de4
+  sched-fair-introduce-an-energy: 390031e4c309c94ecc07a558187eb5185200df83
+  sched-fair-select-an-energy: 732cd75b8c920d3727e69957b14faa7c2d7c3b75
 Unapplied:
 Hidden:

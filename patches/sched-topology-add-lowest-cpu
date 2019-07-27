@@ -1,0 +1,108 @@
+Bottom: 04a92f60e1d10a656d3f46dbe3e673178be51dce
+Top:    b32023356bab474fe23999fe3c19339d617cf466
+Author: Quentin Perret <quentin.perret@arm.com>
+Date:   2018-12-03 09:56:19 +0000
+
+sched/topology: Add lowest CPU asymmetry sched_domain level pointer
+
+Add another member to the family of per-cpu sched_domain shortcut
+pointers. This one, sd_asym_cpucapacity, points to the lowest level
+at which the SD_ASYM_CPUCAPACITY flag is set. While at it, rename the
+sd_asym shortcut to sd_asym_packing to avoid confusions.
+
+Generally speaking, the largest opportunity to save energy via
+scheduling comes from a smarter exploitation of heterogeneous platforms
+(i.e. big.LITTLE). Consequently, the sd_asym_cpucapacity shortcut will
+be used at first as the lowest domain where Energy-Aware Scheduling
+(EAS) should be applied. For example, it is possible to apply EAS within
+a socket on a multi-socket system, as long as each socket has an
+asymmetric topology. Energy-aware cross-sockets wake-up balancing will
+only happen when the system is over-utilized, or this_cpu and prev_cpu
+are in different sockets.
+
+Suggested-by: Morten Rasmussen <morten.rasmussen@arm.com>
+Signed-off-by: Quentin Perret <quentin.perret@arm.com>
+Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Mike Galbraith <efault@gmx.de>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: adharmap@codeaurora.org
+Cc: chris.redpath@arm.com
+Cc: currojerez@riseup.net
+Cc: dietmar.eggemann@arm.com
+Cc: edubezval@gmail.com
+Cc: gregkh@linuxfoundation.org
+Cc: javi.merino@kernel.org
+Cc: joel@joelfernandes.org
+Cc: juri.lelli@redhat.com
+Cc: patrick.bellasi@arm.com
+Cc: pkondeti@codeaurora.org
+Cc: rjw@rjwysocki.net
+Cc: skannan@codeaurora.org
+Cc: smuckle@google.com
+Cc: srinivas.pandruvada@linux.intel.com
+Cc: thara.gopinath@linaro.org
+Cc: tkjos@google.com
+Cc: valentin.schneider@arm.com
+Cc: vincent.guittot@linaro.org
+Cc: viresh.kumar@linaro.org
+Link: https://lkml.kernel.org/r/20181203095628.11858-7-quentin.perret@arm.com
+Signed-off-by: Ingo Molnar <mingo@kernel.org>
+
+
+---
+
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index fdc8356ea742..a31a6d325901 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -9299,7 +9299,7 @@ static void nohz_balancer_kick(struct rq *rq)
+ 		}
+ 	}
+ 
+-	sd = rcu_dereference(per_cpu(sd_asym, cpu));
++	sd = rcu_dereference(per_cpu(sd_asym_packing, cpu));
+ 	if (sd) {
+ 		for_each_cpu(i, sched_domain_span(sd)) {
+ 			if (i == cpu ||
+diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
+index 808a565187b1..75c403674706 100644
+--- a/kernel/sched/sched.h
++++ b/kernel/sched/sched.h
+@@ -1303,7 +1303,8 @@ DECLARE_PER_CPU(int, sd_llc_size);
+ DECLARE_PER_CPU(int, sd_llc_id);
+ DECLARE_PER_CPU(struct sched_domain_shared *, sd_llc_shared);
+ DECLARE_PER_CPU(struct sched_domain *, sd_numa);
+-DECLARE_PER_CPU(struct sched_domain *, sd_asym);
++DECLARE_PER_CPU(struct sched_domain *, sd_asym_packing);
++DECLARE_PER_CPU(struct sched_domain *, sd_asym_cpucapacity);
+ extern struct static_key_false sched_asym_cpucapacity;
+ 
+ struct sched_group_capacity {
+diff --git a/kernel/sched/topology.c b/kernel/sched/topology.c
+index 169d25cafab5..137ccfed9a43 100644
+--- a/kernel/sched/topology.c
++++ b/kernel/sched/topology.c
+@@ -508,7 +508,8 @@ DEFINE_PER_CPU(int, sd_llc_size);
+ DEFINE_PER_CPU(int, sd_llc_id);
+ DEFINE_PER_CPU(struct sched_domain_shared *, sd_llc_shared);
+ DEFINE_PER_CPU(struct sched_domain *, sd_numa);
+-DEFINE_PER_CPU(struct sched_domain *, sd_asym);
++DEFINE_PER_CPU(struct sched_domain *, sd_asym_packing);
++DEFINE_PER_CPU(struct sched_domain *, sd_asym_cpucapacity);
+ DEFINE_STATIC_KEY_FALSE(sched_asym_cpucapacity);
+ 
+ static void update_top_cache_domain(int cpu)
+@@ -534,7 +535,10 @@ static void update_top_cache_domain(int cpu)
+ 	rcu_assign_pointer(per_cpu(sd_numa, cpu), sd);
+ 
+ 	sd = highest_flag_domain(cpu, SD_ASYM_PACKING);
+-	rcu_assign_pointer(per_cpu(sd_asym, cpu), sd);
++	rcu_assign_pointer(per_cpu(sd_asym_packing, cpu), sd);
++
++	sd = lowest_flag_domain(cpu, SD_ASYM_CPUCAPACITY);
++	rcu_assign_pointer(per_cpu(sd_asym_cpucapacity, cpu), sd);
+ }
+ 
+ /*
