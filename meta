@@ -1,7 +1,9 @@
 Version: 1
-Previous: 9c0d6a3a21bcde0c4ca28416b6ede4eb329246cb
+Previous: f79af8358ed3db19390e219db6bccdb197b34245
 Head: 732cd75b8c920d3727e69957b14faa7c2d7c3b75
 Applied:
+  sched-topology-relocate: 5bd0988be12733a42a1a3d50e3e2ddfd79e57518
+  sched-cpufreq-prepare: 938e5e4b0d1502a93e787985cb95b136b40717b7
   pm-introduce-an-energy-model: 27871f7a8a341ef5c636a337856369acf8013e4e
   sched-topology-reference-the: 6aa140fa4508933a6ac6717d65a403eb904d6c02
   sched-topology-add-lowest-cpu: 011b27bb5d3139e8b5fe9ceff1fc7f6dc3145071
