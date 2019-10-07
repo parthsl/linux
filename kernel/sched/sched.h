@@ -2498,6 +2498,9 @@ static inline void membarrier_switch_mm(struct rq *rq,
 }
 #endif
 
+#define bgtask_latency(lat)	((lat) == MAX_LATENCY_NICE)
+#define is_bg_task(p)		(bgtask_latency((p)->latency_nice))
+
 void turbo_sched_get(void);
 void turbo_sched_put(void);
 
