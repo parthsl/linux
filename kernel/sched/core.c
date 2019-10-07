@@ -3263,6 +3263,9 @@ static struct rq *finish_task_switch(struct task_struct *prev)
 		mmdrop(mm);
 	}
 	if (unlikely(prev_state == TASK_DEAD)) {
+		if (unlikely(prev->flags & PF_CAN_BE_PACKED))
+			turbo_sched_put();
+
 		if (prev->sched_class->task_dead)
 			prev->sched_class->task_dead(prev);
 
@@ -5008,6 +5011,10 @@ change:
 		put_prev_task(rq, p);
 
 	prev_class = p->sched_class;
+
+	/* Refcount tasks classified as a small background task */
+	if (task_packing_flag != (p->flags & PF_CAN_BE_PACKED))
+		(task_packing_flag) ? turbo_sched_get() : turbo_sched_put();
 
 	__setscheduler(rq, p, attr, pi);
 	__setscheduler_uclamp(p, attr);
