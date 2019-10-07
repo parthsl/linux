@@ -4709,6 +4709,8 @@ static void __setscheduler_params(struct task_struct *p,
 	p->rt_priority = attr->sched_priority;
 	p->normal_prio = normal_prio(p);
 	set_load_weight(p, true);
+	if (attr->sched_flags & SCHED_FLAG_TASK_PACKING)
+		p->flags |= PF_CAN_BE_PACKED;
 }
 
 /* Actually do priority change: must hold pi & rq lock. */
@@ -4768,6 +4770,8 @@ static int __sched_setscheduler(struct task_struct *p,
 	struct rq_flags rf;
 	int reset_on_fork;
 	int queue_flags = DEQUEUE_SAVE | DEQUEUE_MOVE | DEQUEUE_NOCLOCK;
+	unsigned long long task_packing_flag =
+				attr->sched_flags & SCHED_FLAG_TASK_PACKING;
 	struct rq *rq;
 
 	/* The pi code expects interrupts enabled */
@@ -4899,6 +4903,8 @@ recheck:
 		if (dl_policy(policy) && dl_param_changed(p, attr))
 			goto change;
 		if (attr->sched_flags & SCHED_FLAG_UTIL_CLAMP)
+			goto change;
+		if (task_packing_flag)
 			goto change;
 
 		p->sched_reset_on_fork = reset_on_fork;
@@ -5381,6 +5387,9 @@ SYSCALL_DEFINE4(sched_getattr, pid_t, pid, struct sched_attr __user *, uattr,
 	kattr.sched_util_min = p->uclamp_req[UCLAMP_MIN].value;
 	kattr.sched_util_max = p->uclamp_req[UCLAMP_MAX].value;
 #endif
+
+	if (p->flags & PF_CAN_BE_PACKED)
+		attr.sched_flags |= SCHED_FLAG_TASK_PACKING;
 
 	rcu_read_unlock();
 
