@@ -2501,3 +2501,15 @@ static inline void membarrier_switch_mm(struct rq *rq,
 #define lenient_latency(lat)	((lat) == MAX_LATENCY_TOLERANCE)
 #define task_latency_lenient(p)	\
 	(lenient_latency((p)->latency_tolerance))
+
+void turbo_sched_get(void);
+void turbo_sched_put(void);
+
+#ifdef CONFIG_SCHED_SMT
+DECLARE_STATIC_KEY_FALSE(__turbo_sched_enabled);
+
+static inline bool is_turbosched_enabled(void)
+{
+	return static_branch_unlikely(&__turbo_sched_enabled);
+}
+#endif
