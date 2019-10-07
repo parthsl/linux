@@ -5886,6 +5886,14 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 }
 
 #ifdef CONFIG_SCHED_SMT
+
+#ifndef arch_turbo_domain
+static __always_inline struct cpumask *arch_turbo_domain(int cpu)
+{
+	return sched_domain_span(rcu_dereference(per_cpu(sd_llc, cpu)));
+}
+#endif
+
 static inline bool is_background_task(struct task_struct *p)
 {
 	if (p->flags & PF_CAN_BE_PACKED)
@@ -5910,7 +5918,8 @@ static int select_non_idle_core(struct task_struct *p, int prev_cpu, int target)
 	struct cpumask *cpus = this_cpu_cpumask_var_ptr(turbo_sched_mask);
 	int iter_cpu, sibling;
 
-	cpumask_and(cpus, cpu_online_mask, p->cpus_ptr);
+	cpumask_and(cpus, cpu_online_mask, arch_turbo_domain(prev_cpu));
+	cpumask_and(cpus, cpus, p->cpus_ptr);
 
 	for_each_cpu_wrap(iter_cpu, cpus, prev_cpu) {
 		int idle_cpu_count = 0, non_idle_cpu_count = 0;
