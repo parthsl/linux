@@ -2497,3 +2497,7 @@ static inline void membarrier_switch_mm(struct rq *rq,
 {
 }
 #endif
+
+#define lenient_latency(lat)	((lat) == MAX_LATENCY_TOLERANCE)
+#define task_latency_lenient(lat)	\
+	(lenient_latency((p)->latency_tolerance))
