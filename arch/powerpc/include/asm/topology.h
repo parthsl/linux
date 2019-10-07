@@ -138,6 +138,9 @@ static inline void shared_proc_topology_init(void) {}
 #define topology_sibling_cpumask(cpu)	(per_cpu(cpu_sibling_map, cpu))
 #define topology_core_cpumask(cpu)	(per_cpu(cpu_core_map, cpu))
 #define topology_core_id(cpu)		(cpu_to_core_id(cpu))
+#define arch_turbo_domain		powerpc_turbo_domain
+
+struct cpumask *powerpc_turbo_domain(int cpu);
 
 int dlpar_cpu_readd(int cpu);
 #endif
