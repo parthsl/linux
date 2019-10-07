@@ -5380,6 +5380,9 @@ static void dequeue_task_fair(struct rq *rq, struct task_struct *p, int flags)
 DEFINE_PER_CPU(cpumask_var_t, load_balance_mask);
 DEFINE_PER_CPU(cpumask_var_t, select_idle_mask);
 
+/* A cpumask to find active cores in the system. */
+DEFINE_PER_CPU(cpumask_var_t, turbo_sched_mask);
+
 #ifdef CONFIG_NO_HZ_COMMON
 
 static struct {
@@ -5883,6 +5886,81 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 	return cpu;
 }
 
+#ifdef CONFIG_SCHED_SMT
+
+/* Define non-idle CPU as the one with the utilization >= 12.5% */
+#define merely_used_cpu(util) ((cpu_util(util)) > (100 >> 3))
+
+/*
+ * Classify small background tasks with higher latency_nice value for task
+ * packing.
+ */
+static inline bool is_small_bg_task(struct task_struct *p)
+{
+	if (is_bg_task(p) && (task_util(p) > (SCHED_CAPACITY_SCALE >> 3)))
+		return true;
+
+	return false;
+}
+
+/*
+ * Try to find a non idle core in the system  based on few heuristics:
+ * - Keep track of overutilized (>80% util) and busy (>12.5% util) CPUs
+ * - If none CPUs are busy then do not select the core for task packing
+ * - If atleast one CPU is busy then do task packing unless overutilized CPUs
+ *   count is < busy/2 CPU count
+ * - Always select idle CPU for task packing
+ */
+static int select_non_idle_core(struct task_struct *p, int prev_cpu)
+{
+	struct cpumask *cpus = this_cpu_cpumask_var_ptr(turbo_sched_mask);
+	int iter_cpu, sibling;
+
+	cpumask_and(cpus, cpu_online_mask, p->cpus_ptr);
+
+	for_each_cpu_wrap(iter_cpu, cpus, prev_cpu) {
+		int idle_cpu_count = 0, non_idle_cpu_count = 0;
+		int overutil_cpu_count = 0;
+		int busy_cpu_count = 0;
+		int best_cpu = iter_cpu;
+
+		for_each_cpu(sibling, cpu_smt_mask(iter_cpu)) {
+			__cpumask_clear_cpu(sibling, cpus);
+			if (idle_cpu(sibling)) {
+				idle_cpu_count++;
+				best_cpu = sibling;
+			} else {
+				non_idle_cpu_count++;
+				if (cpu_overutilized(sibling))
+					overutil_cpu_count++;
+				if (merely_used_cpu(sibling))
+					busy_cpu_count++;
+			}
+		}
+
+		/*
+		 * Pack tasks to this core if
+		 * 1. Idle CPU count is higher and atleast one is busy
+		 * 2. If idle_cpu_count < non_idle_cpu_count then ideally do
+		 * packing but if there are more CPUs overutilized then don't
+		 * overload it.
+		 */
+		if (idle_cpu_count > non_idle_cpu_count) {
+			if (busy_cpu_count)
+				return best_cpu;
+		} else {
+			/*
+			 * Pack tasks if at max 1 CPU is overutilized
+			 */
+			if (overutil_cpu_count < 2)
+				return best_cpu;
+		}
+	}
+
+	return -1;
+}
+#endif /* CONFIG_SCHED_SMT */
+
 /*
  * Try and locate an idle core/thread in the LLC cache domain.
  */
@@ -6367,6 +6445,15 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_f
 			new_cpu = prev_cpu;
 		}
 
+#ifdef CONFIG_SCHED_SMT
+		if (is_turbosched_enabled() && unlikely(is_small_bg_task(p))) {
+			new_cpu = select_non_idle_core(p, prev_cpu);
+			if (new_cpu >= 0)
+				return new_cpu;
+			new_cpu = prev_cpu;
+		}
+#endif
+
 		want_affine = !wake_wide(p) && !wake_cap(p, cpu, prev_cpu) &&
 			      cpumask_test_cpu(cpu, p->cpus_ptr);
 	}
@@ -6400,7 +6487,6 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_f
 		new_cpu = find_idlest_cpu(sd, p, cpu, prev_cpu, sd_flag);
 	} else if (sd_flag & SD_BALANCE_WAKE) { /* XXX always ? */
 		/* Fast path */
-
 		new_cpu = select_idle_sibling(p, prev_cpu, new_cpu);
 
 		if (want_affine)
