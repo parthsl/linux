@@ -5891,6 +5891,13 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 /* Define non-idle CPU as the one with the utilization >= 12.5% */
 #define busy_cpu(util) ((cpu_util(util)) > (100 >> 3))
 
+#ifndef arch_turbo_domain
+static __always_inline struct cpumask *arch_turbo_domain(int cpu)
+{
+	return sched_domain_span(rcu_dereference(per_cpu(sd_llc, cpu)));
+}
+#endif
+
 /*
  * Classify small background tasks with higher latency_nice value for task
  * packing.
@@ -5917,6 +5924,7 @@ static int select_non_idle_core(struct task_struct *p, int prev_cpu)
 	int iter_cpu, sibling;
 
 	cpumask_and(cpus, cpu_online_mask, p->cpus_ptr);
+	cpumask_and(cpus, cpus, arch_turbo_domain(prev_cpu));
 
 	for_each_cpu_wrap(iter_cpu, cpus, prev_cpu) {
 		int idle_cpu_count = 0, non_idle_cpu_count = 0;
