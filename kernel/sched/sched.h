@@ -102,6 +102,24 @@ extern long calc_load_fold_active(struct rq *this_rq, long adjust);
 #define NS_TO_JIFFIES(TIME)	((unsigned long)(TIME) / (NSEC_PER_SEC / HZ))
 
 /*
+ * Latency tolerance is meant to provide scheduler hints about the relative
+ * latency requirements of a task with respect to other tasks.
+ * Thus a task with latency_tolerance == 19 can be hinted as the task with no
+ * latency requirements, in contrast to the task with latency_tolerance == -20
+ * which should be given priority in terms of lower latency.
+ */
+#define MAX_LATENCY_TOLERANCE	19
+#define MIN_LATENCY_TOLERANCE	-20
+
+#define LATENCY_TOLERANCE_WIDTH	\
+	(MAX_LATENCY_TOLERANCE - MIN_LATENCY_TOLERANCE + 1)
+
+/*
+ * Default tasks should be treated as a task with latency_tolerance = 0.
+ */
+#define DEFAULT_LATENCY_TOLERANCE	0
+
+/*
  * Increase resolution of nice-level calculations for 64-bit architectures.
  * The extra resolution improves shares distribution and load balancing of
  * low-weight task groups (eg. nice +19 on an autogroup), deeper taskgroup

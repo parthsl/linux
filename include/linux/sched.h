@@ -666,6 +666,8 @@ struct task_struct {
 #endif
 	int				on_rq;
 
+	int				latency_tolerance;
+
 	int				prio;
 	int				static_prio;
 	int				normal_prio;
