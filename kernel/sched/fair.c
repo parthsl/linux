@@ -5780,6 +5780,26 @@ static inline int select_idle_smt(struct task_struct *p, int target)
 
 #endif /* CONFIG_SCHED_SMT */
 
+static int __select_idle_cpu(struct task_struct *p, struct sched_domain *sd,
+			     int target, int nr)
+{
+	int si_cpu = -1;
+	int cpu;
+
+	for_each_cpu_wrap(cpu, sched_domain_span(sd), target) {
+		if (!--nr)
+			return si_cpu;
+		if (!cpumask_test_cpu(cpu, p->cpus_ptr))
+			continue;
+		if (available_idle_cpu(cpu))
+			return cpu;
+		if (si_cpu == -1 && sched_idle_cpu(cpu))
+			si_cpu = cpu;
+	}
+
+	return si_cpu;
+}
+
 /*
  * Scan the LLC domain for idle CPUs; this is dynamically regulated by
  * comparing the average scan cost (tracked in sd->avg_scan_cost) against the
@@ -5792,7 +5812,7 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 	u64 time, cost;
 	s64 delta;
 	int this = smp_processor_id();
-	int cpu, nr = INT_MAX, si_cpu = -1;
+	int cpu, nr = INT_MAX;
 
 	this_sd = rcu_dereference(*this_cpu_ptr(&sd_llc));
 	if (!this_sd)
@@ -5818,16 +5838,7 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 
 	time = cpu_clock(this);
 
-	for_each_cpu_wrap(cpu, sched_domain_span(sd), target) {
-		if (!--nr)
-			return si_cpu;
-		if (!cpumask_test_cpu(cpu, p->cpus_ptr))
-			continue;
-		if (available_idle_cpu(cpu))
-			break;
-		if (si_cpu == -1 && sched_idle_cpu(cpu))
-			si_cpu = cpu;
-	}
+	cpu = __select_idle_cpu(p, sd, target, nr);
 
 	time = cpu_clock(this) - time;
 	cost = this_sd->avg_scan_cost;
