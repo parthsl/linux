@@ -5768,6 +5768,8 @@ static int select_idle_smt(struct task_struct *p, int target)
 
 #else /* CONFIG_SCHED_SMT */
 
+#define sched_smt_weight 1
+
 static inline int select_idle_core(struct task_struct *p, struct sched_domain *sd, int target)
 {
 	return -1;
@@ -5800,6 +5802,8 @@ static int __select_idle_cpu(struct task_struct *p, struct sched_domain *sd,
 	return si_cpu;
 }
 
+#define sis_min_cores 2
+
 /*
  * Scan the LLC domain for idle CPUs; this is dynamically regulated by
  * comparing the average scan cost (tracked in sd->avg_scan_cost) against the
@@ -5830,15 +5834,15 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 
 	if (sched_feat(SIS_PROP)) {
 		u64 span_avg = sd->span_weight * avg_idle;
-		if (span_avg > 4*avg_cost)
+		if (span_avg > sis_min_cores * avg_cost)
 			nr = div_u64(span_avg, avg_cost);
 		else
-			nr = 4;
+			nr = sis_min_cores;
 	}
 
 	time = cpu_clock(this);
 
-	cpu = __select_idle_cpu(p, sd, target, nr);
+	cpu = __select_idle_cpu(p, sd, target, nr * sched_smt_weight);
 
 	time = cpu_clock(this) - time;
 	cost = this_sd->avg_scan_cost;
