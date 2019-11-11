@@ -1054,6 +1054,8 @@ static inline void update_idle_core(struct rq *rq)
 		__update_idle_core(rq);
 }
 
+extern __read_mostly int sched_smt_weight;
+
 #else
 static inline void update_idle_core(struct rq *rq) { }
 #endif

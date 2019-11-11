@@ -1417,8 +1417,40 @@ sd_init(struct sched_domain_topology_level *tl,
 	 */
 	if (sd->flags & SD_SHARE_PKG_RESOURCES) {
 		sd->shared = *per_cpu_ptr(sdd->sds, sd_id);
-		atomic_inc(&sd->shared->ref);
 		atomic_set(&sd->shared->nr_busy_cpus, sd_weight);
+		if (atomic_read(&sd->shared->ref)) {
+			atomic_inc(&sd->shared->ref);
+		} else {
+#ifdef CONFIG_SCHED_SMT
+			int core, smt, smt_weight;
+
+			/*
+			 * Set the first SMT sibling of each core present in
+			 * the domain span.
+			 */
+			for_each_cpu(core, sched_domain_span(sd)) {
+				for_each_cpu(smt, cpu_smt_mask(core)) {
+					if (cpumask_test_cpu(smt, sched_domain_span(sd))) {
+						__cpumask_set_cpu(smt, sched_domain_cores(sd));
+						break;
+					}
+				}
+
+				/*
+				 * And track the presence and number of threads
+				 * per core
+				 */
+
+				smt_weight = cpumask_weight(cpu_smt_mask(core));
+				if (smt_weight > sched_smt_weight) {
+					sched_smt_weight = smt_weight;
+					static_branch_enable(&sched_smt_present);
+				}
+			}
+#endif
+
+			atomic_set(&sd->shared->ref, 1);
+		}
 	}
 
 	sd->private = sdd;
@@ -1781,7 +1813,7 @@ static int __sdt_alloc(const struct cpumask *cpu_map)
 
 			*per_cpu_ptr(sdd->sd, j) = sd;
 
-			sds = kzalloc_node(sizeof(struct sched_domain_shared),
+			sds = kzalloc_node(sizeof(struct sched_domain_shared) + cpumask_size(),
 					GFP_KERNEL, cpu_to_node(j));
 			if (!sds)
 				return -ENOMEM;

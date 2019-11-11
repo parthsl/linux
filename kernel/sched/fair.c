@@ -5654,6 +5654,8 @@ static inline int find_idlest_cpu(struct sched_domain *sd, struct task_struct *p
 DEFINE_STATIC_KEY_FALSE(sched_smt_present);
 EXPORT_SYMBOL_GPL(sched_smt_present);
 
+__read_mostly int sched_smt_weight = 1;
+
 static inline void set_idle_cores(int cpu, int val)
 {
 	struct sched_domain_shared *sds;
