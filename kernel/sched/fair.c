@@ -5352,7 +5352,6 @@ static void dequeue_task_fair(struct rq *rq, struct task_struct *p, int flags)
 
 /* Working cpumask for: load_balance, load_balance_newidle. */
 DEFINE_PER_CPU(cpumask_var_t, load_balance_mask);
-DEFINE_PER_CPU(cpumask_var_t, select_idle_mask);
 
 #ifdef CONFIG_NO_HZ_COMMON
 
@@ -5706,66 +5705,11 @@ unlock:
 }
 
 /*
- * Scan the entire LLC domain for idle cores; this dynamically switches off if
- * there are no idle cores left in the system; tracked through
- * sd_llc->shared->has_idle_cores and enabled through update_idle_core() above.
+ * Scan the entire LLC domain for idle cores; this dynamically toggles to scan
+ * only for the first IDLE CPU in case if there are no idle cores left in the
+ * system; tracked through sd_llc->shared->has_idle_cores and enabled through
+ * update_idle_core() above.
  */
-static int select_idle_core(struct task_struct *p, struct sched_domain *sd, int target)
-{
-	struct cpumask *cpus = this_cpu_cpumask_var_ptr(select_idle_mask);
-	int core, cpu;
-
-	if (!static_branch_likely(&sched_smt_present))
-		return -1;
-
-	if (!test_idle_cores(target, false))
-		return -1;
-
-	cpumask_and(cpus, sched_domain_span(sd), p->cpus_ptr);
-
-	for_each_cpu_wrap(core, cpus, target) {
-		bool idle = true;
-
-		for_each_cpu(cpu, cpu_smt_mask(core)) {
-			__cpumask_clear_cpu(cpu, cpus);
-			if (!available_idle_cpu(cpu))
-				idle = false;
-		}
-
-		if (idle)
-			return core;
-	}
-
-	/*
-	 * Failed to find an idle core; stop looking for one.
-	 */
-	set_idle_cores(target, 0);
-
-	return -1;
-}
-
-/*
- * Scan the local SMT mask for idle CPUs.
- */
-static int select_idle_smt(struct task_struct *p, int target)
-{
-	int cpu, si_cpu = -1;
-
-	if (!static_branch_likely(&sched_smt_present))
-		return -1;
-
-	for_each_cpu(cpu, cpu_smt_mask(target)) {
-		if (!cpumask_test_cpu(cpu, p->cpus_ptr))
-			continue;
-		if (available_idle_cpu(cpu))
-			return cpu;
-		if (si_cpu == -1 && sched_idle_cpu(cpu))
-			si_cpu = cpu;
-	}
-
-	return si_cpu;
-}
-
 static int __select_idle_core(struct task_struct *p, struct sched_domain *sd,
 			      int target, int nr)
 {
@@ -5820,16 +5764,6 @@ static int __select_idle_core(struct task_struct *p, struct sched_domain *sd,
 #else /* CONFIG_SCHED_SMT */
 
 #define sched_smt_weight 1
-
-static inline int select_idle_core(struct task_struct *p, struct sched_domain *sd, int target)
-{
-	return -1;
-}
-
-static inline int select_idle_smt(struct task_struct *p, int target)
-{
-	return -1;
-}
 
 #endif /* CONFIG_SCHED_SMT */
 
@@ -5894,7 +5828,7 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 	time = cpu_clock(this);
 
 #ifdef CONFIG_SCHED_SMT
-	if (sched_feat(SIS_FOLD) && static_branch_likely(&sched_smt_present))
+	if (static_branch_likely(&sched_smt_present))
 		cpu = __select_idle_core(p, sd, target, nr);
 	else
 #endif
@@ -5945,21 +5879,7 @@ static int select_idle_sibling(struct task_struct *p, int prev, int target)
 	if (!sd)
 		return target;
 
-	if (sched_feat(SIS_FOLD)) {
-		i = select_idle_cpu(p, sd, target);
-		if ((unsigned)i < nr_cpumask_bits)
-			return i;
-	}
-
-	i = select_idle_core(p, sd, target);
-	if ((unsigned)i < nr_cpumask_bits)
-		return i;
-
 	i = select_idle_cpu(p, sd, target);
-	if ((unsigned)i < nr_cpumask_bits)
-		return i;
-
-	i = select_idle_smt(p, target);
 	if ((unsigned)i < nr_cpumask_bits)
 		return i;
 
