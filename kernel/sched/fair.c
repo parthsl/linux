@@ -5766,6 +5766,57 @@ static int select_idle_smt(struct task_struct *p, int target)
 	return si_cpu;
 }
 
+static int __select_idle_core(struct task_struct *p, struct sched_domain *sd,
+			      int target, int nr)
+{
+	int best_busy = INT_MAX;
+	int best_cpu = -1;
+	int core, cpu;
+
+	for_each_cpu_wrap(core, sched_domain_cores(sd), target) {
+		int first_idle = -1;
+		int busy = 0;
+
+		if (!--nr)
+			break;
+
+		for (cpu = core; cpu < nr_cpumask_bits; cpu = cpumask_next(cpu,
+		     cpu_smt_mask(core))) {
+			if (!available_idle_cpu(cpu) && !sched_idle_cpu(cpu)) {
+				busy++;
+				continue;
+			}
+			if (!cpumask_test_cpu(cpu, p->cpus_ptr))
+				continue;
+			if (first_idle < 0)
+				first_idle = cpu;
+		}
+
+		if (first_idle < 0)
+			continue;
+
+		/*
+		 * Return first idle cpu found if:
+		 * - No cores are fully idle in LLC domain
+		 * - All threads in this core are IDLE/ SCHED_IDLE
+		 */
+		if (!test_idle_cores(target, false) || !busy)
+			return first_idle;
+
+		if (busy < best_busy) {
+			best_busy = busy;
+			best_cpu = first_idle;
+		}
+	}
+
+	/*
+	 * Failed to find an idle core; stop looking for one.
+	 */
+	set_idle_cores(target, 0);
+
+	return best_cpu;
+}
+
 #else /* CONFIG_SCHED_SMT */
 
 #define sched_smt_weight 1
@@ -5842,6 +5893,11 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 
 	time = cpu_clock(this);
 
+#ifdef CONFIG_SCHED_SMT
+	if (sched_feat(SIS_FOLD) && static_branch_likely(&sched_smt_present))
+		cpu = __select_idle_core(p, sd, target, nr);
+	else
+#endif
 	cpu = __select_idle_cpu(p, sd, target, nr * sched_smt_weight);
 
 	time = cpu_clock(this) - time;
@@ -5888,6 +5944,12 @@ static int select_idle_sibling(struct task_struct *p, int prev, int target)
 	sd = rcu_dereference(per_cpu(sd_llc, target));
 	if (!sd)
 		return target;
+
+	if (sched_feat(SIS_FOLD)) {
+		i = select_idle_cpu(p, sd, target);
+		if ((unsigned)i < nr_cpumask_bits)
+			return i;
+	}
 
 	i = select_idle_core(p, sd, target);
 	if ((unsigned)i < nr_cpumask_bits)

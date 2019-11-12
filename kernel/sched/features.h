@@ -89,3 +89,8 @@ SCHED_FEAT(WA_BIAS, true)
  * UtilEstimation. Use estimated CPU utilization.
  */
 SCHED_FEAT(UTIL_EST, true)
+
+/*
+ * Fold the search for select_idle_core, select_idle_cpu and select_idle_smt
+ */
+SCHED_FEAT(SIS_FOLD, true)
