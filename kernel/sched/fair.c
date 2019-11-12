@@ -5825,6 +5825,13 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 			nr = sis_min_cores;
 	}
 
+	/*
+	 * If task is less latency tolerance (= -19 to 0) then reduce core
+	 * scans. Similarly increase core scans for latency insensitive tasks
+	 */
+	if (sched_feat(SIS_REDUCE_SEARCH))
+		nr += (p->latency_tolerance * nr) / MAX_LATENCY_TOLERANCE;
+
 	time = cpu_clock(this);
 
 #ifdef CONFIG_SCHED_SMT
