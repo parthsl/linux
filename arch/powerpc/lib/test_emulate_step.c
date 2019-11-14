@@ -57,7 +57,10 @@
 					___PPC_RA(a) | ___PPC_RB(b))
 #define TEST_SRAW_DOT(s, a, b)	(PPC_INST_SRAW | ___PPC_RS(s) |		\
 					___PPC_RA(a) | ___PPC_RB(b) | 0x1)
-
+#define TEST_SRAWI(s, a, b)	(PPC_INST_SRAW | ___PPC_RS(s) |		\
+					___PPC_RA(a) | ___PPC_RB(b))
+#define TEST_SRAWI_DOT(s, a, b)	(PPC_INST_SRAW | ___PPC_RS(s) |		\
+					___PPC_RA(a) | ___PPC_RB(b))
 #define MAX_SUBTESTS	16
 
 #define IGNORE_GPR(n)	(0x1UL << (n))
@@ -1122,6 +1125,256 @@ static struct compute_test compute_tests[] = {
 				.regs = {
 					.gpr[21] = 0x1FF000001,
 					.gpr[22] = 0xFC00000000000000,
+				}
+			}
+		}
+	},
+	{
+		.mnemonic = "srawi",
+		.subtests = {
+			{
+				.descr = "RS = 0xff, SH = 0x0",
+				.instr = TEST_SRAWI(21, 20, 0x0),
+				.regs = {
+					.gpr[21] = 0xff,
+				}
+			},
+			{
+				.descr = "RS = SHRT_MIN, SH = SHRT_MIN",
+				.instr = TEST_SRAWI(21, 20, SHRT_MIN),
+				.regs = {
+					.gpr[21] = SHRT_MIN,
+				}
+			},
+			{
+				.descr = "RS = SHRT_MIN, SH = LONG_MAX",
+				.instr = TEST_SRAWI(21, 20, LONG_MAX),
+				.regs = {
+					.gpr[21] = SHRT_MIN,
+				}
+			},
+			{
+				.descr = "RS = LONG_MAX, SH = LONG_MAX",
+				.flags = IGNORE_CCR,
+				.instr = TEST_SRAWI(21, 20, LONG_MAX),
+				.regs = {
+					.gpr[21] = LONG_MAX,
+				}
+			},
+			{
+				.descr = "RS = 0x1ffffffff, SH = 0x0",
+				.instr = TEST_SRAWI(21, 20, 0x0),
+				.regs = {
+					.gpr[21] = 0x1ffffffff,
+				}
+			},
+			{
+				.descr = "RS = ULONG_MAX, SH = 0x1",
+				.instr = TEST_SRAWI(21, 20, 0x1),
+				.regs = {
+					.gpr[21] = ULONG_MAX,
+				}
+			},
+			{
+				.descr = "RS = INT_MIN, SH = INT_MIN",
+				.instr = TEST_SRAWI(21, 20, INT_MIN),
+				.regs = {
+					.gpr[21] = INT_MIN,
+				}
+			},
+			{
+				.descr = "RS = INT_MIN, SH = INT_MAX",
+				.instr = TEST_SRAWI(21, 20, INT_MAX),
+				.regs = {
+					.gpr[21] = INT_MIN,
+				}
+			},
+			{
+				.descr = "RS = INT_MAX, SH = INT_MAX",
+				.instr = TEST_SRAWI(21, 20, INT_MAX),
+				.regs = {
+					.gpr[21] = INT_MAX,
+				}
+			},
+			{
+				.descr = "RS = UINT_MAX, SH = UINT_MAX",
+				.instr = TEST_SRAWI(21, 20, UINT_MAX),
+				.regs = {
+					.gpr[21] = UINT_MAX,
+				}
+			},
+			{
+				/* Test for sh < 32 */
+				.descr = "RS = 0xffff, SH = 0x0",
+				.instr = TEST_SRAWI(21, 20, 0x0),
+				.regs = {
+					.gpr[21] = 0xfffff,
+				}
+			},
+
+			{
+				/* Test for sh < 32 */
+				.descr = "RS = 0xfff, SH = 0x20",
+				.instr = TEST_SRAWI(21, 20, 0x20),
+				.regs = {
+					.gpr[21] = 0xfff,
+				}
+			},
+			{
+				/* Check for (RS)32 sign propagate */
+				.descr = "RS = 1000fffff, SH = 0xff1",
+				.instr = TEST_SRAWI(21, 20, 0xff1),
+				.regs = {
+					.gpr[21] = 0x1000fffff,
+				}
+			},
+			{
+				/* Check for (RS)32 sign propagate */
+				.descr = "RS = 1000fffff, SH = 0x11",
+				.instr = TEST_SRAWI(21, 20, 0x11),
+				.regs = {
+					.gpr[21] = 0x1000fffff,
+				}
+			},
+			{
+				/* Test for MASK flag */
+				.descr = "RS = 0x1ffffffff, SH = 0x31",
+				.instr = TEST_SRAWI(21, 20, 0x31),
+				.regs = {
+					.gpr[21] = 0x1ffffffff,
+				}
+			},
+			{
+				/* Test for CARRY (CA/CA32) flag */
+				.descr = "RS = 0x1ffffffff, SH = 0xf",
+				.instr = TEST_SRAWI(21, 20, 0xf),
+				.regs = {
+					.gpr[21] = 0x1ffffffff,
+				}
+			}
+		}
+	},
+	{
+		.mnemonic = "srawi.",
+		.subtests = {
+			{
+				.descr = "RS = 0xff, SH = 0x0",
+				.instr = TEST_SRAWI_DOT(21, 20, 0x0),
+				.regs = {
+					.gpr[21] = 0xff,
+				}
+			},
+			{
+				.descr = "RS = SHRT_MIN, SH = SHRT_MIN",
+				.instr = TEST_SRAWI_DOT(21, 20, SHRT_MIN),
+				.regs = {
+					.gpr[21] = SHRT_MIN,
+				}
+			},
+			{
+				.descr = "RS = SHRT_MIN, SH = LONG_MAX",
+				.instr = TEST_SRAWI_DOT(21, 20, LONG_MAX),
+				.regs = {
+					.gpr[21] = SHRT_MIN,
+				}
+			},
+			{
+				.descr = "RS = LONG_MAX, SH = LONG_MAX",
+				.flags = IGNORE_CCR,
+				.instr = TEST_SRAWI_DOT(21, 20, LONG_MAX),
+				.regs = {
+					.gpr[21] = LONG_MAX,
+				}
+			},
+			{
+				.descr = "RS = 0x1ffffffff, SH = 0x0",
+				.instr = TEST_SRAWI_DOT(21, 20, 0x0),
+				.regs = {
+					.gpr[21] = 0x1ffffffff,
+				}
+			},
+			{
+				.descr = "RS = ULONG_MAX, SH = 0x1",
+				.instr = TEST_SRAWI_DOT(21, 20, 0x1),
+				.regs = {
+					.gpr[21] = ULONG_MAX,
+				}
+			},
+			{
+				.descr = "RS = INT_MIN, SH = INT_MIN",
+				.instr = TEST_SRAWI_DOT(21, 20, INT_MIN),
+				.regs = {
+					.gpr[21] = INT_MIN,
+				}
+			},
+			{
+				.descr = "RS = INT_MIN, SH = INT_MAX",
+				.instr = TEST_SRAWI_DOT(21, 20, INT_MAX),
+				.regs = {
+					.gpr[21] = INT_MIN,
+				}
+			},
+			{
+				.descr = "RS = INT_MAX, SH = INT_MAX",
+				.instr = TEST_SRAWI_DOT(21, 20, INT_MAX),
+				.regs = {
+					.gpr[21] = INT_MAX,
+				}
+			},
+			{
+				.descr = "RS = UINT_MAX, SH = UINT_MAX",
+				.instr = TEST_SRAWI_DOT(21, 20, UINT_MAX),
+				.regs = {
+					.gpr[21] = UINT_MAX,
+				}
+			},
+			{
+				/* Test for sh < 32 */
+				.descr = "RS = 0xffff, SH = 0x0",
+				.instr = TEST_SRAWI_DOT(21, 20, 0x0),
+				.regs = {
+					.gpr[21] = 0xfffff,
+				}
+			},
+
+			{
+				/* Test for sh < 32 */
+				.descr = "RS = 0xfff, SH = 0x20",
+				.instr = TEST_SRAWI_DOT(21, 20, 0x20),
+				.regs = {
+					.gpr[21] = 0xfff,
+				}
+			},
+			{
+				/* Check for (RS)32 sign propagate */
+				.descr = "RS = 1000fffff, SH = 0xff1",
+				.instr = TEST_SRAWI_DOT(21, 20, 0xff1),
+				.regs = {
+					.gpr[21] = 0x1000fffff,
+				}
+			},
+			{
+				/* Check for (RS)32 sign propagate */
+				.descr = "RS = 1000fffff, SH = 0x11",
+				.instr = TEST_SRAWI_DOT(21, 20, 0x11),
+				.regs = {
+					.gpr[21] = 0x1000fffff,
+				}
+			},
+			{
+				/* Test for MASK flag */
+				.descr = "RS = 0x1ffffffff, SH = 0x31",
+				.instr = TEST_SRAWI_DOT(21, 20, 0x31),
+				.regs = {
+					.gpr[21] = 0x1ffffffff,
+				}
+			},
+			{
+				/* Test for CARRY (CA/CA32) flag */
+				.descr = "RS = 0x1ffffffff, SH = 0xf",
+				.instr = TEST_SRAWI_DOT(21, 20, 0xf),
+				.regs = {
+					.gpr[21] = 0x1ffffffff,
 				}
 			}
 		}
