@@ -53,6 +53,10 @@
 					___PPC_RA(a) | ___PPC_RB(b))
 #define TEST_ADDC_DOT(t, a, b)	(PPC_INST_ADDC | ___PPC_RT(t) |		\
 					___PPC_RA(a) | ___PPC_RB(b) | 0x1)
+#define TEST_SRAW(s, a, b)	(PPC_INST_SRAW | ___PPC_RS(s) |		\
+					___PPC_RA(a) | ___PPC_RB(b))
+#define TEST_SRAW_DOT(s, a, b)	(PPC_INST_SRAW | ___PPC_RS(s) |		\
+					___PPC_RA(a) | ___PPC_RB(b) | 0x1)
 
 #define MAX_SUBTESTS	16
 
@@ -837,7 +841,292 @@ static struct compute_test compute_tests[] = {
 				}
 			}
 		}
+	},
+	{
+		.mnemonic = "sraw",
+		.subtests = {
+			{
+				.descr = "RS = LONG_MIN, RB = LONG_MIN",
+				.instr = TEST_SRAW(21, 20, 22),
+				.regs = {
+					.gpr[21] = LONG_MIN,
+					.gpr[22] = LONG_MIN,
+				}
+			},
+			{
+				.descr = "RS = LONG_MIN, RB = LONG_MAX",
+				.instr = TEST_SRAW(21, 20, 22),
+				.regs = {
+					.gpr[21] = LONG_MIN,
+					.gpr[22] = LONG_MAX,
+				}
+			},
+			{
+				.descr = "RS = LONG_MAX, RB = LONG_MAX",
+				.flags = IGNORE_CCR,
+				.instr = TEST_SRAW(21, 20, 22),
+				.regs = {
+					.gpr[21] = LONG_MAX,
+					.gpr[22] = LONG_MAX,
+				}
+			},
+			{
+				.descr = "RS = ULONG_MAX, RB = ULONG_MAX",
+				.instr = TEST_SRAW(21, 20, 22),
+				.regs = {
+					.gpr[21] = ULONG_MAX,
+					.gpr[22] = ULONG_MAX,
+				}
+			},
+			{
+				.descr = "RS = ULONG_MAX, RB = 0x1",
+				.instr = TEST_SRAW(21, 20, 22),
+				.regs = {
+					.gpr[21] = ULONG_MAX,
+					.gpr[22] = 0x1,
+				}
+			},
+			{
+				.descr = "RS = INT_MIN, RB = INT_MIN",
+				.instr = TEST_SRAW(21, 20, 22),
+				.regs = {
+					.gpr[21] = INT_MIN,
+					.gpr[22] = INT_MIN,
+				}
+			},
+			{
+				.descr = "RS = INT_MIN, RB = INT_MAX",
+				.instr = TEST_SRAW(21, 20, 22),
+				.regs = {
+					.gpr[21] = INT_MIN,
+					.gpr[22] = INT_MAX,
+				}
+			},
+			{
+				.descr = "RS = INT_MAX, RB = INT_MAX",
+				.instr = TEST_SRAW(21, 20, 22),
+				.regs = {
+					.gpr[21] = INT_MAX,
+					.gpr[22] = INT_MAX,
+				}
+			},
+			{
+				.descr = "RS = UINT_MAX, RB = UINT_MAX",
+				.instr = TEST_SRAW(21, 20, 22),
+				.regs = {
+					.gpr[21] = UINT_MAX,
+					.gpr[22] = UINT_MAX,
+				}
+			},
+			{
+				/* Test for sh < 32 */
+				.descr = "RS = 0xffff, RB = 0x0",
+				.instr = TEST_SRAW(21, 20, 22),
+				.regs = {
+					.gpr[21] = 0xfffff,
+					.gpr[22] = 0x0,
+				}
+			},
+
+			{
+				/* Test for sh < 32 */
+				.descr = "RS = 0xfff, RB = 0x20",
+				.instr = TEST_SRAW(21, 20, 22),
+				.regs = {
+					.gpr[21] = 0xfff,
+					.gpr[22] = 0x20,
+				}
+			},
+			{
+				/* Check for (RS)32 sign propagate */
+				.descr = "RS = 100000011, RB = 0xff1",
+				.instr = TEST_SRAW(21, 20, 22),
+				.regs = {
+					.gpr[21] = 0x100000011,
+					.gpr[22] = 0xff1,
+				}
+			},
+			{
+				/* Check for (RS)32 sign propagate */
+				.descr = "RS = 100000011, RB = 0x11",
+				.instr = TEST_SRAW(21, 20, 22),
+				.regs = {
+					.gpr[21] = 0x100000011,
+					.gpr[22] = 0x11,
+				}
+			},
+			{
+				/* Verify (RS)58 MASK bits */
+				.descr = "RS = 0x11, RB = 0xff1",
+				.instr = TEST_SRAW(21, 20, 22),
+				.regs = {
+					.gpr[21] = 0x11,
+					.gpr[22] = 0xff1,
+				}
+			},
+			{
+				/* Test for MASK flag */
+				.descr = "RS = 0xffff, RB = 0xff1",
+				.instr = TEST_SRAW(21, 20, 22),
+				.regs = {
+					.gpr[21] = 0xffff,
+					.gpr[22] = 0xff1,
+				}
+			},
+			{
+				/* Test for CARRY (CA/CA32) flag */
+				.descr = "RS = 1FF000001, RB = FC00000000000000",
+				.instr = TEST_SRAW(21, 20, 22),
+				.regs = {
+					.gpr[21] = 0x1FF000001,
+					.gpr[22] = 0xFC00000000000000,
+				}
+			}
+		}
+	},
+	{
+		.mnemonic = "sraw.",
+		.subtests = {
+			{
+				.descr = "RS = LONG_MIN, RB = LONG_MIN",
+				.instr = TEST_SRAW_DOT(21, 20, 22),
+				.regs = {
+					.gpr[21] = LONG_MIN,
+					.gpr[22] = LONG_MIN,
+				}
+			},
+			{
+				.descr = "RS = LONG_MIN, RB = LONG_MAX",
+				.instr = TEST_SRAW_DOT(21, 20, 22),
+				.regs = {
+					.gpr[21] = LONG_MIN,
+					.gpr[22] = LONG_MAX,
+				}
+			},
+			{
+				.descr = "RS = LONG_MAX, RB = LONG_MAX",
+				.flags = IGNORE_CCR,
+				.instr = TEST_SRAW_DOT(21, 20, 22),
+				.regs = {
+					.gpr[21] = LONG_MAX,
+					.gpr[22] = LONG_MAX,
+				}
+			},
+			{
+				.descr = "RS = ULONG_MAX, RB = ULONG_MAX",
+				.instr = TEST_SRAW_DOT(21, 20, 22),
+				.regs = {
+					.gpr[21] = ULONG_MAX,
+					.gpr[22] = ULONG_MAX,
+				}
+			},
+			{
+				.descr = "RS = ULONG_MAX, RB = 0x1",
+				.instr = TEST_SRAW_DOT(21, 20, 22),
+				.regs = {
+					.gpr[21] = ULONG_MAX,
+					.gpr[22] = 0x1,
+				}
+			},
+			{
+				.descr = "RS = INT_MIN, RB = INT_MIN",
+				.instr = TEST_SRAW_DOT(21, 20, 22),
+				.regs = {
+					.gpr[21] = INT_MIN,
+					.gpr[22] = INT_MIN,
+				}
+			},
+			{
+				.descr = "RS = INT_MIN, RB = INT_MAX",
+				.instr = TEST_SRAW_DOT(21, 20, 22),
+				.regs = {
+					.gpr[21] = INT_MIN,
+					.gpr[22] = INT_MAX,
+				}
+			},
+			{
+				.descr = "RS = INT_MAX, RB = INT_MAX",
+				.instr = TEST_SRAW_DOT(21, 20, 22),
+				.regs = {
+					.gpr[21] = INT_MAX,
+					.gpr[22] = INT_MAX,
+				}
+			},
+			{
+				.descr = "RS = UINT_MAX, RB = UINT_MAX",
+				.instr = TEST_SRAW_DOT(21, 20, 22),
+				.regs = {
+					.gpr[21] = UINT_MAX,
+					.gpr[22] = UINT_MAX,
+				}
+			},
+			{
+				/* Test for sh < 32 */
+				.descr = "RS = 0xffff, RB = 0x0",
+				.instr = TEST_SRAW_DOT(21, 20, 22),
+				.regs = {
+					.gpr[21] = 0xfffff,
+					.gpr[22] = 0x0,
+				}
+			},
+
+			{
+				/* Test for sh < 32 */
+				.descr = "RS = 0xfff, RB = 0x20",
+				.instr = TEST_SRAW_DOT(21, 20, 22),
+				.regs = {
+					.gpr[21] = 0xfff,
+					.gpr[22] = 0x20,
+				}
+			},
+			{
+				/* Check for (RS)32 sign propagate */
+				.descr = "RS = 100000011, RB = 0xff1",
+				.instr = TEST_SRAW_DOT(21, 20, 22),
+				.regs = {
+					.gpr[21] = 0x100000011,
+					.gpr[22] = 0xff1,
+				}
+			},
+			{
+				/* Check for (RS)32 sign propagate */
+				.descr = "RS = 100000011, RB = 0x11",
+				.instr = TEST_SRAW_DOT(21, 20, 22),
+				.regs = {
+					.gpr[21] = 0x100000011,
+					.gpr[22] = 0x11,
+				}
+			},
+			{
+				/* Verify (RS)58 MASK bits */
+				.descr = "RS = 0x11, RB = 0xff1",
+				.instr = TEST_SRAW_DOT(21, 20, 22),
+				.regs = {
+					.gpr[21] = 0x11,
+					.gpr[22] = 0xff1,
+				}
+			},
+			{
+				/* Test for MASK flag */
+				.descr = "RS = 0xffff, RB = 0xff1",
+				.instr = TEST_SRAW_DOT(21, 20, 22),
+				.regs = {
+					.gpr[21] = 0xffff,
+					.gpr[22] = 0xff1,
+				}
+			},
+			{
+				/* Test for CARRY (CA/CA32) flag */
+				.descr = "RS = 1FF000001, RB = FC00000000000000",
+				.instr = TEST_SRAW_DOT(21, 20, 22),
+				.regs = {
+					.gpr[21] = 0x1FF000001,
+					.gpr[22] = 0xFC00000000000000,
+				}
+			}
+		}
 	}
+
 };
 
 static int __init emulate_compute_instr(struct pt_regs *regs,
