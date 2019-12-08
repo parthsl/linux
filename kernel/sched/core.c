@@ -4713,6 +4713,8 @@ static void __setscheduler_params(struct task_struct *p,
 	p->rt_priority = attr->sched_priority;
 	p->normal_prio = normal_prio(p);
 	set_load_weight(p, true);
+
+	p->latency_tolerance = attr->sched_latency_tolerance;
 }
 
 /* Actually do priority change: must hold pi & rq lock. */
@@ -4870,6 +4872,13 @@ recheck:
 			return retval;
 	}
 
+	if (attr->sched_flags & SCHED_FLAG_LATENCY_TOLERANCE) {
+		if (attr->sched_latency_tolerance > MAX_LATENCY_TOLERANCE)
+			return -EINVAL;
+		if (attr->sched_latency_tolerance < MIN_LATENCY_TOLERANCE)
+			return -EINVAL;
+	}
+
 	if (pi)
 		cpuset_read_lock();
 
@@ -4903,6 +4912,9 @@ recheck:
 		if (dl_policy(policy) && dl_param_changed(p, attr))
 			goto change;
 		if (attr->sched_flags & SCHED_FLAG_UTIL_CLAMP)
+			goto change;
+		if (attr->sched_flags & SCHED_FLAG_LATENCY_TOLERANCE &&
+		    attr->sched_latency_tolerance != p->latency_tolerance)
 			goto change;
 
 		p->sched_reset_on_fork = reset_on_fork;
@@ -5152,6 +5164,9 @@ static int sched_copy_attr(struct sched_attr __user *uattr, struct sched_attr *a
 	    size < SCHED_ATTR_SIZE_VER1)
 		return -EINVAL;
 
+	if ((attr->sched_flags & SCHED_FLAG_LATENCY_TOLERANCE) &&
+	    size < SCHED_ATTR_SIZE_VER2)
+		return -EINVAL;
 	/*
 	 * XXX: Do we want to be lenient like existing syscalls; or do we want
 	 * to be strict and return an error on out-of-bounds values?
@@ -5380,6 +5395,8 @@ SYSCALL_DEFINE4(sched_getattr, pid_t, pid, struct sched_attr __user *, uattr,
 		kattr.sched_priority = p->rt_priority;
 	else
 		kattr.sched_nice = task_nice(p);
+
+	kattr.sched_latency_tolerance = p->latency_tolerance;
 
 #ifdef CONFIG_UCLAMP_TASK
 	kattr.sched_util_min = p->uclamp_req[UCLAMP_MIN].value;
