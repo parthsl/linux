@@ -1,0 +1,32 @@
+Bottom: cfa849ee56cf4e0a8db34fd90573b912f29d03ff
+Top:    ed4802ba7856d42e86e862034bd30044a93010e5
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2020-01-09 13:38:49 +0530
+
+Refresh of sched-core-update-turbo_sched
+
+---
+
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index b6f112e0c8e4..b156eacbb0b1 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -3267,7 +3267,7 @@ static struct rq *finish_task_switch(struct task_struct *prev)
+ 		mmdrop(mm);
+ 	}
+ 	if (unlikely(prev_state == TASK_DEAD)) {
+-		if (unlikely(prev->flags & PF_CAN_BE_PACKED))
++		if (unlikely(prev->latency_tolerance > 18))
+ 			turbo_sched_put();
+ 
+ 		if (prev->sched_class->task_dead)
+@@ -5023,8 +5023,7 @@ static int __sched_setscheduler(struct task_struct *p,
+ 	prev_class = p->sched_class;
+ 
+ 	/* Refcount tasks classified as a small background task */
+-	if (task_packing_flag != (p->flags & PF_CAN_BE_PACKED))
+-		(task_packing_flag) ? turbo_sched_get() : turbo_sched_put();
++	(p->latency_tolerance > 18) ? turbo_sched_get() : turbo_sched_put();
+ 
+ 	__setscheduler(rq, p, attr, pi);
+ 	__setscheduler_uclamp(p, attr);
