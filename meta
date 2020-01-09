@@ -1,6 +1,9 @@
 Version: 1
-Previous: dece58112f9a98d3c13a7d8ce89415e30315cda3
+Previous: cd1b998fe7e04f57c951b604383a1b7869ffe408
 Head: a1d500dd9fcbfcaa689393ad59ef1761b438a96d
 Applied:
+  sched-introduce-latency: 64706fffe8fefd9f0b6f997dae69169f588c9e30
+  sched-core-propagate-parent: 2c658f974316afed8896087b8475cf737dd72e9b
+  sched-allow-sched_-get-set: a1d500dd9fcbfcaa689393ad59ef1761b438a96d
 Unapplied:
 Hidden:

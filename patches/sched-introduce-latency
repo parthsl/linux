@@ -1,0 +1,65 @@
+Bottom: 322afca4e0a69ec6f45f87bcbd4e982526bead6a
+Top:    78effd6cd72d885d29b5a71da6a4a2dc7cbe3b79
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2019-12-08 11:34:08 +0530
+
+sched: Introduce latency-tolerance as a per-task attribute
+
+Latency-tolerance indicates the latency requirements of a task with respect
+to the other tasks in the system. The value of the attribute can be within
+the range of [-20, 19] both inclusive to be in-line with the values just
+like task nice values.
+
+latency_tolerance = -20 indicates the task to have the least latency as
+compared to the tasks having latency_tolerance = +19.
+
+The latency_tolerance may affect only the CFS SCHED_CLASS by getting
+latency requirements from the userspace.
+
+Signed-off-by: Parth Shah <parth@linux.ibm.com>
+Reviewed-by: Qais Yousef <qais.yousef@arm.com>
+
+
+---
+
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index 467d26046416..90d1766d93a4 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -676,6 +676,7 @@ struct task_struct {
+ 	int				static_prio;
+ 	int				normal_prio;
+ 	unsigned int			rt_priority;
++	int				latency_tolerance;
+ 
+ 	const struct sched_class	*sched_class;
+ 	struct sched_entity		se;
+diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
+index 1a88dc8ad11b..84b46a992e11 100644
+--- a/kernel/sched/sched.h
++++ b/kernel/sched/sched.h
+@@ -101,6 +101,24 @@ extern long calc_load_fold_active(struct rq *this_rq, long adjust);
+  */
+ #define NS_TO_JIFFIES(TIME)	((unsigned long)(TIME) / (NSEC_PER_SEC / HZ))
+ 
++/*
++ * Latency tolerance is meant to provide scheduler hints about the relative
++ * latency requirements of a task with respect to other tasks.
++ * Thus a task with latency_tolerance == 19 can be hinted as the task with no
++ * latency requirements, in contrast to the task with latency_tolerance == -20
++ * which should be given priority in terms of lower latency.
++ */
++#define MAX_LATENCY_TOLERANCE	19
++#define MIN_LATENCY_TOLERANCE	-20
++
++#define LATENCY_TOLERANCE_WIDTH	\
++	(MAX_LATENCY_TOLERANCE - MIN_LATENCY_TOLERANCE + 1)
++
++/*
++ * Default tasks should be treated as a task with latency_tolerance = 0.
++ */
++#define DEFAULT_LATENCY_TOLERANCE	0
++
+ /*
+  * Increase resolution of nice-level calculations for 64-bit architectures.
+  * The extra resolution improves shares distribution and load balancing of

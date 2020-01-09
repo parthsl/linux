@@ -1,0 +1,40 @@
+Bottom: 78effd6cd72d885d29b5a71da6a4a2dc7cbe3b79
+Top:    2affd255c3c8c51457054d7a3adb07ca0c6e175e
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2019-12-08 11:34:09 +0530
+
+sched/core: Propagate parent task's latency requirements to the child task
+
+Clone parent task's latency_tolerance attribute to the forked child task.
+
+Reset the latency_tolerance value to default value when the child task is
+set to sched_reset_on_fork.
+
+Signed-off-by: Parth Shah <parth@linux.ibm.com>
+Reviewed-by: Qais Yousef <qais.yousef@arm.com>
+
+
+---
+
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index e7b08d52db93..09947e80fac4 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -2854,6 +2854,9 @@ int sched_fork(unsigned long clone_flags, struct task_struct *p)
+ 	 */
+ 	p->prio = current->normal_prio;
+ 
++	/* Propagate the parent's latency requirements to the child as well */
++	p->latency_tolerance = current->latency_tolerance;
++
+ 	uclamp_fork(p);
+ 
+ 	/*
+@@ -2870,6 +2873,7 @@ int sched_fork(unsigned long clone_flags, struct task_struct *p)
+ 		p->prio = p->normal_prio = __normal_prio(p);
+ 		set_load_weight(p, false);
+ 
++		p->latency_tolerance = DEFAULT_LATENCY_TOLERANCE;
+ 		/*
+ 		 * We don't need the reset flag anymore after the fork. It has
+ 		 * fulfilled its duty:
