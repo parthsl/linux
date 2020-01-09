@@ -3267,7 +3267,7 @@ static struct rq *finish_task_switch(struct task_struct *prev)
 		mmdrop(mm);
 	}
 	if (unlikely(prev_state == TASK_DEAD)) {
-		if (unlikely(prev->latency_tolerance > 18))
+		if (unlikely(lenient_latency(prev)))
 			turbo_sched_put();
 
 		if (prev->sched_class->task_dead)
@@ -5023,8 +5023,8 @@ change:
 	prev_class = p->sched_class;
 
 	/* Refcount tasks classified as a small background task */
-	if (p->latency_tolerance > 18 != attr->latency_tolerance > 18)
-		(p->latency_tolerance > 18) ? turbo_sched_get() : turbo_sched_put();
+	if (lenient_latency(p) != lenient_latency(attr))
+		lenient_latency(attr) ? turbo_sched_get() : turbo_sched_put();
 
 	__setscheduler(rq, p, attr, pi);
 	__setscheduler_uclamp(p, attr);
