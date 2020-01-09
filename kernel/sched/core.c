@@ -5023,7 +5023,8 @@ change:
 	prev_class = p->sched_class;
 
 	/* Refcount tasks classified as a small background task */
-	(p->latency_tolerance > 18) ? turbo_sched_get() : turbo_sched_put();
+	if (p->latency_tolerance > 18 != attr->latency_tolerance > 18)
+		(p->latency_tolerance > 18) ? turbo_sched_get() : turbo_sched_put();
 
 	__setscheduler(rq, p, attr, pi);
 	__setscheduler_uclamp(p, attr);
