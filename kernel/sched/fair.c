@@ -5886,16 +5886,25 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 }
 
 #ifdef CONFIG_SCHED_SMT
+
+/* Define non-idle CPU/task as the one with the utilization >= 12.5% */
+#define is_zealous(util) ((util) > (100 >> 3))
+
 static inline bool is_background_task(struct task_struct *p)
 {
-	if (p->flags & PF_CAN_BE_PACKED)
+	if (p->latency_tolerance > 18)
 		return true;
 
 	return false;
 }
 
-#define busyness_threshold	(100 >> 3)
-#define is_cpu_busy(util) ((util) > busyness_threshold)
+static inline bool check_task_packing(struct task_struct *p)
+{
+	if (is_background_task(p) && is_zealous(task_util(p)))
+		return true;
+
+	return false;
+}
 
 /*
  * Try to find a non idle core in the system  based on few heuristics:
@@ -5927,7 +5936,7 @@ static int select_non_idle_core(struct task_struct *p, int prev_cpu, int target)
 				non_idle_cpu_count++;
 				if (cpu_overutilized(iter_cpu))
 					overutil_cpu_count++;
-				if (is_cpu_busy(cpu_util(iter_cpu)))
+				if (is_zealous(cpu_util(iter_cpu)))
 					busy_cpu_count++;
 			}
 		}
@@ -6490,7 +6499,7 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_f
 	} else if (sd_flag & SD_BALANCE_WAKE) { /* XXX always ? */
 		/* Fast path */
 
-		if (is_turbosched_enabled() && unlikely(is_background_task(p)))
+		if (is_turbosched_enabled() && unlikely(check_task_packing(p)))
 			new_cpu = turbosched_select_non_idle_core(p, prev_cpu,
 								  new_cpu);
 		else
