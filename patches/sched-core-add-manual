@@ -1,5 +1,5 @@
 Bottom: 9fbd5a9eb19f822e1fd393f1d441c7b75aa9b605
-Top:    394f142eedc7a0a7de0a443f2e8e9248ef4251aa
+Top:    07352998882094ad56f8e446112bac932e333bae
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2019-10-07 14:00:46 +0530
 
@@ -22,38 +22,10 @@ Signed-off-by: Parth Shah <parth@linux.ibm.com>
 ---
 
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index e5533eecca9e..014b5569d641 100644
+index e5533eecca9e..42b3c4c5559c 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
-@@ -4715,6 +4715,8 @@ static void __setscheduler_params(struct task_struct *p,
- 	set_load_weight(p, true);
- 
- 	p->latency_tolerance = attr->sched_latency_tolerance;
-+	//if (attr->sched_flags & SCHED_FLAG_TASK_PACKING)
-+	//	p->flags |= PF_CAN_BE_PACKED;
- }
- 
- /* Actually do priority change: must hold pi & rq lock. */
-@@ -4774,6 +4776,8 @@ static int __sched_setscheduler(struct task_struct *p,
- 	struct rq_flags rf;
- 	int reset_on_fork;
- 	int queue_flags = DEQUEUE_SAVE | DEQUEUE_MOVE | DEQUEUE_NOCLOCK;
-+	unsigned long long task_packing_flag =
-+				attr->sched_flags & SCHED_FLAG_TASK_PACKING;
- 	struct rq *rq;
- 
- 	/* The pi code expects interrupts enabled */
-@@ -4915,7 +4919,8 @@ static int __sched_setscheduler(struct task_struct *p,
- 			goto change;
- 		if (attr->sched_flags & SCHED_FLAG_LATENCY_TOLERANCE &&
- 		    attr->sched_latency_tolerance != p->latency_tolerance)
--			goto change;
-+		//if (task_packing_flag)
-+		//	goto change;
- 
- 		p->sched_reset_on_fork = reset_on_fork;
- 		retval = 0;
-@@ -5403,6 +5408,9 @@ SYSCALL_DEFINE4(sched_getattr, pid_t, pid, struct sched_attr __user *, uattr,
+@@ -5403,6 +5403,9 @@ SYSCALL_DEFINE4(sched_getattr, pid_t, pid, struct sched_attr __user *, uattr,
  	kattr.sched_util_max = p->uclamp_req[UCLAMP_MAX].value;
  #endif
  
