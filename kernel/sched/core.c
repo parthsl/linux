@@ -73,6 +73,7 @@ __read_mostly int scheduler_running;
  */
 int sysctl_sched_rt_runtime = 950000;
 
+#ifdef CONFIG_SCHED_SMT
 DEFINE_STATIC_KEY_FALSE(__turbo_sched_enabled);
 static DEFINE_MUTEX(turbo_sched_lock);
 static int turbo_sched_count;
@@ -92,6 +93,10 @@ void turbo_sched_put(void)
 		static_branch_disable(&__turbo_sched_enabled);
 	mutex_unlock(&turbo_sched_lock);
 }
+#else
+void turbo_sched_get(void) { return ; }
+void turbo_sched_get(void) { return ; }
+#endif
 
 /*
  * __task_rq_lock - lock the rq @p resides on.
