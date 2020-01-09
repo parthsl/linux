@@ -1,0 +1,69 @@
+Bottom: 2f050b7c5ae08cf42f6bc4cd364b02868071b21e
+Top:    ffa2b4c94e65ef71af0940bd75a984285d9dad6e
+Author: Valentin Schneider <valentin.schneider@arm.com>
+Date:   2019-12-11 11:38:50 +0000
+
+sched/fair: Make task_fits_capacity() consider uclamp restrictions
+
+task_fits_capacity() drives CPU selection at wakeup time, and is also used
+to detect misfit tasks. Right now it does so by comparing task_util_est()
+with a CPU's capacity, but doesn't take into account uclamp restrictions.
+
+There's a few interesting uses that can come out of doing this. For
+instance, a low uclamp.max value could prevent certain tasks from being
+flagged as misfit tasks, so they could merrily remain on low-capacity CPUs.
+Similarly, a high uclamp.min value would steer tasks towards high capacity
+CPUs at wakeup (and, should that fail, later steered via misfit balancing),
+so such "boosted" tasks would favor CPUs of higher capacity.
+
+Introduce uclamp_task_util() and make task_fits_capacity() use it.
+
+Tested-By: Dietmar Eggemann <dietmar.eggemann@arm.com>
+Signed-off-by: Valentin Schneider <valentin.schneider@arm.com>
+Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
+Reviewed-by: Quentin Perret <qperret@google.com>
+Reviewed-by: Vincent Guittot <vincent.guittot@linaro.org>
+Reviewed-by: Dietmar Eggemann <dietmar.eggemann@arm.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Link: https://lkml.kernel.org/r/20191211113851.24241-5-valentin.schneider@arm.com
+Signed-off-by: Ingo Molnar <mingo@kernel.org>
+
+
+---
+
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index 1f34fa9732d8..26c59bc5b2ed 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -3711,6 +3711,20 @@ static inline unsigned long task_util_est(struct task_struct *p)
+ 	return max(task_util(p), _task_util_est(p));
+ }
+ 
++#ifdef CONFIG_UCLAMP_TASK
++static inline unsigned long uclamp_task_util(struct task_struct *p)
++{
++	return clamp(task_util_est(p),
++		     uclamp_eff_value(p, UCLAMP_MIN),
++		     uclamp_eff_value(p, UCLAMP_MAX));
++}
++#else
++static inline unsigned long uclamp_task_util(struct task_struct *p)
++{
++	return task_util_est(p);
++}
++#endif
++
+ static inline void util_est_enqueue(struct cfs_rq *cfs_rq,
+ 				    struct task_struct *p)
+ {
+@@ -3822,7 +3836,7 @@ util_est_dequeue(struct cfs_rq *cfs_rq, struct task_struct *p, bool task_sleep)
+ 
+ static inline int task_fits_capacity(struct task_struct *p, long capacity)
+ {
+-	return fits_capacity(task_util_est(p), capacity);
++	return fits_capacity(uclamp_task_util(p), capacity);
+ }
+ 
+ static inline void update_misfit_status(struct task_struct *p, struct rq *rq)
