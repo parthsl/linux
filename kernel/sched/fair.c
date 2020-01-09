@@ -5921,14 +5921,14 @@ static int select_non_idle_core(struct task_struct *p, int prev_cpu, int target)
 
 		for_each_cpu(sibling, cpu_smt_mask(iter_cpu)) {
 			__cpumask_clear_cpu(sibling, cpus);
-			if (idle_cpu(iter_cpu)) {
+			if (idle_cpu(sibling)) {
 				idle_cpu_count++;
-				best_cpu = iter_cpu;
+				best_cpu = sibling;
 			} else {
 				non_idle_cpu_count++;
-				if (cpu_overutilized(iter_cpu))
+				if (cpu_overutilized(sibling))
 					overutil_cpu_count++;
-				if (is_zealous(cpu_util(iter_cpu)))
+				if (is_zealous(cpu_util(sibling)))
 					busy_cpu_count++;
 			}
 		}
