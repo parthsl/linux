@@ -1,5 +1,5 @@
 Bottom: ed4802ba7856d42e86e862034bd30044a93010e5
-Top:    dcaa6a37761add364738a3f14c7f042426270f3e
+Top:    7a05e2e68c5c3722db8cbc949bbce313a92ebf2d
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2019-10-07 14:00:49 +0530
 
@@ -51,7 +51,7 @@ index b156eacbb0b1..db9397c206a4 100644
  #endif /* CONFIG_CPUMASK_OFFSTACK */
  
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 2d170b5da0e3..0de3873c0a27 100644
+index 2d170b5da0e3..0dc89f149608 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
 @@ -5379,6 +5379,8 @@ static void dequeue_task_fair(struct rq *rq, struct task_struct *p, int flags)
@@ -63,21 +63,30 @@ index 2d170b5da0e3..0de3873c0a27 100644
  
  #ifdef CONFIG_NO_HZ_COMMON
  
-@@ -5883,6 +5885,76 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
+@@ -5883,6 +5885,85 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
  	return cpu;
  }
  
 +#ifdef CONFIG_SCHED_SMT
++
++/* Define non-idle CPU/task as the one with the utilization >= 12.5% */
++#define is_zealous(util) ((util) > (100 >> 3))
++
 +static inline bool is_background_task(struct task_struct *p)
 +{
-+	if (p->flags & PF_CAN_BE_PACKED)
++	if (p->latency_tolerance > 18)
 +		return true;
 +
 +	return false;
 +}
 +
-+#define busyness_threshold	(100 >> 3)
-+#define is_cpu_busy(util) ((util) > busyness_threshold)
++static inline bool check_task_packing(struct task_struct *p)
++{
++	if (is_background_task(p) && is_zealous(task_util(p)))
++		return true;
++
++	return false;
++}
 +
 +/*
 + * Try to find a non idle core in the system  based on few heuristics:
@@ -109,7 +118,7 @@ index 2d170b5da0e3..0de3873c0a27 100644
 +				non_idle_cpu_count++;
 +				if (cpu_overutilized(iter_cpu))
 +					overutil_cpu_count++;
-+				if (is_cpu_busy(cpu_util(iter_cpu)))
++				if (is_zealous(cpu_util(iter_cpu)))
 +					busy_cpu_count++;
 +			}
 +		}
@@ -140,7 +149,7 @@ index 2d170b5da0e3..0de3873c0a27 100644
  /*
   * Try and locate an idle core/thread in the LLC cache domain.
   */
-@@ -6336,6 +6408,23 @@ static int find_energy_efficient_cpu(struct task_struct *p, int prev_cpu)
+@@ -6336,6 +6417,23 @@ static int find_energy_efficient_cpu(struct task_struct *p, int prev_cpu)
  	return -1;
  }
  
@@ -164,12 +173,12 @@ index 2d170b5da0e3..0de3873c0a27 100644
  /*
   * select_task_rq_fair: Select target runqueue for the waking task in domains
   * that have the 'sd_flag' flag set. In practice, this is SD_BALANCE_WAKE,
-@@ -6401,7 +6490,11 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_f
+@@ -6401,7 +6499,11 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_f
  	} else if (sd_flag & SD_BALANCE_WAKE) { /* XXX always ? */
  		/* Fast path */
  
 -		new_cpu = select_idle_sibling(p, prev_cpu, new_cpu);
-+		if (is_turbosched_enabled() && unlikely(is_background_task(p)))
++		if (is_turbosched_enabled() && unlikely(check_task_packing(p)))
 +			new_cpu = turbosched_select_non_idle_core(p, prev_cpu,
 +								  new_cpu);
 +		else
