@@ -1,5 +1,5 @@
-Bottom: a03b139384344fa219d287db960fdcfbfefa9a61
-Top:    83a913a3fba8ddd416b67025feee1f0eb2b82488
+Bottom: c61793ff12a13e471af08b852d690adec843cbcc
+Top:    cfa849ee56cf4e0a8db34fd90573b912f29d03ff
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2019-10-07 14:00:48 +0530
 
@@ -15,7 +15,7 @@ Signed-off-by: Parth Shah <parth@linux.ibm.com>
 ---
 
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 3b96fdc4d46a..1ce76576087d 100644
+index 2d360796859d..b6f112e0c8e4 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
 @@ -3267,6 +3267,9 @@ static struct rq *finish_task_switch(struct task_struct *prev)
@@ -28,7 +28,7 @@ index 3b96fdc4d46a..1ce76576087d 100644
  		if (prev->sched_class->task_dead)
  			prev->sched_class->task_dead(prev);
  
-@@ -5024,6 +5027,10 @@ static int __sched_setscheduler(struct task_struct *p,
+@@ -5019,6 +5022,10 @@ static int __sched_setscheduler(struct task_struct *p,
  
  	prev_class = p->sched_class;
  
