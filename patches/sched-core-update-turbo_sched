@@ -1,5 +1,5 @@
 Bottom: 2b1cc21f3744303fdbe2e20c46bb49069dc36d83
-Top:    64abc376fe1a74380cb610743180cde8cf7100cb
+Top:    36d94d6d7f25daa1e7bea7d0350ab81ac212b6ff
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2019-10-07 14:00:48 +0530
 
@@ -11,11 +11,10 @@ classified small bckground task.
 
 Signed-off-by: Parth Shah <parth@linux.ibm.com>
 
-
 ---
 
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 47c76b5daf83..600588e8eba5 100644
+index 47c76b5daf83..1c86f465a153 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
 @@ -3272,6 +3272,9 @@ static struct rq *finish_task_switch(struct task_struct *prev)
@@ -32,7 +31,7 @@ index 47c76b5daf83..600588e8eba5 100644
  	int reset_on_fork;
  	int queue_flags = DEQUEUE_SAVE | DEQUEUE_MOVE | DEQUEUE_NOCLOCK;
  	struct rq *rq;
-+	bool attr_leniency = lenient_latency(attr->sched_latency_tolerance))
++	bool attr_leniency = lenient_latency(attr->sched_latency_tolerance));
 +
  
  	/* The pi code expects interrupts enabled */
