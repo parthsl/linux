@@ -5892,15 +5892,7 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 
 static inline bool is_background_task(struct task_struct *p)
 {
-	if (p->latency_tolerance > 18)
-		return true;
-
-	return false;
-}
-
-static inline bool check_task_packing(struct task_struct *p)
-{
-	if (is_background_task(p) && is_zealous(task_util(p)))
+	if (lenient_latency(p) && !is_zealous(task_util(p)))
 		return true;
 
 	return false;
@@ -6499,7 +6491,7 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_f
 	} else if (sd_flag & SD_BALANCE_WAKE) { /* XXX always ? */
 		/* Fast path */
 
-		if (is_turbosched_enabled() && unlikely(check_task_packing(p)))
+		if (is_turbosched_enabled() && unlikely(is_background_task(p))
 			new_cpu = turbosched_select_non_idle_core(p, prev_cpu,
 								  new_cpu);
 		else
