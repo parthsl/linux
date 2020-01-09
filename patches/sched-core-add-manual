@@ -1,0 +1,98 @@
+Bottom: 9fbd5a9eb19f822e1fd393f1d441c7b75aa9b605
+Top:    d10ed292314f5204c4b65d09d04cb387df8093d1
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2019-10-07 14:00:46 +0530
+
+sched/core: Add manual background task classification using sched_setattr syscall
+
+Small background tasks typically performs some housekeeping work and are
+less important in the overall scheme of load balancing and scheduling.
+
+So provide a way to mark the task which are small background noises with
+the use of additional flag to the existing task attribute. Also provide an
+interface from the userspace which uses sched_setattr syscall to mark such
+tasks.
+
+The scheduler may use this as hints to pack such tasks on fewer number of
+cores.
+
+Signed-off-by: Parth Shah <parth@linux.ibm.com>
+
+
+---
+
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index 90d1766d93a4..d7e9eed9c8ca 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -1484,6 +1484,7 @@ extern struct pid *cad_pid;
+ #define PF_MCE_EARLY		0x08000000      /* Early kill for mce process policy */
+ #define PF_MEMALLOC_NOCMA	0x10000000	/* All allocation request will have _GFP_MOVABLE cleared */
+ #define PF_IO_WORKER		0x20000000	/* Task is an IO worker */
++//#define PF_CAN_BE_PACKED	0x20000000	/* Provide hints to the scheduler to pack such tasks */
+ #define PF_FREEZER_SKIP		0x40000000	/* Freezer should not count it as freezable */
+ #define PF_SUSPEND_TASK		0x80000000      /* This thread called freeze_processes() and should not be frozen */
+ 
+diff --git a/include/uapi/linux/sched.h b/include/uapi/linux/sched.h
+index 450702f42839..38a8a24c3ec2 100644
+--- a/include/uapi/linux/sched.h
++++ b/include/uapi/linux/sched.h
+@@ -122,6 +122,7 @@ struct clone_args {
+ #define SCHED_FLAG_UTIL_CLAMP_MIN	0x20
+ #define SCHED_FLAG_UTIL_CLAMP_MAX	0x40
+ #define SCHED_FLAG_LATENCY_TOLERANCE	0x80
++//#define SCHED_FLAG_TASK_PACKING		0x80
+ 
+ #define SCHED_FLAG_KEEP_ALL	(SCHED_FLAG_KEEP_POLICY | \
+ 				 SCHED_FLAG_KEEP_PARAMS)
+@@ -134,6 +135,8 @@ struct clone_args {
+ 			 SCHED_FLAG_DL_OVERRUN		| \
+ 			 SCHED_FLAG_KEEP_ALL		| \
+ 			 SCHED_FLAG_UTIL_CLAMP		| \
++<<<<<<< HEAD
+ 			 SCHED_FLAG_LATENCY_TOLERANCE)
++//			 SCHED_FLAG_TASK_PACKING)
+ 
+ #endif /* _UAPI_LINUX_SCHED_H */
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index e5533eecca9e..014b5569d641 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -4715,6 +4715,8 @@ static void __setscheduler_params(struct task_struct *p,
+ 	set_load_weight(p, true);
+ 
+ 	p->latency_tolerance = attr->sched_latency_tolerance;
++	//if (attr->sched_flags & SCHED_FLAG_TASK_PACKING)
++	//	p->flags |= PF_CAN_BE_PACKED;
+ }
+ 
+ /* Actually do priority change: must hold pi & rq lock. */
+@@ -4774,6 +4776,8 @@ static int __sched_setscheduler(struct task_struct *p,
+ 	struct rq_flags rf;
+ 	int reset_on_fork;
+ 	int queue_flags = DEQUEUE_SAVE | DEQUEUE_MOVE | DEQUEUE_NOCLOCK;
++	unsigned long long task_packing_flag =
++				attr->sched_flags & SCHED_FLAG_TASK_PACKING;
+ 	struct rq *rq;
+ 
+ 	/* The pi code expects interrupts enabled */
+@@ -4915,7 +4919,8 @@ static int __sched_setscheduler(struct task_struct *p,
+ 			goto change;
+ 		if (attr->sched_flags & SCHED_FLAG_LATENCY_TOLERANCE &&
+ 		    attr->sched_latency_tolerance != p->latency_tolerance)
+-			goto change;
++		//if (task_packing_flag)
++		//	goto change;
+ 
+ 		p->sched_reset_on_fork = reset_on_fork;
+ 		retval = 0;
+@@ -5403,6 +5408,9 @@ SYSCALL_DEFINE4(sched_getattr, pid_t, pid, struct sched_attr __user *, uattr,
+ 	kattr.sched_util_max = p->uclamp_req[UCLAMP_MAX].value;
+ #endif
+ 
++	if (p->flags & PF_CAN_BE_PACKED)
++		attr.sched_flags |= SCHED_FLAG_TASK_PACKING;
++
+ 	rcu_read_unlock();
+ 
+ 	return sched_attr_copy_to_user(uattr, &kattr, usize);

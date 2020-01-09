@@ -1,0 +1,40 @@
+Bottom: a03b139384344fa219d287db960fdcfbfefa9a61
+Top:    83a913a3fba8ddd416b67025feee1f0eb2b82488
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2019-10-07 14:00:48 +0530
+
+sched/core: Update turbo_sched count only when required
+
+Use the get/put methods to add/remove the use of TurboSched support, such
+that the feature is turned on only in the presence of atleast one
+classified small bckground task.
+
+Signed-off-by: Parth Shah <parth@linux.ibm.com>
+
+
+---
+
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 3b96fdc4d46a..1ce76576087d 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -3267,6 +3267,9 @@ static struct rq *finish_task_switch(struct task_struct *prev)
+ 		mmdrop(mm);
+ 	}
+ 	if (unlikely(prev_state == TASK_DEAD)) {
++		if (unlikely(prev->flags & PF_CAN_BE_PACKED))
++			turbo_sched_put();
++
+ 		if (prev->sched_class->task_dead)
+ 			prev->sched_class->task_dead(prev);
+ 
+@@ -5024,6 +5027,10 @@ static int __sched_setscheduler(struct task_struct *p,
+ 
+ 	prev_class = p->sched_class;
+ 
++	/* Refcount tasks classified as a small background task */
++	if (task_packing_flag != (p->flags & PF_CAN_BE_PACKED))
++		(task_packing_flag) ? turbo_sched_get() : turbo_sched_put();
++
+ 	__setscheduler(rq, p, attr, pi);
+ 	__setscheduler_uclamp(p, attr);
