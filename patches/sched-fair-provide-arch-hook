@@ -1,5 +1,5 @@
-Bottom: 3359858e2dc77e68cd58e8cb2bd7d22208ffdd17
-Top:    5317fbd9b9c6c8d766151bf51597bc416471d9ab
+Bottom: 5ff79c3c4bdccfb0b1526d50e9310b498c74acd0
+Top:    f8f5710f1a21dfcf922122e71ebb68cd14062477
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2019-10-07 14:00:50 +0530
 
@@ -21,7 +21,7 @@ Signed-off-by: Parth Shah <parth@linux.ibm.com>
 ---
 
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 76e1a379e6d3..2cbe40629b33 100644
+index 943065096ff9..8e623e823710 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
 @@ -5890,6 +5890,13 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
@@ -37,7 +37,7 @@ index 76e1a379e6d3..2cbe40629b33 100644
 +
  static inline bool is_background_task(struct task_struct *p)
  {
- 	if (lenient_latency(p) && !is_zealous(task_util(p)))
+ 	if (task_latency_lenient(p) && !is_zealous(task_util(p)))
 @@ -5912,6 +5919,7 @@ static int select_non_idle_core(struct task_struct *p, int prev_cpu, int target)
  	int iter_cpu, sibling;
  
