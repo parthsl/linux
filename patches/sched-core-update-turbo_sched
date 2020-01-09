@@ -1,5 +1,5 @@
 Bottom: c61793ff12a13e471af08b852d690adec843cbcc
-Top:    ed4802ba7856d42e86e862034bd30044a93010e5
+Top:    6a58b0c24f53edc0308b2d390e08e2d7838db90c
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2019-10-07 14:00:48 +0530
 
@@ -15,7 +15,7 @@ Signed-off-by: Parth Shah <parth@linux.ibm.com>
 ---
 
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 2d360796859d..b156eacbb0b1 100644
+index 2d360796859d..9fa91d72793f 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
 @@ -3267,6 +3267,9 @@ static struct rq *finish_task_switch(struct task_struct *prev)
@@ -28,12 +28,13 @@ index 2d360796859d..b156eacbb0b1 100644
  		if (prev->sched_class->task_dead)
  			prev->sched_class->task_dead(prev);
  
-@@ -5019,6 +5022,9 @@ static int __sched_setscheduler(struct task_struct *p,
+@@ -5019,6 +5022,10 @@ static int __sched_setscheduler(struct task_struct *p,
  
  	prev_class = p->sched_class;
  
 +	/* Refcount tasks classified as a small background task */
-+	(p->latency_tolerance > 18) ? turbo_sched_get() : turbo_sched_put();
++	if (p->latency_tolerance > 18 != attr->latency_tolerance > 18)
++		(p->latency_tolerance > 18) ? turbo_sched_get() : turbo_sched_put();
 +
  	__setscheduler(rq, p, attr, pi);
  	__setscheduler_uclamp(p, attr);
