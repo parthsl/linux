@@ -5926,8 +5926,8 @@ static int select_non_idle_core(struct task_struct *p, int prev_cpu, int target)
 	struct cpumask *cpus = this_cpu_cpumask_var_ptr(turbo_sched_mask);
 	int iter_cpu, sibling;
 
-	cpumask_and(cpus, cpu_online_mask, arch_turbo_domain(prev_cpu));
-	cpumask_and(cpus, cpus, p->cpus_ptr);
+	cpumask_and(cpus, cpu_online_mask, p->cpus_ptr);
+	cpumask_and(cpus, cpus, arch_turbo_domain(prev_cpu));
 
 	for_each_cpu_wrap(iter_cpu, cpus, prev_cpu) {
 		int idle_cpu_count = 0, non_idle_cpu_count = 0;
