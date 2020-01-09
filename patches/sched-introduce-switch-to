@@ -1,5 +1,5 @@
-Bottom: 2a851356dedaf0d611560fc342b239ed48b73bbd
-Top:    22bbe93f888f81d20ac0483284e88cd0b8f050e5
+Bottom: 420aa00e48a82369b66be34d4633b4966f3ff029
+Top:    18647d425b0f3062b4b3c7ddeec622c45da8a476
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2019-10-07 14:00:47 +0530
 
@@ -54,12 +54,12 @@ index e5533eecca9e..2d360796859d 100644
   * __task_rq_lock - lock the rq @p resides on.
   */
 diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index 71e2b19de51b..3e8a42d4ab81 100644
+index cf7f40a06d4e..8d7bb94ae5fd 100644
 --- a/kernel/sched/sched.h
 +++ b/kernel/sched/sched.h
 @@ -2501,3 +2501,12 @@ static inline void membarrier_switch_mm(struct rq *rq,
  #define lenient_latency(lat)	((lat) == MAX_LATENCY_TOLERANCE)
- #define task_latency_lenient(lat)	\
+ #define task_latency_lenient(p)	\
  	(lenient_latency((p)->latency_tolerance))
 +
 +void turbo_sched_get(void);
