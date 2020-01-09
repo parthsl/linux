@@ -1,5 +1,5 @@
 Bottom: 8fbe615e1ecc7911466c9c83270e94cd333e9766
-Top:    9ff925dd780c5a432c3c5035753a0a60634c92d7
+Top:    8a189473cb6d2329f2864f868f019618ba779d46
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2019-10-07 14:00:49 +0530
 
@@ -51,7 +51,7 @@ index b23284b92760..51f8391d8c6b 100644
  #endif /* CONFIG_CPUMASK_OFFSTACK */
  
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 2d170b5da0e3..fa908769bcbc 100644
+index 2d170b5da0e3..4b61cd5f0fc6 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
 @@ -5379,6 +5379,8 @@ static void dequeue_task_fair(struct rq *rq, struct task_struct *p, int flags)
@@ -141,40 +141,27 @@ index 2d170b5da0e3..fa908769bcbc 100644
  /*
   * Try and locate an idle core/thread in the LLC cache domain.
   */
-@@ -6336,6 +6409,23 @@ static int find_energy_efficient_cpu(struct task_struct *p, int prev_cpu)
- 	return -1;
- }
+@@ -6367,6 +6440,15 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_f
+ 			new_cpu = prev_cpu;
+ 		}
  
 +#ifdef CONFIG_SCHED_SMT
-+/*
-+ * Select all classified background tasks for task packing
-+ */
-+static inline int turbosched_select_non_idle_core(struct task_struct *p,
-+						  int prev_cpu, int target)
-+{
-+	return select_non_idle_core(p, prev_cpu, target);
-+}
-+#else
-+static inline int turbosched_select_non_idle_core(struct task_struct *p,
-+						  int prev_cpu, int target)
-+{
-+	return select_idle_sibling(p, prev_cpu, target);
-+}
++		if (is_turbosched_enabled() && unlikely(is_background_task(p))) {
++			new_cpu = select_non_idle_core(p, prev_cpu);
++			if (new_cpu >= 0)
++				return new_cpu;
++			new_cpu = prev_cpu;
++		}
 +#endif
 +
- /*
-  * select_task_rq_fair: Select target runqueue for the waking task in domains
-  * that have the 'sd_flag' flag set. In practice, this is SD_BALANCE_WAKE,
-@@ -6401,7 +6491,11 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_f
+ 		want_affine = !wake_wide(p) && !wake_cap(p, cpu, prev_cpu) &&
+ 			      cpumask_test_cpu(cpu, p->cpus_ptr);
+ 	}
+@@ -6400,7 +6482,6 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_f
+ 		new_cpu = find_idlest_cpu(sd, p, cpu, prev_cpu, sd_flag);
  	} else if (sd_flag & SD_BALANCE_WAKE) { /* XXX always ? */
  		/* Fast path */
- 
--		new_cpu = select_idle_sibling(p, prev_cpu, new_cpu);
-+		if (is_turbosched_enabled() && unlikely(is_background_task(p))
-+			new_cpu = turbosched_select_non_idle_core(p, prev_cpu,
-+								  new_cpu);
-+		else
-+			new_cpu = select_idle_sibling(p, prev_cpu, new_cpu);
+-
+ 		new_cpu = select_idle_sibling(p, prev_cpu, new_cpu);
  
  		if (want_affine)
- 			current->recent_used_cpu = cpu;
