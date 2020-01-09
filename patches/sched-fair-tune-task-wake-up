@@ -1,5 +1,5 @@
 Bottom: 8fbe615e1ecc7911466c9c83270e94cd333e9766
-Top:    8a189473cb6d2329f2864f868f019618ba779d46
+Top:    3359858e2dc77e68cd58e8cb2bd7d22208ffdd17
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2019-10-07 14:00:49 +0530
 
@@ -51,7 +51,7 @@ index b23284b92760..51f8391d8c6b 100644
  #endif /* CONFIG_CPUMASK_OFFSTACK */
  
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 2d170b5da0e3..4b61cd5f0fc6 100644
+index 2d170b5da0e3..76e1a379e6d3 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
 @@ -5379,6 +5379,8 @@ static void dequeue_task_fair(struct rq *rq, struct task_struct *p, int flags)
@@ -103,14 +103,14 @@ index 2d170b5da0e3..4b61cd5f0fc6 100644
 +
 +		for_each_cpu(sibling, cpu_smt_mask(iter_cpu)) {
 +			__cpumask_clear_cpu(sibling, cpus);
-+			if (idle_cpu(iter_cpu)) {
++			if (idle_cpu(sibling)) {
 +				idle_cpu_count++;
-+				best_cpu = iter_cpu;
++				best_cpu = sibling;
 +			} else {
 +				non_idle_cpu_count++;
-+				if (cpu_overutilized(iter_cpu))
++				if (cpu_overutilized(sibling))
 +					overutil_cpu_count++;
-+				if (is_zealous(cpu_util(iter_cpu)))
++				if (is_zealous(cpu_util(sibling)))
 +					busy_cpu_count++;
 +			}
 +		}
