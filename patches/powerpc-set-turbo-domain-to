@@ -1,0 +1,51 @@
+Bottom: 8cc0b0734459ea3d9ec293de74129f0c1ab6e47b
+Top:    3ac3f7f60486a95becf8488ba15b8aded89cfb96
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2019-10-07 14:00:51 +0530
+
+powerpc: Set turbo domain to NUMA node for task packing
+
+Provide an powerpc architecture specific implementation for defining the
+turbo domain to make searching of the core to be bound within the NUMA.
+
+The POWER9 systems have a pair of cores in the LLC domain. Hence to make
+TurboSched more effective, increase the domain space for task packing
+to search within NUMA domain.
+
+Signed-off-by: Parth Shah <parth@linux.ibm.com>
+
+
+---
+
+diff --git a/arch/powerpc/include/asm/topology.h b/arch/powerpc/include/asm/topology.h
+index 2f7e1ea5089e..83adfb99f8ba 100644
+--- a/arch/powerpc/include/asm/topology.h
++++ b/arch/powerpc/include/asm/topology.h
+@@ -138,6 +138,9 @@ static inline void shared_proc_topology_init(void) {}
+ #define topology_sibling_cpumask(cpu)	(per_cpu(cpu_sibling_map, cpu))
+ #define topology_core_cpumask(cpu)	(per_cpu(cpu_core_map, cpu))
+ #define topology_core_id(cpu)		(cpu_to_core_id(cpu))
++#define arch_turbo_domain		powerpc_turbo_domain
++
++struct cpumask *powerpc_turbo_domain(int cpu);
+ 
+ int dlpar_cpu_readd(int cpu);
+ #endif
+diff --git a/arch/powerpc/kernel/smp.c b/arch/powerpc/kernel/smp.c
+index ea6adbf6a221..0fc4443a3f27 100644
+--- a/arch/powerpc/kernel/smp.c
++++ b/arch/powerpc/kernel/smp.c
+@@ -1169,6 +1169,13 @@ static void remove_cpu_from_masks(int cpu)
+ }
+ #endif
+ 
++#ifdef CONFIG_SCHED_SMT
++inline struct cpumask *powerpc_turbo_domain(int cpu)
++{
++	return cpumask_of_node(cpu_to_node(cpu));
++}
++#endif
++
+ static inline void add_cpu_to_smallcore_masks(int cpu)
+ {
+ 	struct cpumask *this_l1_cache_map = per_cpu(cpu_l1_cache_map, cpu);
