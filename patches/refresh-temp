@@ -1,0 +1,32 @@
+Bottom: 8a189473cb6d2329f2864f868f019618ba779d46
+Top:    3359858e2dc77e68cd58e8cb2bd7d22208ffdd17
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2020-01-09 16:50:04 +0530
+
+Refresh of sched-fair-tune-task-wake-up
+
+---
+
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index 4b61cd5f0fc6..76e1a379e6d3 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -5921,14 +5921,14 @@ static int select_non_idle_core(struct task_struct *p, int prev_cpu, int target)
+ 
+ 		for_each_cpu(sibling, cpu_smt_mask(iter_cpu)) {
+ 			__cpumask_clear_cpu(sibling, cpus);
+-			if (idle_cpu(iter_cpu)) {
++			if (idle_cpu(sibling)) {
+ 				idle_cpu_count++;
+-				best_cpu = iter_cpu;
++				best_cpu = sibling;
+ 			} else {
+ 				non_idle_cpu_count++;
+-				if (cpu_overutilized(iter_cpu))
++				if (cpu_overutilized(sibling))
+ 					overutil_cpu_count++;
+-				if (is_zealous(cpu_util(iter_cpu)))
++				if (is_zealous(cpu_util(sibling)))
+ 					busy_cpu_count++;
+ 			}
+ 		}
