@@ -1,6 +1,6 @@
 Version: 1
-Previous: 8af6e65b2d77ea9685ded95fc6b9a396ec2a2672
-Head: 0caa53846cab6f1a9543b8264a77a21441587444
+Previous: 8a049ab31c8b1deb89e1c6c2f4edb3c1eb177a78
+Head: 94990434acaeb83bf00b8321140e2be7eb3a9f7e
 Applied:
   sched-introduce-latency: 64706fffe8fefd9f0b6f997dae69169f588c9e30
   sched-core-propagate-parent: 2c658f974316afed8896087b8475cf737dd72e9b
@@ -8,8 +8,8 @@ Applied:
   sched-core-add-manual: d749bdee9cc3b105e95be6ff5bb7a9b6f26e6e54
   sched-introduce-switch-to: 2125a54d980c1f042f680652d8655a20f2cdbfbd
   sched-core-update-turbo_sched: 94990434acaeb83bf00b8321140e2be7eb3a9f7e
-  sched-fair-tune-task-wake-up: 0caa53846cab6f1a9543b8264a77a21441587444
 Unapplied:
+  sched-fair-tune-task-wake-up: 0caa53846cab6f1a9543b8264a77a21441587444
   sched-fair-provide-arch-hook: d6786be4a4e846b753ec6dcb12a98599a232b7ae
   powerpc-set-turbo-domain-to: 94e54cf39a08a3dad8c0d2bdf627d7011e6543ce
 Hidden:
