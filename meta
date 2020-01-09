@@ -1,9 +1,7 @@
 Version: 1
-Previous: 73c3932ad73d680096bfa39b9c2e662030d4dcfa
+Previous: c5879ad945f96aae12d49cc08a8c854c73241e88
 Head: 3fff947f5b30331a0fb13fdc8769c66208fa675a
 Applied:
-  sched-fair-make-eas-wakeup: 1d42509e475cdc8542aa5b3e03a7e845244f4f57
-  sched-rt-make-rt-capacity: 804d402fb6f6487b825aae8cf42fda6426c62867
   sched-introduce-latency: 64706fffe8fefd9f0b6f997dae69169f588c9e30
   sched-core-propagate-parent: 2c658f974316afed8896087b8475cf737dd72e9b
   sched-allow-sched_-get-set: a1d500dd9fcbfcaa689393ad59ef1761b438a96d
