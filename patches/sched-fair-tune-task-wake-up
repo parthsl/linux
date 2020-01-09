@@ -1,5 +1,5 @@
 Bottom: 4b1c76025ff66c997cb0ae6a4e878da9ffe00716
-Top:    55752b017222f0e166f19c451c5175c0e4be5088
+Top:    5ff79c3c4bdccfb0b1526d50e9310b498c74acd0
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2019-10-07 14:00:49 +0530
 
@@ -51,7 +51,7 @@ index 09465d8bb3ac..d3cad75b7408 100644
  #endif /* CONFIG_CPUMASK_OFFSTACK */
  
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 2d170b5da0e3..76e1a379e6d3 100644
+index 2d170b5da0e3..943065096ff9 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
 @@ -5379,6 +5379,8 @@ static void dequeue_task_fair(struct rq *rq, struct task_struct *p, int flags)
@@ -74,7 +74,7 @@ index 2d170b5da0e3..76e1a379e6d3 100644
 +
 +static inline bool is_background_task(struct task_struct *p)
 +{
-+	if (lenient_latency(p) && !is_zealous(task_util(p)))
++	if (task_latency_lenient(p) && !is_zealous(task_util(p)))
 +		return true;
 +
 +	return false;
