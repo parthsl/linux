@@ -1,0 +1,42 @@
+Bottom: d10ed292314f5204c4b65d09d04cb387df8093d1
+Top:    394f142eedc7a0a7de0a443f2e8e9248ef4251aa
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2020-01-09 12:05:18 +0530
+
+Refresh of sched-core-add-manual
+
+---
+
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index d7e9eed9c8ca..90d1766d93a4 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -1484,7 +1484,6 @@ extern struct pid *cad_pid;
+ #define PF_MCE_EARLY		0x08000000      /* Early kill for mce process policy */
+ #define PF_MEMALLOC_NOCMA	0x10000000	/* All allocation request will have _GFP_MOVABLE cleared */
+ #define PF_IO_WORKER		0x20000000	/* Task is an IO worker */
+-//#define PF_CAN_BE_PACKED	0x20000000	/* Provide hints to the scheduler to pack such tasks */
+ #define PF_FREEZER_SKIP		0x40000000	/* Freezer should not count it as freezable */
+ #define PF_SUSPEND_TASK		0x80000000      /* This thread called freeze_processes() and should not be frozen */
+ 
+diff --git a/include/uapi/linux/sched.h b/include/uapi/linux/sched.h
+index 38a8a24c3ec2..450702f42839 100644
+--- a/include/uapi/linux/sched.h
++++ b/include/uapi/linux/sched.h
+@@ -122,7 +122,6 @@ struct clone_args {
+ #define SCHED_FLAG_UTIL_CLAMP_MIN	0x20
+ #define SCHED_FLAG_UTIL_CLAMP_MAX	0x40
+ #define SCHED_FLAG_LATENCY_TOLERANCE	0x80
+-//#define SCHED_FLAG_TASK_PACKING		0x80
+ 
+ #define SCHED_FLAG_KEEP_ALL	(SCHED_FLAG_KEEP_POLICY | \
+ 				 SCHED_FLAG_KEEP_PARAMS)
+@@ -135,8 +134,6 @@ struct clone_args {
+ 			 SCHED_FLAG_DL_OVERRUN		| \
+ 			 SCHED_FLAG_KEEP_ALL		| \
+ 			 SCHED_FLAG_UTIL_CLAMP		| \
+-<<<<<<< HEAD
+ 			 SCHED_FLAG_LATENCY_TOLERANCE)
+-//			 SCHED_FLAG_TASK_PACKING)
+ 
+ #endif /* _UAPI_LINUX_SCHED_H */
