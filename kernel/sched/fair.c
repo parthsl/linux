@@ -5892,7 +5892,7 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 
 static inline bool is_background_task(struct task_struct *p)
 {
-	if (lenient_latency(p) && !is_zealous(task_util(p)))
+	if (task_latency_lenient(p) && !is_zealous(task_util(p)))
 		return true;
 
 	return false;
