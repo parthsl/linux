@@ -1,5 +1,5 @@
 Bottom: 9bba55e2636ef4e93800243dc1e0819ea03a92ce
-Top:    9078d9eb55348cbc8f13264314f7955f33cd5bf3
+Top:    a9d9bfe73242b99ebfdf8fdfedcf8495c222f764
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2019-10-07 14:00:49 +0530
 
@@ -26,7 +26,6 @@ doing enough work and not become idle in nearby timeframe.
 
 Signed-off-by: Parth Shah <parth@linux.ibm.com>
 
-
 ---
 
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
@@ -51,7 +50,7 @@ index 273a068a2367..53e5a932bd6f 100644
  #endif /* CONFIG_CPUMASK_OFFSTACK */
  
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 2d170b5da0e3..943065096ff9 100644
+index 2d170b5da0e3..ff8b8d95ce7b 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
 @@ -5379,6 +5379,8 @@ static void dequeue_task_fair(struct rq *rq, struct task_struct *p, int flags)
@@ -88,7 +87,7 @@ index 2d170b5da0e3..943065096ff9 100644
 + *   count is < busy/2 CPU count
 + * - Always select idle CPU for task packing
 + */
-+static int select_non_idle_core(struct task_struct *p, int prev_cpu, int target)
++static int select_non_idle_core(struct task_struct *p, int prev_cpu)
 +{
 +	struct cpumask *cpus = this_cpu_cpumask_var_ptr(turbo_sched_mask);
 +	int iter_cpu, sibling;
