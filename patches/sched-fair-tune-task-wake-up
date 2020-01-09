@@ -1,5 +1,5 @@
 Bottom: 9bba55e2636ef4e93800243dc1e0819ea03a92ce
-Top:    a9d9bfe73242b99ebfdf8fdfedcf8495c222f764
+Top:    f3f911c611d16ced1ca75d16730b4a663b07787f
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2019-10-07 14:00:49 +0530
 
@@ -50,7 +50,7 @@ index 273a068a2367..53e5a932bd6f 100644
  #endif /* CONFIG_CPUMASK_OFFSTACK */
  
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 2d170b5da0e3..ff8b8d95ce7b 100644
+index 2d170b5da0e3..ed0df4abe874 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
 @@ -5379,6 +5379,8 @@ static void dequeue_task_fair(struct rq *rq, struct task_struct *p, int flags)
@@ -133,7 +133,7 @@ index 2d170b5da0e3..ff8b8d95ce7b 100644
 +		}
 +	}
 +
-+	return select_idle_sibling(p, prev_cpu, target);
++	return -1;
 +}
 +#endif /* CONFIG_SCHED_SMT */
 +
