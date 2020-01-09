@@ -1,0 +1,57 @@
+Bottom: 2a851356dedaf0d611560fc342b239ed48b73bbd
+Top:    22bbe93f888f81d20ac0483284e88cd0b8f050e5
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2020-01-09 18:41:23 +0530
+
+Refresh of sched-introduce-switch-to
+
+---
+
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index e5533eecca9e..2d360796859d 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -73,6 +73,26 @@ __read_mostly int scheduler_running;
+  */
+ int sysctl_sched_rt_runtime = 950000;
+ 
++DEFINE_STATIC_KEY_FALSE(__turbo_sched_enabled);
++static DEFINE_MUTEX(turbo_sched_lock);
++static int turbo_sched_count;
++
++void turbo_sched_get(void)
++{
++	mutex_lock(&turbo_sched_lock);
++	if (!turbo_sched_count++)
++		static_branch_enable(&__turbo_sched_enabled);
++	mutex_unlock(&turbo_sched_lock);
++}
++
++void turbo_sched_put(void)
++{
++	mutex_lock(&turbo_sched_lock);
++	if (!--turbo_sched_count)
++		static_branch_disable(&__turbo_sched_enabled);
++	mutex_unlock(&turbo_sched_lock);
++}
++
+ /*
+  * __task_rq_lock - lock the rq @p resides on.
+  */
+diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
+index 71e2b19de51b..3e8a42d4ab81 100644
+--- a/kernel/sched/sched.h
++++ b/kernel/sched/sched.h
+@@ -2501,3 +2501,12 @@ static inline void membarrier_switch_mm(struct rq *rq,
+ #define lenient_latency(lat)	((lat) == MAX_LATENCY_TOLERANCE)
+ #define task_latency_lenient(lat)	\
+ 	(lenient_latency((p)->latency_tolerance))
++
++void turbo_sched_get(void);
++void turbo_sched_put(void);
++DECLARE_STATIC_KEY_FALSE(__turbo_sched_enabled);
++
++static inline bool is_turbosched_enabled(void)
++{
++	return static_branch_unlikely(&__turbo_sched_enabled);
++}
