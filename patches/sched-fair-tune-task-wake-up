@@ -1,5 +1,5 @@
-Bottom: 4b1c76025ff66c997cb0ae6a4e878da9ffe00716
-Top:    5ff79c3c4bdccfb0b1526d50e9310b498c74acd0
+Bottom: 64abc376fe1a74380cb610743180cde8cf7100cb
+Top:    2da6e56e6615e60f52ecefc910189d63c6f352e5
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2019-10-07 14:00:49 +0530
 
@@ -30,10 +30,10 @@ Signed-off-by: Parth Shah <parth@linux.ibm.com>
 ---
 
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 09465d8bb3ac..d3cad75b7408 100644
+index 600588e8eba5..bc0d547939b0 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
-@@ -6612,6 +6612,7 @@ static struct kmem_cache *task_group_cache __read_mostly;
+@@ -6617,6 +6617,7 @@ static struct kmem_cache *task_group_cache __read_mostly;
  
  DECLARE_PER_CPU(cpumask_var_t, load_balance_mask);
  DECLARE_PER_CPU(cpumask_var_t, select_idle_mask);
@@ -41,7 +41,7 @@ index 09465d8bb3ac..d3cad75b7408 100644
  
  void __init sched_init(void)
  {
-@@ -6652,6 +6653,8 @@ void __init sched_init(void)
+@@ -6657,6 +6658,8 @@ void __init sched_init(void)
  			cpumask_size(), GFP_KERNEL, cpu_to_node(i));
  		per_cpu(select_idle_mask, i) = (cpumask_var_t)kzalloc_node(
  			cpumask_size(), GFP_KERNEL, cpu_to_node(i));
