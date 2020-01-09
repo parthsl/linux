@@ -1,5 +1,5 @@
 Bottom: 9fbd5a9eb19f822e1fd393f1d441c7b75aa9b605
-Top:    5b15f5f7f4b37aba2e62a8a857486c6e41f1375f
+Top:    2a851356dedaf0d611560fc342b239ed48b73bbd
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2019-10-07 14:00:46 +0530
 
@@ -22,12 +22,14 @@ Signed-off-by: Parth Shah <parth@linux.ibm.com>
 ---
 
 diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index 84b46a992e11..0bda380d2845 100644
+index 84b46a992e11..71e2b19de51b 100644
 --- a/kernel/sched/sched.h
 +++ b/kernel/sched/sched.h
-@@ -2497,3 +2497,5 @@ static inline void membarrier_switch_mm(struct rq *rq,
+@@ -2497,3 +2497,7 @@ static inline void membarrier_switch_mm(struct rq *rq,
  {
  }
  #endif
 +
 +#define lenient_latency(lat)	((lat) == MAX_LATENCY_TOLERANCE)
++#define task_latency_lenient(lat)	\
++	(lenient_latency((p)->latency_tolerance))
