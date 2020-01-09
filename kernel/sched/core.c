@@ -3267,7 +3267,7 @@ static struct rq *finish_task_switch(struct task_struct *prev)
 		mmdrop(mm);
 	}
 	if (unlikely(prev_state == TASK_DEAD)) {
-		if (unlikely(lenient_latency(prev)))
+		if (unlikely(task_latency_lenient(prev)))
 			turbo_sched_put();
 
 		if (prev->sched_class->task_dead)
@@ -4798,6 +4798,8 @@ static int __sched_setscheduler(struct task_struct *p,
 	int reset_on_fork;
 	int queue_flags = DEQUEUE_SAVE | DEQUEUE_MOVE | DEQUEUE_NOCLOCK;
 	struct rq *rq;
+	bool attr_leniency = lenient_latency(attr->sched_latency_tolerance))
+
 
 	/* The pi code expects interrupts enabled */
 	BUG_ON(pi && in_interrupt());
@@ -5023,8 +5025,8 @@ change:
 	prev_class = p->sched_class;
 
 	/* Refcount tasks classified as a small background task */
-	if (lenient_latency(p) != lenient_latency(attr))
-		lenient_latency(attr) ? turbo_sched_get() : turbo_sched_put();
+	if (task_latency_lenient(p) != attr_leniency)
+		attr_leniency ? turbo_sched_get() : turbo_sched_put();
 
 	__setscheduler(rq, p, attr, pi);
 	__setscheduler_uclamp(p, attr);
