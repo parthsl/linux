@@ -1,5 +1,5 @@
-Bottom: 9fbd5a9eb19f822e1fd393f1d441c7b75aa9b605
-Top:    c61793ff12a13e471af08b852d690adec843cbcc
+Bottom: 6656b3dabea0f1415107cbeea7b33d74ed35036c
+Top:    6656b3dabea0f1415107cbeea7b33d74ed35036c
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2019-10-07 14:00:47 +0530
 
@@ -22,51 +22,4 @@ Signed-off-by: Parth Shah <parth@linux.ibm.com>
 
 ---
 
-diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index e5533eecca9e..2d360796859d 100644
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -73,6 +73,26 @@ __read_mostly int scheduler_running;
-  */
- int sysctl_sched_rt_runtime = 950000;
- 
-+DEFINE_STATIC_KEY_FALSE(__turbo_sched_enabled);
-+static DEFINE_MUTEX(turbo_sched_lock);
-+static int turbo_sched_count;
-+
-+void turbo_sched_get(void)
-+{
-+	mutex_lock(&turbo_sched_lock);
-+	if (!turbo_sched_count++)
-+		static_branch_enable(&__turbo_sched_enabled);
-+	mutex_unlock(&turbo_sched_lock);
-+}
-+
-+void turbo_sched_put(void)
-+{
-+	mutex_lock(&turbo_sched_lock);
-+	if (!--turbo_sched_count)
-+		static_branch_disable(&__turbo_sched_enabled);
-+	mutex_unlock(&turbo_sched_lock);
-+}
-+
- /*
-  * __task_rq_lock - lock the rq @p resides on.
-  */
-diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index 84b46a992e11..9b56b0e655b3 100644
---- a/kernel/sched/sched.h
-+++ b/kernel/sched/sched.h
-@@ -2497,3 +2497,12 @@ static inline void membarrier_switch_mm(struct rq *rq,
- {
- }
- #endif
-+
-+void turbo_sched_get(void);
-+void turbo_sched_put(void);
-+DECLARE_STATIC_KEY_FALSE(__turbo_sched_enabled);
-+
-+static inline bool is_turbosched_enabled(void)
-+{
-+	return static_branch_unlikely(&__turbo_sched_enabled);
-+}
+
