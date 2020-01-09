@@ -1,5 +1,5 @@
-Bottom: 7a05e2e68c5c3722db8cbc949bbce313a92ebf2d
-Top:    b7ac0132a89eb8dccd5ec1095b950db9b17b3243
+Bottom: 9ff925dd780c5a432c3c5035753a0a60634c92d7
+Top:    5baddf500c298d936d1110a7cae5ce1c015f54db
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2019-10-07 14:00:50 +0530
 
@@ -21,7 +21,7 @@ Signed-off-by: Parth Shah <parth@linux.ibm.com>
 ---
 
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 0dc89f149608..27387a4e0543 100644
+index fa908769bcbc..6a826ce14690 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
 @@ -5890,6 +5890,13 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
@@ -37,8 +37,8 @@ index 0dc89f149608..27387a4e0543 100644
 +
  static inline bool is_background_task(struct task_struct *p)
  {
- 	if (p->latency_tolerance > 18)
-@@ -5920,6 +5927,7 @@ static int select_non_idle_core(struct task_struct *p, int prev_cpu, int target)
+ 	if (lenient_latency(p) && !is_zealous(task_util(p)))
+@@ -5912,6 +5919,7 @@ static int select_non_idle_core(struct task_struct *p, int prev_cpu, int target)
  	int iter_cpu, sibling;
  
  	cpumask_and(cpus, cpu_online_mask, p->cpus_ptr);
