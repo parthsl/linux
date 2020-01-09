@@ -2497,3 +2497,6 @@ static inline void membarrier_switch_mm(struct rq *rq,
 {
 }
 #endif
+
+#define lenient_latency(attr) \
+	((attr)->latency_tolerance == MAX_LATENCY_TOLERANCE)
