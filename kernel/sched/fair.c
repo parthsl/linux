@@ -6409,23 +6409,6 @@ fail:
 	return -1;
 }
 
-#ifdef CONFIG_SCHED_SMT
-/*
- * Select all classified background tasks for task packing
- */
-static inline int turbosched_select_non_idle_core(struct task_struct *p,
-						  int prev_cpu, int target)
-{
-	return select_non_idle_core(p, prev_cpu, target);
-}
-#else
-static inline int turbosched_select_non_idle_core(struct task_struct *p,
-						  int prev_cpu, int target)
-{
-	return select_idle_sibling(p, prev_cpu, target);
-}
-#endif
-
 /*
  * select_task_rq_fair: Select target runqueue for the waking task in domains
  * that have the 'sd_flag' flag set. In practice, this is SD_BALANCE_WAKE,
@@ -6456,6 +6439,15 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_f
 				return new_cpu;
 			new_cpu = prev_cpu;
 		}
+
+#ifdef CONFIG_SCHED_SMT
+		if (is_turbosched_enabled() && unlikely(is_background_task(p))) {
+			new_cpu = select_non_idle_core(p, prev_cpu);
+			if (new_cpu >= 0)
+				return new_cpu;
+			new_cpu = prev_cpu;
+		}
+#endif
 
 		want_affine = !wake_wide(p) && !wake_cap(p, cpu, prev_cpu) &&
 			      cpumask_test_cpu(cpu, p->cpus_ptr);
@@ -6490,12 +6482,7 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_f
 		new_cpu = find_idlest_cpu(sd, p, cpu, prev_cpu, sd_flag);
 	} else if (sd_flag & SD_BALANCE_WAKE) { /* XXX always ? */
 		/* Fast path */
-
-		if (is_turbosched_enabled() && unlikely(is_background_task(p))
-			new_cpu = turbosched_select_non_idle_core(p, prev_cpu,
-								  new_cpu);
-		else
-			new_cpu = select_idle_sibling(p, prev_cpu, new_cpu);
+		new_cpu = select_idle_sibling(p, prev_cpu, new_cpu);
 
 		if (want_affine)
 			current->recent_used_cpu = cpu;
