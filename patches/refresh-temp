@@ -1,0 +1,22 @@
+Bottom: 37bb6247a12945868a1ae36170b4183ff4ce2827
+Top:    9bba55e2636ef4e93800243dc1e0819ea03a92ce
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2020-01-10 14:58:30 +0530
+
+Refresh of sched-core-update-turbo_sched
+
+---
+
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 1abe19586912..273a068a2367 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -5031,7 +5031,7 @@ static int __sched_setscheduler(struct task_struct *p,
+ 
+ 	/* Refcount tasks classified as a small background task */
+ 	if (task_latency_lenient(p) != attr_leniency)
+-		attr_leniency ? turbo_sched_put() : turbo_sched_get();
++		attr_leniency ? turbo_sched_get() : turbo_sched_put();
+ 
+ 	__setscheduler(rq, p, attr, pi);
+ 	__setscheduler_uclamp(p, attr);
