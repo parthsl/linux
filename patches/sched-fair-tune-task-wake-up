@@ -1,5 +1,5 @@
 Bottom: 9bba55e2636ef4e93800243dc1e0819ea03a92ce
-Top:    f3f911c611d16ced1ca75d16730b4a663b07787f
+Top:    e6ace61a1378f7f00cdc9e49bae497a658f6271c
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2019-10-07 14:00:49 +0530
 
@@ -50,7 +50,7 @@ index 273a068a2367..53e5a932bd6f 100644
  #endif /* CONFIG_CPUMASK_OFFSTACK */
  
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 2d170b5da0e3..ed0df4abe874 100644
+index 2d170b5da0e3..a5cee6876263 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
 @@ -5379,6 +5379,8 @@ static void dequeue_task_fair(struct rq *rq, struct task_struct *p, int flags)
@@ -69,7 +69,7 @@ index 2d170b5da0e3..ed0df4abe874 100644
 +#ifdef CONFIG_SCHED_SMT
 +
 +/* Define non-idle CPU/task as the one with the utilization >= 12.5% */
-+#define is_zealous(util) ((util) > (100 >> 3))
++#define is_zealous(util) ((util) > (1024 >> 3))
 +
 +static inline bool is_background_task(struct task_struct *p)
 +{
