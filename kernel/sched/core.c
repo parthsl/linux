@@ -5031,7 +5031,7 @@ change:
 
 	/* Refcount tasks classified as a small background task */
 	if (task_latency_lenient(p) != attr_leniency)
-		attr_leniency ? turbo_sched_put() : turbo_sched_get();
+		attr_leniency ? turbo_sched_get() : turbo_sched_put();
 
 	__setscheduler(rq, p, attr, pi);
 	__setscheduler_uclamp(p, attr);
