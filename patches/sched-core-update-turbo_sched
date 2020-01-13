@@ -1,5 +1,5 @@
 Bottom: 65b1c3428ac67d20cbf770fd7f633f0c26bde76d
-Top:    35bbf195e86732f54ab257b8ffd77d1e70e45db7
+Top:    cbdc7b0fadc37323fce95270bb7c46bf4c4efb66
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2019-10-07 14:00:48 +0530
 
@@ -14,7 +14,7 @@ Signed-off-by: Parth Shah <parth@linux.ibm.com>
 ---
 
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 46f452528ae1..9334adb2874b 100644
+index 46f452528ae1..44d029a8516a 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
 @@ -3272,6 +3272,9 @@ static struct rq *finish_task_switch(struct task_struct *prev)
@@ -31,7 +31,7 @@ index 46f452528ae1..9334adb2874b 100644
  	int reset_on_fork;
  	int queue_flags = DEQUEUE_SAVE | DEQUEUE_MOVE | DEQUEUE_NOCLOCK;
  	struct rq *rq;
-+	bool attr_leniency = lenient_latency(attr->sched_latency_tolerance);
++	bool attr_leniency = lenient_latency(attr->sched_latency_nice);
 +
  
  	/* The pi code expects interrupts enabled */
