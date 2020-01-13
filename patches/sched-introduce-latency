@@ -1,5 +1,5 @@
 Bottom: 322afca4e0a69ec6f45f87bcbd4e982526bead6a
-Top:    02910ad81bdbb7cb5baa46bfbece724d866d49ac
+Top:    2736b6ad29f5920fe798fa4688d59fb90e9c4b98
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2019-12-08 11:34:08 +0530
 
@@ -34,7 +34,7 @@ index 467d26046416..0668948fddcd 100644
  	const struct sched_class	*sched_class;
  	struct sched_entity		se;
 diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index 1a88dc8ad11b..df54d8dfe029 100644
+index 1a88dc8ad11b..edae9277e48d 100644
 --- a/kernel/sched/sched.h
 +++ b/kernel/sched/sched.h
 @@ -101,6 +101,24 @@ extern long calc_load_fold_active(struct rq *this_rq, long adjust);
@@ -48,16 +48,16 @@ index 1a88dc8ad11b..df54d8dfe029 100644
 + * latency requirements, in contrast to the task with latency_nice == -20
 + * which should be given priority in terms of lower latency.
 + */
-+#define MAX_LATENCY_TOLERANCE	19
-+#define MIN_LATENCY_TOLERANCE	-20
++#define MAX_LATENCY_NICE	19
++#define MIN_LATENCY_NICE	-20
 +
-+#define LATENCY_TOLERANCE_WIDTH	\
-+	(MAX_LATENCY_TOLERANCE - MIN_LATENCY_TOLERANCE + 1)
++#define LATENCY_NICE_WIDTH	\
++	(MAX_LATENCY_NICE - MIN_LATENCY_NICE + 1)
 +
 +/*
 + * Default tasks should be treated as a task with latency_nice = 0.
 + */
-+#define DEFAULT_LATENCY_TOLERANCE	0
++#define DEFAULT_LATENCY_NICE	0
 +
  /*
   * Increase resolution of nice-level calculations for 64-bit architectures.
