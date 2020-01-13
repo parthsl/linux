@@ -1,5 +1,5 @@
 Bottom: 2736b6ad29f5920fe798fa4688d59fb90e9c4b98
-Top:    f0b05a7a4e0ccbc2692781c4c09cfacc185e6fb7
+Top:    bf587dd39e9af6cbf90cc4ffc54a6ce53381c198
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2019-12-08 11:34:09 +0530
 
@@ -16,7 +16,7 @@ Reviewed-by: Qais Yousef <qais.yousef@arm.com>
 ---
 
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index e7b08d52db93..f436147664e4 100644
+index e7b08d52db93..a7359836bf17 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
 @@ -2854,6 +2854,9 @@ int sched_fork(unsigned long clone_flags, struct task_struct *p)
@@ -33,7 +33,7 @@ index e7b08d52db93..f436147664e4 100644
  		p->prio = p->normal_prio = __normal_prio(p);
  		set_load_weight(p, false);
  
-+		p->latency_nice = DEFAULT_LATENCY_TOLERANCE;
++		p->latency_nice = DEFAULT_LATENCY_NICE;
  		/*
  		 * We don't need the reset flag anymore after the fork. It has
  		 * fulfilled its duty:

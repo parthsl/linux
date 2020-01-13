@@ -1,9 +1,9 @@
 Version: 1
-Previous: ad044aaa2917ea601bc24f0fcfd921e3dfd69205
-Head: 3605a3ad2117d9c5f40363ab8cb7b241255a0abe
+Previous: 8cc62eb8c157314d81eb81c2cff448b07ae39ea7
+Head: 2aea1dca5a6d0981d7c436d40357375398c86430
 Applied:
   sched-introduce-latency: 9417630d299b2584a8ed6b26f3c2a8a215ba88a3
-  sched-core-propagate-parent: 3605a3ad2117d9c5f40363ab8cb7b241255a0abe
+  sched-core-propagate-parent: 2aea1dca5a6d0981d7c436d40357375398c86430
 Unapplied:
   sched-allow-sched_-get-set: 7acaaf0deffae18d2616901ac84bff0d912c229f
   sched-core-add-manual: 309af1810931b39a750df7798324d68543b0322f
