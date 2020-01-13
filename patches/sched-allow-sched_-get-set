@@ -1,5 +1,5 @@
-Bottom: 299bee9e2167110f926916e795c9b95a00880d5c
-Top:    9f5d0eae94dbffd1d66a0d9142878e97ab92ade4
+Bottom: bf587dd39e9af6cbf90cc4ffc54a6ce53381c198
+Top:    5cff9d29d388ff748c8e5abe052fe0003fca94d2
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2019-12-08 11:34:10 +0530
 
@@ -83,7 +83,7 @@ index c852153ddb0d..626ab61c1145 100644
  
  #endif /* _UAPI_LINUX_SCHED_TYPES_H */
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index f436147664e4..d745f0d9fee8 100644
+index a7359836bf17..a9e5d157b1a5 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
 @@ -4713,6 +4713,8 @@ static void __setscheduler_params(struct task_struct *p,
