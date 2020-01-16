@@ -1,0 +1,22 @@
+Bottom: 9c7a59777e8a8766bc7acc82e41d62a0f3c5a3ae
+Top:    f5730c6e261797cf2f67eafb77229d02551f2454
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2020-01-16 17:44:13 +0530
+
+Refresh of sched-core-update-turbo_sched
+
+---
+
+diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
+index f841297b7d56..712d9c2243df 100644
+--- a/kernel/sched/sched.h
++++ b/kernel/sched/sched.h
+@@ -2498,6 +2498,9 @@ static inline void membarrier_switch_mm(struct rq *rq,
+ }
+ #endif
+ 
++#define lenient_latency(lat)	((lat) == MAX_LATENCY_NICE)
++#define task_latency_lenient(p)	(lenient_latency((p)->latency_nice))
++
+ void turbo_sched_get(void);
+ void turbo_sched_put(void);
