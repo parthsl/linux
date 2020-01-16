@@ -1,0 +1,45 @@
+Bottom: 5cff9d29d388ff748c8e5abe052fe0003fca94d2
+Top:    ef16598e75ffa38b67ea33b7340a4567ec5d95e5
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2020-01-16 17:37:29 +0530
+
+Refresh of sched-introduce-switch-to
+
+---
+
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index a9e5d157b1a5..dfbb52d66b29 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -73,6 +73,31 @@ __read_mostly int scheduler_running;
+  */
+ int sysctl_sched_rt_runtime = 950000;
+ 
++#ifdef CONFIG_SCHED_SMT
++DEFINE_STATIC_KEY_FALSE(__turbo_sched_enabled);
++static DEFINE_MUTEX(turbo_sched_lock);
++static int turbo_sched_count;
++
++void turbo_sched_get(void)
++{
++	mutex_lock(&turbo_sched_lock);
++	if (!turbo_sched_count++)
++		static_branch_enable(&__turbo_sched_enabled);
++	mutex_unlock(&turbo_sched_lock);
++}
++
++void turbo_sched_put(void)
++{
++	mutex_lock(&turbo_sched_lock);
++	if (!--turbo_sched_count)
++		static_branch_disable(&__turbo_sched_enabled);
++	mutex_unlock(&turbo_sched_lock);
++}
++#else
++void turbo_sched_get(void) { return ; }
++void turbo_sched_get(void) { return ; }
++#endif
++
+ /*
+  * __task_rq_lock - lock the rq @p resides on.
+  */
