@@ -12,7 +12,7 @@ which also reduces task ping-pong behaviour inside of the core.
 
 Define a new method to select_non_idle_core which keep tracks of the idle
 and non-idle CPUs in the core and based on the heuristics determines if the
-core is sufficiently busy to place the incoming backgroung task. The
+core is sufficiently busy to place the waking up background task. The
 heuristic further defines the non-idle CPU into either busy (>12.5% util)
 CPU and overutilized (>80% util) CPU.
 - The core containing more idle CPUs and no busy CPUs is not selected for
@@ -22,9 +22,10 @@ CPU and overutilized (>80% util) CPU.
 - Pack if there is atleast one busy CPU and overutilized CPUs count is <2
 
 Value of 12.5% utilization for busy CPU gives sufficient heuristics for CPU
-doing enough work and not become idle in nearby timeframe.
+doing enough work and not become idle in nearby time frame.
 
 Signed-off-by: Parth Shah <parth@linux.ibm.com>
+
 
 ---
 
