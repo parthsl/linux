@@ -5890,7 +5890,8 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 /* Define non-idle CPU as the one with the utilization >= 12.5% */
 #define is_cpu_non_idle(util) ((util) > (100 >> 3))
 
-static inline bool is_background_task(struct task_struct *p)
+/* Classify background tasks with higher latency_nice value for task packing */
+static inline bool is_bg_task(struct task_struct *p)
 {
 	/* Pack a task with utilization >= 12.5% only */
 	if (task_latency_lenient(p) && (task_util(p) > (1024 >> 3)))
@@ -6442,7 +6443,7 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_f
 		}
 
 #ifdef CONFIG_SCHED_SMT
-		if (is_turbosched_enabled() && unlikely(is_background_task(p))) {
+		if (is_turbosched_enabled() && unlikely(is_bg_task(p))) {
 			new_cpu = select_non_idle_core(p, prev_cpu);
 			if (new_cpu >= 0)
 				return new_cpu;
