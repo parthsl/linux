@@ -1,5 +1,5 @@
-Bottom: 3525144993da9748807c5ff324fdd7662cd08d6d
-Top:    e6fc29b953f816ff21426fb48caacfd788909593
+Bottom: 95ad21949183eeb7d4e344f09431274d7a8174a2
+Top:    9cbe2b9d1a471632cc4455b96f907dd2ff7dbce0
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2019-10-07 14:00:50 +0530
 
@@ -20,12 +20,12 @@ Signed-off-by: Parth Shah <parth@linux.ibm.com>
 ---
 
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index f038f65ed006..6578d1ea73c2 100644
+index 6ce6d9803e52..89f1a8ce3443 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
 @@ -5890,6 +5890,13 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
- /* Define non-idle CPU/task as the one with the utilization >= 12.5% */
- #define is_zealous(util) ((util) > (100 >> 3))
+ /* Define non-idle CPU as the one with the utilization >= 12.5% */
+ #define is_cpu_non_idle(util) ((util) > (100 >> 3))
  
 +#ifndef arch_turbo_domain
 +static __always_inline struct cpumask *arch_turbo_domain(int cpu)
@@ -36,8 +36,8 @@ index f038f65ed006..6578d1ea73c2 100644
 +
  static inline bool is_background_task(struct task_struct *p)
  {
- 	if (task_latency_lenient(p) && (task_util(p) > (1024 >> 3)))
-@@ -5912,6 +5919,7 @@ static int select_non_idle_core(struct task_struct *p, int prev_cpu)
+ 	/* Pack a task with utilization >= 12.5% only */
+@@ -5913,6 +5920,7 @@ static int select_non_idle_core(struct task_struct *p, int prev_cpu)
  	int iter_cpu, sibling;
  
  	cpumask_and(cpus, cpu_online_mask, p->cpus_ptr);
