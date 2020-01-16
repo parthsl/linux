@@ -5888,11 +5888,11 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 #ifdef CONFIG_SCHED_SMT
 
 /* Define non-idle CPU/task as the one with the utilization >= 12.5% */
-#define is_zealous(util) ((util) > (1024 >> 3))
+#define is_zealous(util) ((util) > (100 >> 3))
 
 static inline bool is_background_task(struct task_struct *p)
 {
-	if (task_latency_lenient(p) && !is_zealous(task_util(p)))
+	if (task_latency_lenient(p) && (task_util(p) > (1024 >> 3)))
 		return true;
 
 	return false;
