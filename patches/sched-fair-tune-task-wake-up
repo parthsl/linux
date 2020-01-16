@@ -1,5 +1,5 @@
 Bottom: f5730c6e261797cf2f67eafb77229d02551f2454
-Top:    3525144993da9748807c5ff324fdd7662cd08d6d
+Top:    95ad21949183eeb7d4e344f09431274d7a8174a2
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2019-10-07 14:00:49 +0530
 
@@ -51,7 +51,7 @@ index 744a2ba556f8..ee6d61a7d765 100644
  #endif /* CONFIG_CPUMASK_OFFSTACK */
  
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 2d170b5da0e3..f038f65ed006 100644
+index 2d170b5da0e3..6ce6d9803e52 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
 @@ -5379,6 +5379,8 @@ static void dequeue_task_fair(struct rq *rq, struct task_struct *p, int flags)
@@ -63,17 +63,18 @@ index 2d170b5da0e3..f038f65ed006 100644
  
  #ifdef CONFIG_NO_HZ_COMMON
  
-@@ -5883,6 +5885,77 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
+@@ -5883,6 +5885,78 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
  	return cpu;
  }
  
 +#ifdef CONFIG_SCHED_SMT
 +
-+/* Define non-idle CPU/task as the one with the utilization >= 12.5% */
-+#define is_zealous(util) ((util) > (100 >> 3))
++/* Define non-idle CPU as the one with the utilization >= 12.5% */
++#define is_cpu_non_idle(util) ((util) > (100 >> 3))
 +
 +static inline bool is_background_task(struct task_struct *p)
 +{
++	/* Pack a task with utilization >= 12.5% only */
 +	if (task_latency_lenient(p) && (task_util(p) > (1024 >> 3)))
 +		return true;
 +
@@ -110,7 +111,7 @@ index 2d170b5da0e3..f038f65ed006 100644
 +				non_idle_cpu_count++;
 +				if (cpu_overutilized(sibling))
 +					overutil_cpu_count++;
-+				if (is_zealous(cpu_util(sibling)))
++				if (is_cpu_non_idle(cpu_util(sibling)))
 +					busy_cpu_count++;
 +			}
 +		}
@@ -141,7 +142,7 @@ index 2d170b5da0e3..f038f65ed006 100644
  /*
   * Try and locate an idle core/thread in the LLC cache domain.
   */
-@@ -6367,6 +6440,15 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_f
+@@ -6367,6 +6441,15 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_f
  			new_cpu = prev_cpu;
  		}
  
@@ -157,7 +158,7 @@ index 2d170b5da0e3..f038f65ed006 100644
  		want_affine = !wake_wide(p) && !wake_cap(p, cpu, prev_cpu) &&
  			      cpumask_test_cpu(cpu, p->cpus_ptr);
  	}
-@@ -6400,7 +6482,6 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_f
+@@ -6400,7 +6483,6 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_f
  		new_cpu = find_idlest_cpu(sd, p, cpu, prev_cpu, sd_flag);
  	} else if (sd_flag & SD_BALANCE_WAKE) { /* XXX always ? */
  		/* Fast path */
