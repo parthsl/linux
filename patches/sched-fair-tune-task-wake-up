@@ -1,5 +1,5 @@
 Bottom: 97efe29556fd6c3ee7f78de37b66ed98fc217793
-Top:    2082cdb7ee0b5491341ea2a2934b717463f5fd5e
+Top:    5503e0239fdd5d6fbf0b99198e749578bed1ce43
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2019-10-07 14:00:49 +0530
 
@@ -50,7 +50,7 @@ index 744a2ba556f8..ee6d61a7d765 100644
  #endif /* CONFIG_CPUMASK_OFFSTACK */
  
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 2d170b5da0e3..a5cee6876263 100644
+index 2d170b5da0e3..f038f65ed006 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
 @@ -5379,6 +5379,8 @@ static void dequeue_task_fair(struct rq *rq, struct task_struct *p, int flags)
@@ -69,11 +69,11 @@ index 2d170b5da0e3..a5cee6876263 100644
 +#ifdef CONFIG_SCHED_SMT
 +
 +/* Define non-idle CPU/task as the one with the utilization >= 12.5% */
-+#define is_zealous(util) ((util) > (1024 >> 3))
++#define is_zealous(util) ((util) > (100 >> 3))
 +
 +static inline bool is_background_task(struct task_struct *p)
 +{
-+	if (task_latency_lenient(p) && !is_zealous(task_util(p)))
++	if (task_latency_lenient(p) && (task_util(p) > (1024 >> 3)))
 +		return true;
 +
 +	return false;
