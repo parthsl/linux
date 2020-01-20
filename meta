@@ -1,10 +1,10 @@
 Version: 1
-Previous: cbcfa981e2b009f47ef3bb93b48352a0480de178
-Head: 13a53a31c9b73b8d72177e50198417aac9d5ac13
+Previous: 7f134053e8ef0d3ca01415314bd0257f203c5402
+Head: 4d6e01313b84578a1da301a75ca30051654d6bba
 Applied:
   sched-introduce-switch-to: 1d3ba37c1fb4e8a585fda6bdbe812e4be7082e4d
   sched-core-update-turbo_sched: c2b375cb5325f133bf4c25701bb47807e97a4de0
-  sched-fair-tune-task-wake-up: 13a53a31c9b73b8d72177e50198417aac9d5ac13
+  sched-fair-tune-task-wake-up: 4d6e01313b84578a1da301a75ca30051654d6bba
 Unapplied:
   sched-fair-provide-arch-hook: 2a9ff12d87a21ebe2cc8d084fb426439c748c020
   powerpc-set-turbo-domain-to: 07211127f167ed75e5f9dd9f19e5f00eaa5ef1c5
