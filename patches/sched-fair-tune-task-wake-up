@@ -1,5 +1,5 @@
 Bottom: c65cad2a83b6c2e608674458f8d04b3e07264ae3
-Top:    a5c9896a52b906c689c24636a4f68da4824ea7c7
+Top:    5887c383f13a1270b3bdcdf20d7142cab2e8de29
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2019-10-07 14:00:49 +0530
 
@@ -50,7 +50,7 @@ index 629c2589d727..a34a5589ae16 100644
  #endif /* CONFIG_CPUMASK_OFFSTACK */
  
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 2d170b5da0e3..e9271cc6c06e 100644
+index 2d170b5da0e3..f4cd27593a62 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
 @@ -5379,6 +5379,8 @@ static void dequeue_task_fair(struct rq *rq, struct task_struct *p, int flags)
@@ -62,7 +62,7 @@ index 2d170b5da0e3..e9271cc6c06e 100644
  
  #ifdef CONFIG_NO_HZ_COMMON
  
-@@ -5883,6 +5885,79 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
+@@ -5883,6 +5885,81 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
  	return cpu;
  }
  
@@ -71,11 +71,13 @@ index 2d170b5da0e3..e9271cc6c06e 100644
 +/* Define non-idle CPU as the one with the utilization >= 12.5% */
 +#define is_cpu_non_idle(util) ((util) > (100 >> 3))
 +
-+/* Classify background tasks with higher latency_nice value for task packing */
-+static inline bool is_bg_task(struct task_struct *p)
++/*
++ * Classify small background tasks with higher latency_nice value for task
++ * packing.
++ */
++static inline bool is_small_bg_task(struct task_struct *p)
 +{
-+	/* Pack a task with utilization >= 12.5% only */
-+	if (is_bg_task(p) && (task_util(p) > (1024 >> 3)))
++	if (is_bg_task(p) && (task_util(p) > (SCHED_CAPACITY_SCALE >> 3)))
 +		return true;
 +
 +	return false;
@@ -142,12 +144,12 @@ index 2d170b5da0e3..e9271cc6c06e 100644
  /*
   * Try and locate an idle core/thread in the LLC cache domain.
   */
-@@ -6367,6 +6442,15 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_f
+@@ -6367,6 +6444,15 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_f
  			new_cpu = prev_cpu;
  		}
  
 +#ifdef CONFIG_SCHED_SMT
-+		if (is_turbosched_enabled() && unlikely(is_bg_task(p))) {
++		if (is_turbosched_enabled() && unlikely(is_small_bg_task(p))) {
 +			new_cpu = select_non_idle_core(p, prev_cpu);
 +			if (new_cpu >= 0)
 +				return new_cpu;
@@ -158,7 +160,7 @@ index 2d170b5da0e3..e9271cc6c06e 100644
  		want_affine = !wake_wide(p) && !wake_cap(p, cpu, prev_cpu) &&
  			      cpumask_test_cpu(cpu, p->cpus_ptr);
  	}
-@@ -6400,7 +6484,6 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_f
+@@ -6400,7 +6486,6 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_f
  		new_cpu = find_idlest_cpu(sd, p, cpu, prev_cpu, sd_flag);
  	} else if (sd_flag & SD_BALANCE_WAKE) { /* XXX always ? */
  		/* Fast path */
