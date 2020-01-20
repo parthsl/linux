@@ -6,9 +6,9 @@ Date:   2019-10-07 14:00:49 +0530
 sched/fair: Tune task wake-up logic to pack small background tasks on fewer cores
 
 The algorithm finds the first non idle core in the system and tries to
-place a task in the idle CPU in the chosen core. To maintain
-cache hotness, work of finding non idle core starts from the prev_cpu,
-which also reduces task ping-pong behaviour inside of the core.
+place a task in the idle CPU of the chosen core. To maintain cache hotness,
+work of finding non idle core starts from the prev_cpu, which also reduces
+task ping-pong behaviour inside of the core.
 
 Define a new method to select_non_idle_core which keep tracks of the idle
 and non-idle CPUs in the core and based on the heuristics determines if the
@@ -25,6 +25,7 @@ Value of 12.5% utilization for busy CPU gives sufficient heuristics for CPU
 doing enough work and not become idle in nearby time frame.
 
 Signed-off-by: Parth Shah <parth@linux.ibm.com>
+
 
 ---
 
