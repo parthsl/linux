@@ -1,5 +1,5 @@
-Bottom: 0f06b8e74c91a013fd70063fabda92e95997a801
-Top:    dc4a429582a6bea7c32d2cf1ce679a7818e80793
+Bottom: 4fec4836cc29d7e80dd82e9bc1678772ee550c49
+Top:    80ec1255087d95109e075787e08ac8ab37e7737b
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2019-10-07 14:00:50 +0530
 
@@ -20,12 +20,12 @@ Signed-off-by: Parth Shah <parth@linux.ibm.com>
 ---
 
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index a3a59bd80eee..f26cf76d59b6 100644
+index 8643e6309451..af19e1f9d56d 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
 @@ -5890,6 +5890,13 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
  /* Define non-idle CPU as the one with the utilization >= 12.5% */
- #define merely_used_cpu(util) ((util) > (100 >> 3))
+ #define merely_used_cpu(util) ((cpu_util(util)) > (100 >> 3))
  
 +#ifndef arch_turbo_domain
 +static __always_inline struct cpumask *arch_turbo_domain(int cpu)
