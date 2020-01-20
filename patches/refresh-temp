@@ -1,0 +1,40 @@
+Bottom: a5c9896a52b906c689c24636a4f68da4824ea7c7
+Top:    5887c383f13a1270b3bdcdf20d7142cab2e8de29
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2020-01-20 13:56:55 +0530
+
+Refresh of sched-fair-tune-task-wake-up
+
+---
+
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index e9271cc6c06e..f4cd27593a62 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -5890,11 +5890,13 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
+ /* Define non-idle CPU as the one with the utilization >= 12.5% */
+ #define is_cpu_non_idle(util) ((util) > (100 >> 3))
+ 
+-/* Classify background tasks with higher latency_nice value for task packing */
+-static inline bool is_bg_task(struct task_struct *p)
++/*
++ * Classify small background tasks with higher latency_nice value for task
++ * packing.
++ */
++static inline bool is_small_bg_task(struct task_struct *p)
+ {
+-	/* Pack a task with utilization >= 12.5% only */
+-	if (is_bg_task(p) && (task_util(p) > (1024 >> 3)))
++	if (is_bg_task(p) && (task_util(p) > (SCHED_CAPACITY_SCALE >> 3)))
+ 		return true;
+ 
+ 	return false;
+@@ -6443,7 +6445,7 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_f
+ 		}
+ 
+ #ifdef CONFIG_SCHED_SMT
+-		if (is_turbosched_enabled() && unlikely(is_bg_task(p))) {
++		if (is_turbosched_enabled() && unlikely(is_small_bg_task(p))) {
+ 			new_cpu = select_non_idle_core(p, prev_cpu);
+ 			if (new_cpu >= 0)
+ 				return new_cpu;
