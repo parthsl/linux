@@ -1,5 +1,5 @@
 Bottom: c65cad2a83b6c2e608674458f8d04b3e07264ae3
-Top:    d6817c6fb6662a96947ac85a3d21150ac3f5f868
+Top:    cf3804324045c23e6507130c7d8d22828a349518
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2019-10-07 14:00:49 +0530
 
@@ -26,7 +26,6 @@ doing enough work and not become idle in nearby time frame.
 
 Signed-off-by: Parth Shah <parth@linux.ibm.com>
 
-
 ---
 
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
@@ -51,7 +50,7 @@ index 629c2589d727..a34a5589ae16 100644
  #endif /* CONFIG_CPUMASK_OFFSTACK */
  
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 2d170b5da0e3..017ac3e38d87 100644
+index 2d170b5da0e3..a0d12e8668e3 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
 @@ -5379,6 +5379,8 @@ static void dequeue_task_fair(struct rq *rq, struct task_struct *p, int flags)
@@ -70,7 +69,7 @@ index 2d170b5da0e3..017ac3e38d87 100644
 +#ifdef CONFIG_SCHED_SMT
 +
 +/* Define non-idle CPU as the one with the utilization >= 12.5% */
-+#define dawdling_cpu(util) ((util) > (100 >> 3))
++#define ambling_cpu(util) ((util) > (100 >> 3))
 +
 +/*
 + * Classify small background tasks with higher latency_nice value for task
@@ -114,7 +113,7 @@ index 2d170b5da0e3..017ac3e38d87 100644
 +				non_idle_cpu_count++;
 +				if (cpu_overutilized(sibling))
 +					overutil_cpu_count++;
-+				if (dawdling_cpu(cpu_util(sibling)))
++				if (ambling_cpu(cpu_util(sibling)))
 +					busy_cpu_count++;
 +			}
 +		}
