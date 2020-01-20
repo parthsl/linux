@@ -5888,7 +5888,7 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 #ifdef CONFIG_SCHED_SMT
 
 /* Define non-idle CPU as the one with the utilization >= 12.5% */
-#define is_cpu_non_idle(util) ((util) > (100 >> 3))
+#define dawdling_cpu(util) ((util) > (100 >> 3))
 
 /*
  * Classify small background tasks with higher latency_nice value for task
@@ -5932,7 +5932,7 @@ static int select_non_idle_core(struct task_struct *p, int prev_cpu)
 				non_idle_cpu_count++;
 				if (cpu_overutilized(sibling))
 					overutil_cpu_count++;
-				if (is_cpu_non_idle(cpu_util(sibling)))
+				if (dawdling_cpu(cpu_util(sibling)))
 					busy_cpu_count++;
 			}
 		}
