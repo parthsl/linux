@@ -1,5 +1,5 @@
 Bottom: c65cad2a83b6c2e608674458f8d04b3e07264ae3
-Top:    4fec4836cc29d7e80dd82e9bc1678772ee550c49
+Top:    4ca26aaca3baae6736301ea81b6cc87e367ec340
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2019-10-07 14:00:49 +0530
 
@@ -50,7 +50,7 @@ index 629c2589d727..a34a5589ae16 100644
  #endif /* CONFIG_CPUMASK_OFFSTACK */
  
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 2d170b5da0e3..8643e6309451 100644
+index 2d170b5da0e3..ffc8fee23d94 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
 @@ -5379,6 +5379,8 @@ static void dequeue_task_fair(struct rq *rq, struct task_struct *p, int flags)
@@ -69,7 +69,7 @@ index 2d170b5da0e3..8643e6309451 100644
 +#ifdef CONFIG_SCHED_SMT
 +
 +/* Define non-idle CPU as the one with the utilization >= 12.5% */
-+#define merely_used_cpu(util) ((cpu_util(util)) > (100 >> 3))
++#define cpu_slightlyutilized(util) ((cpu_util(util)) > (100 >> 3))
 +
 +/*
 + * Classify small background tasks with higher latency_nice value for task
@@ -113,7 +113,7 @@ index 2d170b5da0e3..8643e6309451 100644
 +				non_idle_cpu_count++;
 +				if (cpu_overutilized(sibling))
 +					overutil_cpu_count++;
-+				if (merely_used_cpu(sibling))
++				if (cpu_slightlyutilized(sibling))
 +					busy_cpu_count++;
 +			}
 +		}
