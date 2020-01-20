@@ -1,5 +1,5 @@
-Bottom: 8a5029be9f2f4e64260ab66add42399f55ad8293
-Top:    f8d9e440b80e1790e9bd95a269912350c7eb8e47
+Bottom: d6817c6fb6662a96947ac85a3d21150ac3f5f868
+Top:    d6817c6fb6662a96947ac85a3d21150ac3f5f868
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2019-10-07 14:00:50 +0530
 
@@ -19,29 +19,4 @@ Signed-off-by: Parth Shah <parth@linux.ibm.com>
 
 ---
 
-diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 22a45c60d9ab..31eb5b6d14a8 100644
---- a/kernel/sched/fair.c
-+++ b/kernel/sched/fair.c
-@@ -5890,6 +5890,13 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
- /* Define non-idle CPU as the one with the utilization >= 12.5% */
- #define is_cpu_non_idle(util) ((util) > (100 >> 3))
- 
-+#ifndef arch_turbo_domain
-+static __always_inline struct cpumask *arch_turbo_domain(int cpu)
-+{
-+	return sched_domain_span(rcu_dereference(per_cpu(sd_llc, cpu)));
-+}
-+#endif
-+
- /* Classify background tasks with higher latency_nice value for task packing */
- static inline bool is_bg_task(struct task_struct *p)
- {
-@@ -5914,6 +5921,7 @@ static int select_non_idle_core(struct task_struct *p, int prev_cpu)
- 	int iter_cpu, sibling;
- 
- 	cpumask_and(cpus, cpu_online_mask, p->cpus_ptr);
-+	cpumask_and(cpus, cpus, arch_turbo_domain(prev_cpu));
- 
- 	for_each_cpu_wrap(iter_cpu, cpus, prev_cpu) {
- 		int idle_cpu_count = 0, non_idle_cpu_count = 0;
+
