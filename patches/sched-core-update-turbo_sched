@@ -1,5 +1,5 @@
-Bottom: 3a3a7c80f05e13f973511c41bbd1a7957e5eaa7b
-Top:    c65cad2a83b6c2e608674458f8d04b3e07264ae3
+Bottom: a05f57f10e724be99b775542788b99bef22956ff
+Top:    da57418c40ef5e34ac47e83d5c2519ccbebdfa9e
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2019-10-07 14:00:48 +0530
 
@@ -14,7 +14,7 @@ Signed-off-by: Parth Shah <parth@linux.ibm.com>
 ---
 
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index dfbb52d66b29..629c2589d727 100644
+index d5f1a2a233cb..82c709bbd2c8 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
 @@ -3272,6 +3272,9 @@ static struct rq *finish_task_switch(struct task_struct *prev)
@@ -48,7 +48,7 @@ index dfbb52d66b29..629c2589d727 100644
  	__setscheduler_uclamp(p, attr);
  
 diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index f841297b7d56..0a00e16e033a 100644
+index ee89c698ac2a..62fa467ab55e 100644
 --- a/kernel/sched/sched.h
 +++ b/kernel/sched/sched.h
 @@ -2498,6 +2498,9 @@ static inline void membarrier_switch_mm(struct rq *rq,
