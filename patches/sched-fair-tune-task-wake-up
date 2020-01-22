@@ -1,5 +1,5 @@
 Bottom: da57418c40ef5e34ac47e83d5c2519ccbebdfa9e
-Top:    b6e5ad71bd2ad5cec1d49e79d34f84f02718e716
+Top:    281b8c1e69a79d43f4be52d232e0f51c7cb37371
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2019-10-07 14:00:49 +0530
 
@@ -50,19 +50,20 @@ index 82c709bbd2c8..0c27e0d2eee7 100644
  #endif /* CONFIG_CPUMASK_OFFSTACK */
  
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 2d170b5da0e3..8643e6309451 100644
+index 2d170b5da0e3..26c6e61b1182 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
-@@ -5379,6 +5379,8 @@ static void dequeue_task_fair(struct rq *rq, struct task_struct *p, int flags)
- /* Working cpumask for: load_balance, load_balance_newidle. */
+@@ -5380,6 +5380,9 @@ static void dequeue_task_fair(struct rq *rq, struct task_struct *p, int flags)
  DEFINE_PER_CPU(cpumask_var_t, load_balance_mask);
  DEFINE_PER_CPU(cpumask_var_t, select_idle_mask);
+ 
 +/* A cpumask to find active cores in the system. */
 +DEFINE_PER_CPU(cpumask_var_t, turbo_sched_mask);
- 
++
  #ifdef CONFIG_NO_HZ_COMMON
  
-@@ -5883,6 +5885,81 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
+ static struct {
+@@ -5883,6 +5886,81 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
  	return cpu;
  }
  
@@ -144,7 +145,7 @@ index 2d170b5da0e3..8643e6309451 100644
  /*
   * Try and locate an idle core/thread in the LLC cache domain.
   */
-@@ -6367,6 +6444,15 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_f
+@@ -6367,6 +6445,15 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_f
  			new_cpu = prev_cpu;
  		}
  
@@ -160,7 +161,7 @@ index 2d170b5da0e3..8643e6309451 100644
  		want_affine = !wake_wide(p) && !wake_cap(p, cpu, prev_cpu) &&
  			      cpumask_test_cpu(cpu, p->cpus_ptr);
  	}
-@@ -6400,7 +6486,6 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_f
+@@ -6400,7 +6487,6 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_f
  		new_cpu = find_idlest_cpu(sd, p, cpu, prev_cpu, sd_flag);
  	} else if (sd_flag & SD_BALANCE_WAKE) { /* XXX always ? */
  		/* Fast path */
