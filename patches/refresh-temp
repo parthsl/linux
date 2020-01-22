@@ -1,0 +1,20 @@
+Bottom: b6e5ad71bd2ad5cec1d49e79d34f84f02718e716
+Top:    281b8c1e69a79d43f4be52d232e0f51c7cb37371
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2020-01-22 14:21:10 +0530
+
+Refresh of sched-fair-tune-task-wake-up
+
+---
+
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index 8643e6309451..26c6e61b1182 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -5379,6 +5379,7 @@ static void dequeue_task_fair(struct rq *rq, struct task_struct *p, int flags)
+ /* Working cpumask for: load_balance, load_balance_newidle. */
+ DEFINE_PER_CPU(cpumask_var_t, load_balance_mask);
+ DEFINE_PER_CPU(cpumask_var_t, select_idle_mask);
++
+ /* A cpumask to find active cores in the system. */
+ DEFINE_PER_CPU(cpumask_var_t, turbo_sched_mask);
