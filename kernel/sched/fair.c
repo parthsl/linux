@@ -5379,6 +5379,7 @@ static void dequeue_task_fair(struct rq *rq, struct task_struct *p, int flags)
 /* Working cpumask for: load_balance, load_balance_newidle. */
 DEFINE_PER_CPU(cpumask_var_t, load_balance_mask);
 DEFINE_PER_CPU(cpumask_var_t, select_idle_mask);
+
 /* A cpumask to find active cores in the system. */
 DEFINE_PER_CPU(cpumask_var_t, turbo_sched_mask);
 
