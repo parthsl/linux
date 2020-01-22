@@ -1,5 +1,5 @@
 Bottom: 5cff9d29d388ff748c8e5abe052fe0003fca94d2
-Top:    c571e6d8f29816aa969362428af9925116791f73
+Top:    a05f57f10e724be99b775542788b99bef22956ff
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2019-10-07 14:00:47 +0530
 
@@ -22,7 +22,7 @@ Signed-off-by: Parth Shah <parth@linux.ibm.com>
 ---
 
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index a9e5d157b1a5..b2b81c428daf 100644
+index a9e5d157b1a5..d5f1a2a233cb 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
 @@ -73,6 +73,31 @@ __read_mostly int scheduler_running;
@@ -50,8 +50,8 @@ index a9e5d157b1a5..b2b81c428daf 100644
 +	mutex_unlock(&turbo_sched_lock);
 +}
 +#else
-+void turbo_sched_get(void) { return ; }
-+void turbo_sched_get(void) { return ; }
++void turbo_sched_get(void) {}
++void turbo_sched_get(void) {}
 +#endif
 +
  /*
