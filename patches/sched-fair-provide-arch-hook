@@ -1,5 +1,5 @@
-Bottom: 4fec4836cc29d7e80dd82e9bc1678772ee550c49
-Top:    80ec1255087d95109e075787e08ac8ab37e7737b
+Bottom: 2f69df15228d3c90487335e2a3681027a4a470b8
+Top:    b198f6a3402bd9201b977a12759f6bb8ef40427e
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2019-10-07 14:00:50 +0530
 
@@ -20,12 +20,12 @@ Signed-off-by: Parth Shah <parth@linux.ibm.com>
 ---
 
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 8643e6309451..af19e1f9d56d 100644
+index a189a9d2a23e..21a84502cb0c 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
-@@ -5890,6 +5890,13 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
+@@ -5891,6 +5891,13 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
  /* Define non-idle CPU as the one with the utilization >= 12.5% */
- #define merely_used_cpu(util) ((cpu_util(util)) > (100 >> 3))
+ #define busy_cpu(util) ((cpu_util(util)) > (100 >> 3))
  
 +#ifndef arch_turbo_domain
 +static __always_inline struct cpumask *arch_turbo_domain(int cpu)
@@ -37,7 +37,7 @@ index 8643e6309451..af19e1f9d56d 100644
  /*
   * Classify small background tasks with higher latency_nice value for task
   * packing.
-@@ -5916,6 +5923,7 @@ static int select_non_idle_core(struct task_struct *p, int prev_cpu)
+@@ -5917,6 +5924,7 @@ static int select_non_idle_core(struct task_struct *p, int prev_cpu)
  	int iter_cpu, sibling;
  
  	cpumask_and(cpus, cpu_online_mask, p->cpus_ptr);
