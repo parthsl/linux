@@ -1,0 +1,87 @@
+Bottom: 2a3e64fc35198ae0496f74cb085dbdb083630375
+Top:    ab049e02d4691d912e69b8417f5caee161347f40
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2020-01-30 14:29:47 +0530
+
+Refresh of sched-fair-paraphrase
+
+---
+
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index 3d43f80b25b6..c880a8225b56 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -5455,9 +5455,9 @@ static unsigned long capacity_of(int cpu)
+ 
+ enum cpu_idle_type {
+ 	cpu_busy = 0,
+-	cpu_sched_idle,
+-	cpu_non_preempted_idle,
+ 	cpu_preempted_idle
++	cpu_non_preempted_idle,
++	cpu_sched_idle,
+ }
+ 
+ /*
+@@ -5782,7 +5782,7 @@ void __update_idle_core(struct rq *rq)
+ 		if (cpu == core)
+ 			continue;
+ 
+-		if (!available_idle_cpu(cpu) && !sched_idle_cpu(cpu))
++		if (is_idle_cpu(cpu) <= cpu_preempted_idle)
+ 			goto unlock;
+ 	}
+ 
+@@ -5814,7 +5814,7 @@ static int select_idle_core(struct task_struct *p, struct sched_domain *sd, int
+ 
+ 		for_each_cpu(cpu, cpu_smt_mask(core)) {
+ 			__cpumask_clear_cpu(cpu, cpus);
+-			if (!available_idle_cpu(cpu) && !sched_idle_cpu(cpu))
++			if (is_idle_cpu(cpu) <= cpu_preempted_idle)
+ 				idle = false;
+ 		}
+ 
+@@ -5843,7 +5843,7 @@ static int select_idle_smt(struct task_struct *p, int target)
+ 	for_each_cpu(cpu, cpu_smt_mask(target)) {
+ 		if (!cpumask_test_cpu(cpu, p->cpus_ptr))
+ 			continue;
+-		if (available_idle_cpu(cpu) || sched_idle_cpu(cpu))
++		if (is_idle_cpu(cpu) >= cpu_non_preempted_idle)
+ 			return cpu;
+ 	}
+ 
+@@ -5908,7 +5908,7 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
+ 	for_each_cpu_wrap(cpu, cpus, target) {
+ 		if (!--nr)
+ 			return -1;
+-		if (available_idle_cpu(cpu) || sched_idle_cpu(cpu))
++		if (is_idle_cpu(cpu) >= cpu_non_preempted_idle)
+ 			break;
+ 	}
+ 
+@@ -5928,14 +5928,14 @@ static int select_idle_sibling(struct task_struct *p, int prev, int target)
+ 	struct sched_domain *sd;
+ 	int i, recent_used_cpu;
+ 
+-	if (available_idle_cpu(target) || sched_idle_cpu(target))
++	if (is_idle_cpu(target) >= cpu_non_preempted_idle)
+ 		return target;
+ 
+ 	/*
+ 	 * If the previous CPU is cache affine and idle, don't be stupid:
+ 	 */
+ 	if (prev != target && cpus_share_cache(prev, target) &&
+-	    (available_idle_cpu(prev) || sched_idle_cpu(prev)))
++	    (is_idle_cpu(prev) >= cpu_non_preempted_idle))
+ 		return prev;
+ 
+ 	/* Check a recently used CPU as a potential idle candidate: */
+@@ -5943,7 +5943,7 @@ static int select_idle_sibling(struct task_struct *p, int prev, int target)
+ 	if (recent_used_cpu != prev &&
+ 	    recent_used_cpu != target &&
+ 	    cpus_share_cache(recent_used_cpu, target) &&
+-	    (available_idle_cpu(recent_used_cpu) || sched_idle_cpu(recent_used_cpu)) &&
++	    is_idle_task(recent_used_cpu) >= cpu_non_preempted_idle &&
+ 	    cpumask_test_cpu(p->recent_used_cpu, p->cpus_ptr)) {
+ 		/*
+ 		 * Replace recent_used_cpu with prev as it is a potential
