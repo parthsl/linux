@@ -1,7 +1,8 @@
 Version: 1
-Previous: 350712d2df06a3cb93762423a30b87b8d3f8ac8a
-Head: afa70d941f663c69c9a64ec1021bbcfa82f0e54a
+Previous: fb439decc326270f2a837f7223d1dc0ab3a728a9
+Head: 70bbf4b1c01366584344dbcc63050880cc7069a9
 Applied:
+  sched-fair-fix-config_smp-for: 70bbf4b1c01366584344dbcc63050880cc7069a9
 Unapplied:
   sched-fair-consider-sched_idle: b3ce6d56fe36dcca9465f93e11fa7550f53cfb72
 Hidden:

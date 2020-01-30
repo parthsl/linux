@@ -1,0 +1,11 @@
+Bottom: d1b31b36ae61f7143fb85c0a377bd33d474eb2ef
+Top:    d1b31b36ae61f7143fb85c0a377bd33d474eb2ef
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2020-01-30 11:18:35 +0530
+
+sched/fair: Fix CONFIG_SMP for sched_idle_cpu
+
+
+---
+
+
