@@ -5756,7 +5756,7 @@ void __update_idle_core(struct rq *rq)
 		if (cpu == core)
 			continue;
 
-		if (!available_idle_cpu(cpu) || sched_idle_cpu(cpu))
+		if (!available_idle_cpu(cpu) && !sched_idle_cpu(cpu))
 			goto unlock;
 	}
 
