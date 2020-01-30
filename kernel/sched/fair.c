@@ -5699,22 +5699,29 @@ static unsigned long capacity_of(int cpu)
 	return cpu_rq(cpu)->cpu_capacity;
 }
 
+enum idle_level {
+	cpu_busy = 0,
+	cpu_preempted_idle,
+	cpu_non_preempted_idle,
+	cpu_sched_idle
+};
+
 /*
- * available_idle_cpu - is a given CPU idle for enqueuing work.
+ * idle_cpu_level - is a given CPU idle for enqueuing work.
  * @cpu: the CPU in question.
- *
- * Return: 1 if the CPU is currently idle. 0 otherwise.
  */
-int available_idle_cpu(int cpu)
+static int idle_cpu_level(int cpu)
 {
 	if (!idle_cpu(cpu))
-		return 0;
+		return sched_idle_cpu(cpu) ? cpu_sched_idle : cpu_busy;
 
 	if (vcpu_is_preempted(cpu))
-		return 0;
+		return cpu_preempted_idle;
 
-	return 1;
+	return cpu_non_preempted_idle;
 }
+
+#define available_idle_cpu(cpu) ((idle_cpu_level(cpu)) == cpu_non_preempted_idle)
 
 static void record_wakee(struct task_struct *p)
 {
@@ -6019,7 +6026,7 @@ void __update_idle_core(struct rq *rq)
 		if (cpu == core)
 			continue;
 
-		if (!available_idle_cpu(cpu) && !sched_idle_cpu(cpu))
+		if (idle_cpu_level(cpu) <= cpu_preempted_idle)
 			goto unlock;
 	}
 
@@ -6050,7 +6057,7 @@ static int select_idle_core(struct task_struct *p, struct sched_domain *sd, int 
 		bool idle = true;
 
 		for_each_cpu(cpu, cpu_smt_mask(core)) {
-			if (!available_idle_cpu(cpu) && !sched_idle_cpu(cpu)) {
+			if (idle_cpu_level(cpu) <= cpu_preempted_idle) {
 				idle = false;
 				break;
 			}
@@ -6082,7 +6089,7 @@ static int select_idle_smt(struct task_struct *p, int target)
 	for_each_cpu(cpu, cpu_smt_mask(target)) {
 		if (!cpumask_test_cpu(cpu, p->cpus_ptr))
 			continue;
-		if (available_idle_cpu(cpu) || sched_idle_cpu(cpu))
+		if (idle_cpu_level(cpu) >= cpu_non_preempted_idle)
 			return cpu;
 	}
 
@@ -6150,7 +6157,7 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 			break;
 		}
 
-		if (available_idle_cpu(cpu) || sched_idle_cpu(cpu)) {
+		if (idle_cpu_level(cpu) >= cpu_non_preempted_idle) {
 			pick_cpu = cpu;
 			break;
 		}
@@ -6226,14 +6233,14 @@ static int select_idle_sibling(struct task_struct *p, int prev, int target)
 	}
 
 symmetric:
-	if (available_idle_cpu(target) || sched_idle_cpu(target))
+	if (idle_cpu_level(target) >= cpu_non_preempted_idle)
 		return target;
 
 	/*
 	 * If the previous CPU is cache affine and idle, don't be stupid:
 	 */
 	if (prev != target && cpus_share_cache(prev, target) &&
-	    (available_idle_cpu(prev) || sched_idle_cpu(prev)))
+	    (idle_cpu_level(prev) >= cpu_non_preempted_idle))
 		return prev;
 
 	/*
@@ -6255,7 +6262,7 @@ symmetric:
 	if (recent_used_cpu != prev &&
 	    recent_used_cpu != target &&
 	    cpus_share_cache(recent_used_cpu, target) &&
-	    (available_idle_cpu(recent_used_cpu) || sched_idle_cpu(recent_used_cpu)) &&
+	    idle_cpu_level(recent_used_cpu) >= cpu_non_preempted_idle &&
 	    cpumask_test_cpu(p->recent_used_cpu, p->cpus_ptr)) {
 		/*
 		 * Replace recent_used_cpu with prev as it is a potential
