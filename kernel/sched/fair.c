@@ -5453,6 +5453,32 @@ static unsigned long capacity_of(int cpu)
 	return cpu_rq(cpu)->cpu_capacity;
 }
 
+enum cpu_idle_type {
+	cpu_busy = 0,
+	cpu_sched_idle,
+	cpu_non_preempted_idle,
+	cpu_preempted_idle
+}
+
+/*
+ * is_idle_cpu - is a given CPU idle for enqueuing work.
+ * @cpu: the CPU in question.
+ */
+static int is_idle_cpu(int cpu)
+{
+	if (sched_idle_cpu(cpu))
+		return cpu_sched_idle;
+
+	if (!idle_cpu(cpu))
+		return cpu_busy;
+
+	if (vcpu_is_preempted(cpu))
+		return cpu_non_preempted_idle;
+
+	return cpu_preempted_idle;
+}
+#define available_idle_cpu(cpu) ((is_idle_cpu(cpu)) == cpu_non_preempted_idle)
+
 static void record_wakee(struct task_struct *p)
 {
 	/*
