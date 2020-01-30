@@ -1,0 +1,21 @@
+Bottom: 9419bf600bc1e4932f6cb6531355bb764651984c
+Top:    8e92928fe5613c705f3b9facd7e6b85f724145e9
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2020-01-30 14:20:11 +0530
+
+Refresh of sched-fair-consider-sched_idle
+
+---
+
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index 0ec823358d92..6690845f4d79 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -5756,7 +5756,7 @@ void __update_idle_core(struct rq *rq)
+ 		if (cpu == core)
+ 			continue;
+ 
+-		if (!available_idle_cpu(cpu) || sched_idle_cpu(cpu))
++		if (!available_idle_cpu(cpu) && !sched_idle_cpu(cpu))
+ 			goto unlock;
+ 	}
