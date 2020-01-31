@@ -1,0 +1,16 @@
+Bottom: 8e92928fe5613c705f3b9facd7e6b85f724145e9
+Top:    8e92928fe5613c705f3b9facd7e6b85f724145e9
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2020-01-31 12:23:30 +0530
+
+All callers of available_idle_cpu are in kernel/sched/fair.c
+So move the function definition to fair.c
+
+No functional change.
+
+Signed-off-by: Srikar Dronamraju <srikar@linux.vnet.ibm.com>
+
+
+---
+
+
