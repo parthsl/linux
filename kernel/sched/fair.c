@@ -5453,7 +5453,7 @@ static unsigned long capacity_of(int cpu)
 	return cpu_rq(cpu)->cpu_capacity;
 }
 
-enum cpu_idle_type {
+enum idle_cpu_type {
 	cpu_busy = 0,
 	cpu_preempted_idle
 	cpu_non_preempted_idle,
