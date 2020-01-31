@@ -5476,6 +5476,7 @@ static int is_idle_cpu(int cpu)
 }
 
 #define available_idle_cpu(cpu) ((is_idle_cpu(cpu)) == cpu_non_preempted_idle)
+#define is_cpu_hv_idle(cpu) ((is_idle_cpu(cpu)) >= cpu_non_preempted_idle)
 
 static void record_wakee(struct task_struct *p)
 {
@@ -5780,7 +5781,7 @@ void __update_idle_core(struct rq *rq)
 		if (cpu == core)
 			continue;
 
-		if (is_idle_cpu(cpu) <= cpu_preempted_idle)
+		if (!is_cpu_hv_idle(cpu))
 			goto unlock;
 	}
 
@@ -5812,7 +5813,7 @@ static int select_idle_core(struct task_struct *p, struct sched_domain *sd, int 
 
 		for_each_cpu(cpu, cpu_smt_mask(core)) {
 			__cpumask_clear_cpu(cpu, cpus);
-			if (is_idle_cpu(cpu) <= cpu_preempted_idle)
+			if (!is_cpu_hv_idle(cpu))
 				idle = false;
 		}
 
@@ -5829,11 +5830,14 @@ static int select_idle_core(struct task_struct *p, struct sched_domain *sd, int 
 }
 
 /*
- * Scan the local SMT mask for idle CPUs.
+ * Scan the local SMT mask for idle CPUs. Use any available cpu_preempted_idle
+ * in absence of any cpu_non_preempted_idle and cpu_sched_idle.
  */
 static int select_idle_smt(struct task_struct *p, int target)
 {
 	int cpu;
+	int cpi = -1;
+	enum idle_cpu_type ict;
 
 	if (!static_branch_likely(&sched_smt_present))
 		return -1;
@@ -5841,11 +5845,14 @@ static int select_idle_smt(struct task_struct *p, int target)
 	for_each_cpu(cpu, cpu_smt_mask(target)) {
 		if (!cpumask_test_cpu(cpu, p->cpus_ptr))
 			continue;
-		if (is_idle_cpu(cpu) >= cpu_non_preempted_idle)
+		ict = is_idle_cpu(cpu);
+		if (ict >= cpu_non_preempted_idle)
 			return cpu;
+		if (cpi == -1 && ict == cpu_preempted_idle)
+			cpi = cpu;
 	}
 
-	return -1;
+	return cpi;
 }
 
 #else /* CONFIG_SCHED_SMT */
@@ -5875,7 +5882,8 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 	u64 time, cost;
 	s64 delta;
 	int this = smp_processor_id();
-	int cpu, nr = INT_MAX;
+	int cpu, nr = INT_MAX, cpi = -1;
+	enum idle_cpu_type ict;
 
 	this_sd = rcu_dereference(*this_cpu_ptr(&sd_llc));
 	if (!this_sd)
@@ -5905,9 +5913,12 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 
 	for_each_cpu_wrap(cpu, cpus, target) {
 		if (!--nr)
-			return -1;
-		if (is_idle_cpu(cpu) >= cpu_non_preempted_idle)
 			break;
+		ict = is_idle_cpu(cpu);
+		if (ict >= cpu_non_preempted_idle)
+			break;
+		if (cpi == -1 && ict == cpu_preempted_idle)
+			cpi = cpu;
 	}
 
 	time = cpu_clock(this) - time;
@@ -5915,7 +5926,7 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 	delta = (s64)(time - cost) / 8;
 	this_sd->avg_scan_cost += delta;
 
-	return cpu;
+	return cpi;
 }
 
 /*
@@ -5926,14 +5937,14 @@ static int select_idle_sibling(struct task_struct *p, int prev, int target)
 	struct sched_domain *sd;
 	int i, recent_used_cpu;
 
-	if (is_idle_cpu(target) >= cpu_non_preempted_idle)
+	if (is_cpu_hv_idle(target))
 		return target;
 
 	/*
 	 * If the previous CPU is cache affine and idle, don't be stupid:
 	 */
 	if (prev != target && cpus_share_cache(prev, target) &&
-	    (is_idle_cpu(prev) >= cpu_non_preempted_idle))
+	    (is_cpu_hv_idle(prev)))
 		return prev;
 
 	/* Check a recently used CPU as a potential idle candidate: */
@@ -5941,7 +5952,7 @@ static int select_idle_sibling(struct task_struct *p, int prev, int target)
 	if (recent_used_cpu != prev &&
 	    recent_used_cpu != target &&
 	    cpus_share_cache(recent_used_cpu, target) &&
-	    is_idle_cpu(recent_used_cpu) >= cpu_non_preempted_idle &&
+	    is_cpu_hv_idle(recent_used_cpu) &&
 	    cpumask_test_cpu(p->recent_used_cpu, p->cpus_ptr)) {
 		/*
 		 * Replace recent_used_cpu with prev as it is a potential
