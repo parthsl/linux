@@ -5699,7 +5699,7 @@ static unsigned long capacity_of(int cpu)
 	return cpu_rq(cpu)->cpu_capacity;
 }
 
-enum idle_level {
+enum idle_cpu_type {
 	cpu_busy = 0,
 	cpu_preempted_idle,
 	cpu_non_preempted_idle,
@@ -6077,11 +6077,15 @@ static int select_idle_core(struct task_struct *p, struct sched_domain *sd, int 
 }
 
 /*
- * Scan the local SMT mask for idle CPUs.
+ * Scan the local SMT mask for idle CPUs. Use any available cpu_preempted_idle
+ * in absence of any cpu_non_preempted_idle and cpu_sched_idle.
  */
 static int select_idle_smt(struct task_struct *p, int target)
 {
 	int cpu;
+	int cpi = -1;
+	enum idle_cpu_type icl;
+	int pick_cpu = -1;
 
 	if (!static_branch_likely(&sched_smt_present))
 		return -1;
@@ -6089,11 +6093,18 @@ static int select_idle_smt(struct task_struct *p, int target)
 	for_each_cpu(cpu, cpu_smt_mask(target)) {
 		if (!cpumask_test_cpu(cpu, p->cpus_ptr))
 			continue;
-		if (idle_cpu_level(cpu) >= cpu_non_preempted_idle)
+
+		icl = idle_cpu_level(cpu);
+		if (cpi < icl) {
+			cpi = icl;
+			pick_cpu = cpu;
+		}
+
+		if (icl >= cpu_non_preempted_idle)
 			return cpu;
 	}
 
-	return -1;
+	return pick_cpu;
 }
 
 #else /* CONFIG_SCHED_SMT */
@@ -6122,8 +6133,9 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 	u64 avg_cost, avg_idle;
 	u64 time;
 	int this = smp_processor_id();
-	int cpu, nr = INT_MAX;
+	int cpu, nr = INT_MAX, cpi = -1;
 	int pick_cpu = -1;
+	enum idle_cpu_type icl;
 
 	this_sd = rcu_dereference(*this_cpu_ptr(&sd_llc));
 	if (!this_sd)
@@ -6157,8 +6169,13 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 			break;
 		}
 
-		if (idle_cpu_level(cpu) >= cpu_non_preempted_idle) {
+		icl = idle_cpu_level(cpu);
+		if (cpi < icl) {
+			cpi = icl;
 			pick_cpu = cpu;
+		}
+
+		if (icl >= cpu_non_preempted_idle)
 			break;
 		}
 	}
@@ -6189,7 +6206,7 @@ select_idle_capacity(struct task_struct *p, struct sched_domain *sd, int target)
 	for_each_cpu_wrap(cpu, cpus, target) {
 		unsigned long cpu_cap = capacity_of(cpu);
 
-		if (!available_idle_cpu(cpu) && !sched_idle_cpu(cpu))
+		if (idle_cpu_level(cpu) <= cpu_preempted_idle)
 			continue;
 		if (task_fits_capacity(p, cpu_cap))
 			return cpu;
