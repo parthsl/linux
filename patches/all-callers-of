@@ -9,6 +9,7 @@ So move the function definition to fair.c
 No functional change.
 
 Signed-off-by: Srikar Dronamraju <srikar@linux.vnet.ibm.com>
+Signed-off-by: Parth Shah <parth@linux.ibm.com>
 
 
 ---
