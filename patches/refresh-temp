@@ -1,0 +1,22 @@
+Bottom: b2578af105ba6c38c45331d6fc64dcee25c0fdea
+Top:    02b1d18e2b7e74f697b9be2b9a72995d5ce68c13
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2020-01-31 13:50:24 +0530
+
+Refresh of sched-fair-paraphrase
+
+---
+
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index c880a8225b56..484772b7b5e9 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -5453,7 +5453,7 @@ static unsigned long capacity_of(int cpu)
+ 	return cpu_rq(cpu)->cpu_capacity;
+ }
+ 
+-enum cpu_idle_type {
++enum idle_cpu_type {
+ 	cpu_busy = 0,
+ 	cpu_preempted_idle
+ 	cpu_non_preempted_idle,
