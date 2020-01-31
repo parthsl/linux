@@ -5829,11 +5829,14 @@ static int select_idle_core(struct task_struct *p, struct sched_domain *sd, int 
 }
 
 /*
- * Scan the local SMT mask for idle CPUs.
+ * Scan the local SMT mask for idle CPUs. Use any available cpu_preempted_idle
+ * in absence of any cpu_non_preempted_idle and cpu_sched_idle.
  */
 static int select_idle_smt(struct task_struct *p, int target)
 {
 	int cpu;
+	int cpi = -1;
+	enum idle_cpu_type ict;
 
 	if (!static_branch_likely(&sched_smt_present))
 		return -1;
@@ -5841,11 +5844,14 @@ static int select_idle_smt(struct task_struct *p, int target)
 	for_each_cpu(cpu, cpu_smt_mask(target)) {
 		if (!cpumask_test_cpu(cpu, p->cpus_ptr))
 			continue;
-		if (is_idle_cpu(cpu) >= cpu_non_preempted_idle)
+		ict = is_idle_cpu(cpu);
+		if (ict >= cpu_non_preempted_idle)
 			return cpu;
+		if (cpi == -1 && ict == cpu_preempted_idle)
+			cpi = cpu;
 	}
 
-	return -1;
+	return cpi;
 }
 
 #else /* CONFIG_SCHED_SMT */
@@ -5875,7 +5881,8 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 	u64 time, cost;
 	s64 delta;
 	int this = smp_processor_id();
-	int cpu, nr = INT_MAX;
+	int cpu, nr = INT_MAX, cpi = -1;
+	enum idle_cpu_type ict;
 
 	this_sd = rcu_dereference(*this_cpu_ptr(&sd_llc));
 	if (!this_sd)
@@ -5906,8 +5913,11 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 	for_each_cpu_wrap(cpu, cpus, target) {
 		if (!--nr)
 			return -1;
-		if (is_idle_cpu(cpu) >= cpu_non_preempted_idle)
+		ict = is_idle_cpu(cpu);
+		if (ict >= cpu_non_preempted_idle)
 			break;
+		if (cpi == -1 && ict == cpu_preempted_idle)
+			cpi = cpu;
 	}
 
 	time = cpu_clock(this) - time;
@@ -5915,7 +5925,7 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 	delta = (s64)(time - cost) / 8;
 	this_sd->avg_scan_cost += delta;
 
-	return cpu;
+	return cpi;
 }
 
 /*
