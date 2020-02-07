@@ -1,5 +1,5 @@
 Bottom: ccf1c3ae432b3ce1789185552df6b20b965cdd01
-Top:    02b1d18e2b7e74f697b9be2b9a72995d5ce68c13
+Top:    88bb9e41630bbe144771bce184e52c81cf29951c
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2020-01-30 14:19:43 +0530
 
@@ -24,10 +24,10 @@ Signed-off-by: Parth Shah <parth@linux.ibm.com>
 ---
 
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 36599b6155ea..484772b7b5e9 100644
+index 36599b6155ea..94ed9289931b 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
-@@ -5453,22 +5453,31 @@ static unsigned long capacity_of(int cpu)
+@@ -5453,22 +5453,29 @@ static unsigned long capacity_of(int cpu)
  	return cpu_rq(cpu)->cpu_capacity;
  }
  
@@ -50,25 +50,23 @@ index 36599b6155ea..484772b7b5e9 100644
  {
 -       if (!idle_cpu(cpu))
 -               return 0;
-+	if (sched_idle_cpu(cpu))
-+		return cpu_sched_idle;
-+
-+	if (!idle_cpu(cpu))
-+		return cpu_busy;
++	if (!idle_cpu(cpu)) {
++		return sched_idle_cpu(cpu) ? cpu_sched_idle : cpu_busy;
++	}
  
 -       if (vcpu_is_preempted(cpu))
 -               return 0;
 +	if (vcpu_is_preempted(cpu))
-+		return cpu_non_preempted_idle;
++		return cpu_preempted_idle;
  
 -       return 1;
-+	return cpu_preempted_idle;
++	return cpu_non_preempted_idle;
  }
 +#define available_idle_cpu(cpu) ((is_idle_cpu(cpu)) == cpu_non_preempted_idle)
  
  static void record_wakee(struct task_struct *p)
  {
-@@ -5773,7 +5782,7 @@ void __update_idle_core(struct rq *rq)
+@@ -5773,7 +5780,7 @@ void __update_idle_core(struct rq *rq)
  		if (cpu == core)
  			continue;
  
@@ -77,7 +75,7 @@ index 36599b6155ea..484772b7b5e9 100644
  			goto unlock;
  	}
  
-@@ -5805,7 +5814,7 @@ static int select_idle_core(struct task_struct *p, struct sched_domain *sd, int
+@@ -5805,7 +5812,7 @@ static int select_idle_core(struct task_struct *p, struct sched_domain *sd, int
  
  		for_each_cpu(cpu, cpu_smt_mask(core)) {
  			__cpumask_clear_cpu(cpu, cpus);
@@ -86,7 +84,7 @@ index 36599b6155ea..484772b7b5e9 100644
  				idle = false;
  		}
  
-@@ -5834,7 +5843,7 @@ static int select_idle_smt(struct task_struct *p, int target)
+@@ -5834,7 +5841,7 @@ static int select_idle_smt(struct task_struct *p, int target)
  	for_each_cpu(cpu, cpu_smt_mask(target)) {
  		if (!cpumask_test_cpu(cpu, p->cpus_ptr))
  			continue;
@@ -95,7 +93,7 @@ index 36599b6155ea..484772b7b5e9 100644
  			return cpu;
  	}
  
-@@ -5899,7 +5908,7 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
+@@ -5899,7 +5906,7 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
  	for_each_cpu_wrap(cpu, cpus, target) {
  		if (!--nr)
  			return -1;
@@ -104,7 +102,7 @@ index 36599b6155ea..484772b7b5e9 100644
  			break;
  	}
  
-@@ -5919,14 +5928,14 @@ static int select_idle_sibling(struct task_struct *p, int prev, int target)
+@@ -5919,14 +5926,14 @@ static int select_idle_sibling(struct task_struct *p, int prev, int target)
  	struct sched_domain *sd;
  	int i, recent_used_cpu;
  
@@ -121,7 +119,7 @@ index 36599b6155ea..484772b7b5e9 100644
  		return prev;
  
  	/* Check a recently used CPU as a potential idle candidate: */
-@@ -5934,7 +5943,7 @@ static int select_idle_sibling(struct task_struct *p, int prev, int target)
+@@ -5934,7 +5941,7 @@ static int select_idle_sibling(struct task_struct *p, int prev, int target)
  	if (recent_used_cpu != prev &&
  	    recent_used_cpu != target &&
  	    cpus_share_cache(recent_used_cpu, target) &&
