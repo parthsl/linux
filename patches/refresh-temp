@@ -1,0 +1,21 @@
+Bottom: 5eba6c8876cbd7e608bb952d499e3df5213f6965
+Top:    78d673cad5f1fa64871393f27d21e276ee38c64d
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2020-02-07 14:44:11 +0530
+
+Refresh of sched-fair-paraphrase
+
+---
+
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index a691023f5702..574e201d0421 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -5474,6 +5474,7 @@ static int is_idle_cpu(int cpu)
+ 
+ 	return cpu_non_preempted_idle;
+ }
++
+ #define available_idle_cpu(cpu) ((is_idle_cpu(cpu)) == cpu_non_preempted_idle)
+ 
+ static void record_wakee(struct task_struct *p)
