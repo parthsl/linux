@@ -5458,7 +5458,7 @@ enum idle_cpu_type {
 	cpu_preempted_idle,
 	cpu_non_preempted_idle,
 	cpu_sched_idle
-}
+};
 
 /*
  * is_idle_cpu - is a given CPU idle for enqueuing work.
