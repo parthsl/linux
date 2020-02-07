@@ -1,5 +1,5 @@
 Bottom: ccf1c3ae432b3ce1789185552df6b20b965cdd01
-Top:    88bb9e41630bbe144771bce184e52c81cf29951c
+Top:    e045b931472d6054c0236a8dc2b6936d1e04270b
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2020-01-30 14:19:43 +0530
 
@@ -24,7 +24,7 @@ Signed-off-by: Parth Shah <parth@linux.ibm.com>
 ---
 
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 36599b6155ea..94ed9289931b 100644
+index 36599b6155ea..6c0cb349a02f 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
 @@ -5453,22 +5453,29 @@ static unsigned long capacity_of(int cpu)
@@ -33,9 +33,9 @@ index 36599b6155ea..94ed9289931b 100644
  
 +enum idle_cpu_type {
 +	cpu_busy = 0,
-+	cpu_preempted_idle
++	cpu_preempted_idle,
 +	cpu_non_preempted_idle,
-+	cpu_sched_idle,
++	cpu_sched_idle
 +}
 +
  /*
