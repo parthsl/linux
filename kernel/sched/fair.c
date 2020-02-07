@@ -5466,16 +5466,14 @@ enum idle_cpu_type {
  */
 static int is_idle_cpu(int cpu)
 {
-	if (sched_idle_cpu(cpu))
-		return cpu_sched_idle;
-
-	if (!idle_cpu(cpu))
-		return cpu_busy;
+	if (!idle_cpu(cpu)) {
+		return sched_idle_cpu(cpu) ? cpu_sched_idle : cpu_busy;
+	}
 
 	if (vcpu_is_preempted(cpu))
-		return cpu_non_preempted_idle;
+		return cpu_preempted_idle;
 
-	return cpu_preempted_idle;
+	return cpu_non_preempted_idle;
 }
 #define available_idle_cpu(cpu) ((is_idle_cpu(cpu)) == cpu_non_preempted_idle)
 
