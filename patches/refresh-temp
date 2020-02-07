@@ -1,0 +1,34 @@
+Bottom: 02b1d18e2b7e74f697b9be2b9a72995d5ce68c13
+Top:    88bb9e41630bbe144771bce184e52c81cf29951c
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2020-02-07 11:42:21 +0530
+
+Refresh of sched-fair-paraphrase
+
+---
+
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index 484772b7b5e9..94ed9289931b 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -5466,16 +5466,14 @@ enum idle_cpu_type {
+  */
+ static int is_idle_cpu(int cpu)
+ {
+-	if (sched_idle_cpu(cpu))
+-		return cpu_sched_idle;
+-
+-	if (!idle_cpu(cpu))
+-		return cpu_busy;
++	if (!idle_cpu(cpu)) {
++		return sched_idle_cpu(cpu) ? cpu_sched_idle : cpu_busy;
++	}
+ 
+ 	if (vcpu_is_preempted(cpu))
+-		return cpu_non_preempted_idle;
++		return cpu_preempted_idle;
+ 
+-	return cpu_preempted_idle;
++	return cpu_non_preempted_idle;
+ }
+ #define available_idle_cpu(cpu) ((is_idle_cpu(cpu)) == cpu_non_preempted_idle)
