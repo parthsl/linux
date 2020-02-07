@@ -1,10 +1,10 @@
 Version: 1
-Previous: c8799b3ab5fe19c2e36ad35f8c188774a4eaeb63
-Head: 526292270ee82938239a61c0c1238d0bf18e5ae6
+Previous: c757f13d1bad5f4d9725c6e01e8f01c40c1ddf8e
+Head: 3d7ad14a0115422a3389436ad837e21b97b72c78
 Applied:
   sched-fair-consider-sched_idle: 1b12f33f99cce8373fbe3a559e3c132630838f56
   sched-move-available_idle_cpu: 59cd3116b6b6f8fddc91b6ba2bb8715aa393ac14
   sched-fair-paraphrase: 526292270ee82938239a61c0c1238d0bf18e5ae6
+  sched-fair-allow-pre-empted: 3d7ad14a0115422a3389436ad837e21b97b72c78
 Unapplied:
-  sched-fair-allow-pre-empted: 28a9c3027fc6c356786218e97d9f5a6de61dcaea
 Hidden:

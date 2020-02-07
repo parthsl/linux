@@ -1,5 +1,5 @@
-Bottom: 88bb9e41630bbe144771bce184e52c81cf29951c
-Top:    3c9a7fc6da821431e5ca17becb7a1e23267593d0
+Bottom: e045b931472d6054c0236a8dc2b6936d1e04270b
+Top:    15a9bebe3a88c071f2954c7db9dc648ab19bed4e
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2020-01-31 12:29:46 +0530
 
@@ -16,7 +16,7 @@ Signed-off-by: Parth Shah <parth@linux.ibm.com>
 ---
 
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 94ed9289931b..1d43163e4adf 100644
+index 6c0cb349a02f..0467798fbc8f 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
 @@ -5829,11 +5829,14 @@ static int select_idle_core(struct task_struct *p, struct sched_domain *sd, int
