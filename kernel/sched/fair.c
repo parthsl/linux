@@ -5474,6 +5474,7 @@ static int is_idle_cpu(int cpu)
 
 	return cpu_non_preempted_idle;
 }
+
 #define available_idle_cpu(cpu) ((is_idle_cpu(cpu)) == cpu_non_preempted_idle)
 
 static void record_wakee(struct task_struct *p)
