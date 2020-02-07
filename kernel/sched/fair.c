@@ -5461,13 +5461,13 @@ static unsigned long capacity_of(int cpu)
  */
 int available_idle_cpu(int cpu)
 {
-       if (!idle_cpu(cpu))
-               return 0;
+	if (!idle_cpu(cpu))
+		return 0;
 
-       if (vcpu_is_preempted(cpu))
-               return 0;
+	if (vcpu_is_preempted(cpu))
+		return 0;
 
-       return 1;
+	return 1;
 }
 
 static void record_wakee(struct task_struct *p)
