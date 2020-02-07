@@ -5455,9 +5455,9 @@ static unsigned long capacity_of(int cpu)
 
 enum idle_cpu_type {
 	cpu_busy = 0,
-	cpu_preempted_idle
+	cpu_preempted_idle,
 	cpu_non_preempted_idle,
-	cpu_sched_idle,
+	cpu_sched_idle
 }
 
 /*
