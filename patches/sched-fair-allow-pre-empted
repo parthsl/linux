@@ -5,6 +5,11 @@ Date:   2020-01-31 12:29:46 +0530
 
 sched/fair: Allow pre-empted idle CPUs to be used for waking tasks
 
+Pre-empted idle CPUs are not considered for task wakeup as the vCPU is
+guaranteed to be really idle. Hence, optimize the wakeup path when the
+select_idle_cpu and select_idle_smt is not able to find any CPU and so use
+the pre-empted idle CPU (if any available) instead.
+
 
 ---
 
