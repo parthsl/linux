@@ -5941,7 +5941,7 @@ static int select_idle_sibling(struct task_struct *p, int prev, int target)
 	if (recent_used_cpu != prev &&
 	    recent_used_cpu != target &&
 	    cpus_share_cache(recent_used_cpu, target) &&
-	    is_idle_task(recent_used_cpu) >= cpu_non_preempted_idle &&
+	    is_idle_cpu(recent_used_cpu) >= cpu_non_preempted_idle &&
 	    cpumask_test_cpu(p->recent_used_cpu, p->cpus_ptr)) {
 		/*
 		 * Replace recent_used_cpu with prev as it is a potential
