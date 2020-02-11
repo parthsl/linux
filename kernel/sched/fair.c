@@ -5912,7 +5912,7 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 
 	for_each_cpu_wrap(cpu, cpus, target) {
 		if (!--nr)
-			return -1;
+			break;
 		ict = is_idle_cpu(cpu);
 		if (ict >= cpu_non_preempted_idle)
 			break;
