@@ -1,5 +1,5 @@
 Bottom: 78d673cad5f1fa64871393f27d21e276ee38c64d
-Top:    0bc891bba1c1b53dc3476e21c971f445195bb3b8
+Top:    6e0fd8ead10120e20da2e19327260cbd849459b9
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2020-01-31 12:29:46 +0530
 
@@ -16,10 +16,36 @@ Signed-off-by: Parth Shah <parth@linux.ibm.com>
 ---
 
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 574e201d0421..95c20c4e8061 100644
+index 574e201d0421..f3347eced9f5 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
-@@ -5829,11 +5829,14 @@ static int select_idle_core(struct task_struct *p, struct sched_domain *sd, int
+@@ -5476,6 +5476,7 @@ static int is_idle_cpu(int cpu)
+ }
+ 
+ #define available_idle_cpu(cpu) ((is_idle_cpu(cpu)) == cpu_non_preempted_idle)
++#define is_cpu_hv_idle(cpu) ((is_idle_cpu(cpu)) >= cpu_non_preempted_idle)
+ 
+ static void record_wakee(struct task_struct *p)
+ {
+@@ -5780,7 +5781,7 @@ void __update_idle_core(struct rq *rq)
+ 		if (cpu == core)
+ 			continue;
+ 
+-		if (is_idle_cpu(cpu) <= cpu_preempted_idle)
++		if (!is_cpu_hv_idle(cpu))
+ 			goto unlock;
+ 	}
+ 
+@@ -5812,7 +5813,7 @@ static int select_idle_core(struct task_struct *p, struct sched_domain *sd, int
+ 
+ 		for_each_cpu(cpu, cpu_smt_mask(core)) {
+ 			__cpumask_clear_cpu(cpu, cpus);
+-			if (is_idle_cpu(cpu) <= cpu_preempted_idle)
++			if (!is_cpu_hv_idle(cpu))
+ 				idle = false;
+ 		}
+ 
+@@ -5829,11 +5830,14 @@ static int select_idle_core(struct task_struct *p, struct sched_domain *sd, int
  }
  
  /*
@@ -35,7 +61,7 @@ index 574e201d0421..95c20c4e8061 100644
  
  	if (!static_branch_likely(&sched_smt_present))
  		return -1;
-@@ -5841,11 +5844,14 @@ static int select_idle_smt(struct task_struct *p, int target)
+@@ -5841,11 +5845,14 @@ static int select_idle_smt(struct task_struct *p, int target)
  	for_each_cpu(cpu, cpu_smt_mask(target)) {
  		if (!cpumask_test_cpu(cpu, p->cpus_ptr))
  			continue;
@@ -52,7 +78,7 @@ index 574e201d0421..95c20c4e8061 100644
  }
  
  #else /* CONFIG_SCHED_SMT */
-@@ -5875,7 +5881,8 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
+@@ -5875,7 +5882,8 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
  	u64 time, cost;
  	s64 delta;
  	int this = smp_processor_id();
@@ -62,7 +88,7 @@ index 574e201d0421..95c20c4e8061 100644
  
  	this_sd = rcu_dereference(*this_cpu_ptr(&sd_llc));
  	if (!this_sd)
-@@ -5905,9 +5912,12 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
+@@ -5905,9 +5913,12 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
  
  	for_each_cpu_wrap(cpu, cpus, target) {
  		if (!--nr)
@@ -77,7 +103,7 @@ index 574e201d0421..95c20c4e8061 100644
  	}
  
  	time = cpu_clock(this) - time;
-@@ -5915,7 +5925,7 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
+@@ -5915,7 +5926,7 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
  	delta = (s64)(time - cost) / 8;
  	this_sd->avg_scan_cost += delta;
  
@@ -86,3 +112,29 @@ index 574e201d0421..95c20c4e8061 100644
  }
  
  /*
+@@ -5926,14 +5937,14 @@ static int select_idle_sibling(struct task_struct *p, int prev, int target)
+ 	struct sched_domain *sd;
+ 	int i, recent_used_cpu;
+ 
+-	if (is_idle_cpu(target) >= cpu_non_preempted_idle)
++	if (is_cpu_hv_idle(target))
+ 		return target;
+ 
+ 	/*
+ 	 * If the previous CPU is cache affine and idle, don't be stupid:
+ 	 */
+ 	if (prev != target && cpus_share_cache(prev, target) &&
+-	    (is_idle_cpu(prev) >= cpu_non_preempted_idle))
++	    (is_cpu_hv_idle(prev)))
+ 		return prev;
+ 
+ 	/* Check a recently used CPU as a potential idle candidate: */
+@@ -5941,7 +5952,7 @@ static int select_idle_sibling(struct task_struct *p, int prev, int target)
+ 	if (recent_used_cpu != prev &&
+ 	    recent_used_cpu != target &&
+ 	    cpus_share_cache(recent_used_cpu, target) &&
+-	    is_idle_cpu(recent_used_cpu) >= cpu_non_preempted_idle &&
++	    is_cpu_hv_idle(recent_used_cpu) &&
+ 	    cpumask_test_cpu(p->recent_used_cpu, p->cpus_ptr)) {
+ 		/*
+ 		 * Replace recent_used_cpu with prev as it is a potential
