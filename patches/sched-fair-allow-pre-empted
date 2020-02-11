@@ -1,5 +1,5 @@
 Bottom: 78d673cad5f1fa64871393f27d21e276ee38c64d
-Top:    6e9b0e489365dcfdfff0351547957293af7e210e
+Top:    0bc891bba1c1b53dc3476e21c971f445195bb3b8
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2020-01-31 12:29:46 +0530
 
@@ -16,7 +16,7 @@ Signed-off-by: Parth Shah <parth@linux.ibm.com>
 ---
 
 diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 574e201d0421..9abd9085708a 100644
+index 574e201d0421..95c20c4e8061 100644
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
 @@ -5829,11 +5829,14 @@ static int select_idle_core(struct task_struct *p, struct sched_domain *sd, int
@@ -62,14 +62,16 @@ index 574e201d0421..9abd9085708a 100644
  
  	this_sd = rcu_dereference(*this_cpu_ptr(&sd_llc));
  	if (!this_sd)
-@@ -5906,8 +5913,11 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
+@@ -5905,9 +5912,12 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
+ 
  	for_each_cpu_wrap(cpu, cpus, target) {
  		if (!--nr)
- 			return -1;
+-			return -1;
 -		if (is_idle_cpu(cpu) >= cpu_non_preempted_idle)
+ 			break;
 +		ict = is_idle_cpu(cpu);
 +		if (ict >= cpu_non_preempted_idle)
- 			break;
++			break;
 +		if (cpi == -1 && ict == cpu_preempted_idle)
 +			cpi = cpu;
  	}
