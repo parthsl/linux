@@ -5926,7 +5926,7 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 	delta = (s64)(time - cost) / 8;
 	this_sd->avg_scan_cost += delta;
 
-	return cpi;
+	return cpu != -1 ? cpu : cpi;
 }
 
 /*
