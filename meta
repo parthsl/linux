@@ -1,6 +1,11 @@
 Version: 1
-Previous: None
+Previous: efe0282dd05d279d75ed5f9d4798fcb381645353
 Head: 81c09548b09e9fd67946cd9e518ba02e844c8886
 Applied:
+  sched-fair-reorder-enqueue: f799077e7dfba4e4273b70d49d9034162ebe274a
+  sched-numa-replace: 5b02548f4f56bcb7168a35aeda2b988c9a479c5f
+  sched-pelt-remove-unused: 82441e87d4515710697a0c547fc22bd844ca08df
+  sched-pelt-add-a-new-runnable: 716919ab2ab0c45fe35e778d17d298e39cccb6ec
+  sched-fair-take-into-account: 81c09548b09e9fd67946cd9e518ba02e844c8886
 Unapplied:
 Hidden:
