@@ -1020,6 +1020,8 @@ struct rq {
 	unsigned int		sis_domain_search;
 	unsigned int		sis_scanned;
 	unsigned int		sis_failed;
+	unsigned int		sis_recent_hit;
+	unsigned int		sis_recent_miss;
 #endif
 
 #ifdef CONFIG_SMP

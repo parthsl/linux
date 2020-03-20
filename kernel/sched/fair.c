@@ -6230,15 +6230,18 @@ symmetric:
 	recent_used_cpu = p->recent_used_cpu;
 	if (recent_used_cpu != prev &&
 	    recent_used_cpu != target &&
-	    cpus_share_cache(recent_used_cpu, target) &&
-	    (available_idle_cpu(recent_used_cpu) || sched_idle_cpu(recent_used_cpu)) &&
-	    cpumask_test_cpu(p->recent_used_cpu, p->cpus_ptr)) {
-		/*
-		 * Replace recent_used_cpu with prev as it is a potential
-		 * candidate for the next wake:
-		 */
-		p->recent_used_cpu = prev;
-		return recent_used_cpu;
+	    cpus_share_cache(recent_used_cpu, target)) {
+		if ((available_idle_cpu(recent_used_cpu) || sched_idle_cpu(recent_used_cpu)) &&
+		    cpumask_test_cpu(p->recent_used_cpu, p->cpus_ptr)) {
+			/*
+			 * Replace recent_used_cpu with prev as it is a potential
+			 * candidate for the next wake:
+			 */
+			p->recent_used_cpu = prev;
+			schedstat_inc(this_rq()->sis_recent_hit);
+			return recent_used_cpu;
+		}
+		schedstat_inc(this_rq()->sis_recent_miss);
 	}
 
 	sd = rcu_dereference(per_cpu(sd_llc, target));
