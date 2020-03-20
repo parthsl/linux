@@ -5942,6 +5942,38 @@ static inline int find_idlest_cpu(struct sched_domain *sd, struct task_struct *p
 	return new_cpu;
 }
 
+static inline void
+set_sd_overloaded(struct sched_domain_shared *sds, int val)
+{
+	if (!sds)
+		return;
+
+	WRITE_ONCE(sds->is_overloaded, val);
+}
+
+static inline bool test_sd_overloaded(struct sched_domain_shared *sds)
+{
+	return READ_ONCE(sds->is_overloaded);
+}
+
+/* Returns true if a previously overloaded domain is likely still overloaded. */
+static inline bool
+abort_sd_overloaded(struct sched_domain_shared *sds, int prev, int target)
+{
+	if (!sds || !test_sd_overloaded(sds))
+		return false;
+
+	/* Are either target or a suitable prev 1 or 0 tasks? */
+	if (cpu_rq(target)->nr_running <= 1 ||
+	    (prev != target && cpus_share_cache(prev, target) &&
+	     cpu_rq(prev)->nr_running <= 1)) {
+		set_sd_overloaded(sds, 0);
+		return false;
+	}
+
+	return true;
+}
+
 #ifdef CONFIG_SCHED_SMT
 DEFINE_STATIC_KEY_FALSE(sched_smt_present);
 EXPORT_SYMBOL_GPL(sched_smt_present);
@@ -6078,15 +6110,18 @@ static inline int select_idle_smt(struct task_struct *p, int target)
  * comparing the average scan cost (tracked in sd->avg_scan_cost) against the
  * average idle time for this rq (as found in rq->avg_idle).
  */
-static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int target)
+static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd,
+			   int prev, int target)
 {
 	struct cpumask *cpus = this_cpu_cpumask_var_ptr(select_idle_mask);
 	struct sched_domain *this_sd;
+	struct sched_domain_shared *sds;
 	u64 avg_cost, avg_idle;
 	u64 time, cost;
 	s64 delta;
 	int this = smp_processor_id();
 	int cpu, nr = INT_MAX;
+	int nr_scanned = 0, nr_running = 0;
 
 	this_sd = rcu_dereference(*this_cpu_ptr(&sd_llc));
 	if (!this_sd)
@@ -6110,17 +6145,39 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 			nr = 4;
 	}
 
+	sds = rcu_dereference(per_cpu(sd_llc_shared, target));
+	if (sched_feat(SIS_OVERLOAD)) {
+		if (abort_sd_overloaded(sds, prev, target))
+			return -1;
+	}
+
 	time = cpu_clock(this);
 
 	cpumask_and(cpus, sched_domain_span(sd), p->cpus_ptr);
 
 	for_each_cpu_wrap(cpu, cpus, target) {
 		schedstat_inc(this_rq()->sis_scanned);
-		if (!--nr)
-			return -1;
+		if (!--nr) {
+			cpu = -1;
+			break;
+		}
 		if (available_idle_cpu(cpu) || sched_idle_cpu(cpu))
 			break;
+		if (sched_feat(SIS_OVERLOAD)) {
+			nr_scanned++;
+			nr_running += cpu_rq(cpu)->nr_running;
+		}
 	}
+
+	/* Check if domain should be marked overloaded if no cpu was found. */
+	if (sched_feat(SIS_OVERLOAD) && (signed)cpu >= nr_cpumask_bits &&
+	    nr_scanned && nr_running > (nr_scanned << 1)) {
+		set_sd_overloaded(sds, 1);
+	}
+
+	/* Scan cost not accounted for if scan is throttled */
+	if (!nr)
+		return -1;
 
 	time = cpu_clock(this) - time;
 	cost = this_sd->avg_scan_cost;
@@ -6254,7 +6311,7 @@ symmetric:
 	if ((unsigned)i < nr_cpumask_bits)
 		return i;
 
-	i = select_idle_cpu(p, sd, target);
+	i = select_idle_cpu(p, sd, prev, target);
 	if ((unsigned)i < nr_cpumask_bits)
 		return i;
 

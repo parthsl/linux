@@ -57,6 +57,9 @@ SCHED_FEAT(TTWU_QUEUE, true)
 SCHED_FEAT(SIS_AVG_CPU, false)
 SCHED_FEAT(SIS_PROP, true)
 
+/* Limit scans if the domain is likely overloaded */
+SCHED_FEAT(SIS_OVERLOAD, true)
+
 /*
  * Issue a WARN when we do multiple update_rq_clock() calls
  * in a single rq->lock section. Default disabled because the
