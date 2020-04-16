@@ -236,6 +236,12 @@ static void do_idle(void)
 	if (pm_disabled < 0)
 		pr_info("Inconsistent value of nr_lat_sensitive counter\n");
 
+	if (sched_feat(MY_DEBUG)) {
+		if (pm_disabled != 0)
+			trace_printk("cpu-%d pm_disabled=%d\n",cpu,pm_disabled);
+	}
+	if (sched_feat(MY_RESET))
+		per_cpu(nr_lat_sensitive, cpu) = 0;
 	/*
 	 * If the arch has a polling bit, we maintain an invariant:
 	 *
