@@ -6606,6 +6606,7 @@ static struct kmem_cache *task_group_cache __read_mostly;
 
 DECLARE_PER_CPU(cpumask_var_t, load_balance_mask);
 DECLARE_PER_CPU(cpumask_var_t, select_idle_mask);
+DEFINE_PER_CPU(atomic_t, nr_lat_sensitive);
 
 void __init sched_init(void)
 {
@@ -6737,6 +6738,7 @@ void __init sched_init(void)
 #endif /* CONFIG_SMP */
 		hrtick_rq_init(rq);
 		atomic_set(&rq->nr_iowait, 0);
+		atomic_set(&per_cpu(nr_lat_sensitive, i), 0);
 	}
 
 	set_load_weight(&init_task, false);
