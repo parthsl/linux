@@ -262,7 +262,8 @@ static void do_idle(void)
 		 * broadcast device expired for us, we don't want to go deep
 		 * idle as we know that the IPI is going to arrive right away.
 		 */
-		if (cpu_idle_force_poll || tick_check_broadcast_expired()) {
+		if (cpu_idle_force_poll || tick_check_broadcast_expired() ||
+		    per_cpu(nr_lat_sensitive, cpu)) {
 			tick_nohz_idle_restart_tick();
 			cpu_idle_poll();
 		} else {
