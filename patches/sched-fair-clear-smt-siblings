@@ -1,0 +1,35 @@
+Bottom: 6cb8170d0c5d9f32b77e6afa2bc1ac6df874c0a7
+Top:    07fb37e45165ea69f552077a319664e7cae97799
+Author: Mel Gorman <mgorman@techsingularity.net>
+Date:   2020-03-20 15:12:44 +0000
+
+sched/fair: Clear SMT siblings after determining the core is not idle
+
+The clearing of SMT siblings from the SIS mask before checking for an idle
+core is a small but unnecessary cost. Defer the clearing of the siblings
+until the scan moves to the next potential target. The cost of this was
+not measured as it is borderline noise but it should be self-evident.
+
+Signed-off-by: Mel Gorman <mgorman@techsingularity.net>
+Reviewed-by: Valentin Schneider <valentin.schneider@arm.com>
+
+
+---
+
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index 89b551f4af4b..6bfb84e4e0a0 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -6023,10 +6023,11 @@ static int select_idle_core(struct task_struct *p, struct sched_domain *sd, int
+ 				break;
+ 			}
+ 		}
+-		cpumask_andnot(cpus, cpus, cpu_smt_mask(core));
+ 
+ 		if (idle)
+ 			return core;
++
++		cpumask_andnot(cpus, cpus, cpu_smt_mask(core));
+ 	}
+ 
+ 	/*
