@@ -231,6 +231,7 @@ exit_idle:
 static void do_idle(void)
 {
 	int cpu = smp_processor_id();
+	int pm_disabled = atomic_read(&per_cpu(nr_lat_sensitive, cpu));
 
 	/*
 	 * If the arch has a polling bit, we maintain an invariant:
@@ -257,6 +258,9 @@ static void do_idle(void)
 
 		arch_cpu_idle_enter();
 
+		if (pm_disabled < 0)
+			pr_info("Inconsistent value set for nr_lat_sensitive");
+
 		/*
 		 * In poll mode we reenable interrupts and spin. Also if we
 		 * detected in the wakeup from idle path that the tick
@@ -264,7 +268,7 @@ static void do_idle(void)
 		 * idle as we know that the IPI is going to arrive right away.
 		 */
 		if (cpu_idle_force_poll || tick_check_broadcast_expired() ||
-		    atomic_read(&per_cpu(nr_lat_sensitive, cpu))) {
+		    pm_disabled) {
 			tick_nohz_idle_restart_tick();
 			cpu_idle_poll();
 		} else {
