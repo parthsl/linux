@@ -1,0 +1,58 @@
+Bottom: 19a4788524f3c3d756425353d5aff309775ed79f
+Top:    30f08dec763d02b7ef199920aa6571d25bf03aaa
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2020-04-20 11:28:31 +0530
+
+sched/core: Introduce per_cpu counter to track latency sensitive tasks
+
+The "nr_lat_sensitive" per_cpu variable provides hints to the possible
+number of tasks occupying the CPU. This hints further helps in inhibiting
+the CPUIDLE governor from calling deeper IDLE states (next patches includes
+this).
+
+Signed-off-by: Parth Shah <parth@linux.ibm.com>
+
+
+---
+
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 2576fd8cacf9..3c49b839ff24 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -6606,6 +6606,7 @@ static struct kmem_cache *task_group_cache __read_mostly;
+ 
+ DECLARE_PER_CPU(cpumask_var_t, load_balance_mask);
+ DECLARE_PER_CPU(cpumask_var_t, select_idle_mask);
++DEFINE_PER_CPU(atomic_t, nr_lat_sensitive);
+ 
+ void __init sched_init(void)
+ {
+@@ -6646,6 +6647,8 @@ void __init sched_init(void)
+ 			cpumask_size(), GFP_KERNEL, cpu_to_node(i));
+ 		per_cpu(select_idle_mask, i) = (cpumask_var_t)kzalloc_node(
+ 			cpumask_size(), GFP_KERNEL, cpu_to_node(i));
++		per_cpu(nr_lat_sensitive, i) = (cpumask_var_t)kzalloc_node(
++			cpumask_size(), GFP_KERNEL, cpu_to_node(i));
+ 	}
+ #endif /* CONFIG_CPUMASK_OFFSTACK */
+ 
+@@ -6737,6 +6740,7 @@ void __init sched_init(void)
+ #endif /* CONFIG_SMP */
+ 		hrtick_rq_init(rq);
+ 		atomic_set(&rq->nr_iowait, 0);
++		atomic_set(&per_cpu(nr_lat_sensitive, i), 0);
+ 	}
+ 
+ 	set_load_weight(&init_task, false);
+diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
+index b2c86dfe913e..540860584502 100644
+--- a/kernel/sched/sched.h
++++ b/kernel/sched/sched.h
+@@ -1439,6 +1439,7 @@ DECLARE_PER_CPU(struct sched_domain_shared __rcu *, sd_llc_shared);
+ DECLARE_PER_CPU(struct sched_domain __rcu *, sd_numa);
+ DECLARE_PER_CPU(struct sched_domain __rcu *, sd_asym_packing);
+ DECLARE_PER_CPU(struct sched_domain __rcu *, sd_asym_cpucapacity);
++DECLARE_PER_CPU(atomic_t, nr_lat_sensitive);
+ extern struct static_key_false sched_asym_cpucapacity;
+ 
+ struct sched_group_capacity {
