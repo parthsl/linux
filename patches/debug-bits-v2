@@ -1,5 +1,5 @@
-Bottom: c487bb3d2bcd8d2283682b3a27cafa89d58a898c
-Top:    2200255d2440be8649055f0bcf727ec96083e629
+Bottom: 826460f014ffae1f2da9b608b972ea4e695686c2
+Top:    07bb130496b1742e85123272fcb68a0ea9e8a044
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2020-04-16 12:36:44 +0530
 
@@ -8,7 +8,7 @@ debug bits v2
 ---
 
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index e662446bf05a..66ac922252f0 100644
+index f74c307e56c1..b2d3b4f6097b 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
 @@ -1749,6 +1749,8 @@ void set_task_cpu(struct task_struct *p, unsigned int new_cpu)
@@ -57,7 +57,7 @@ index e662446bf05a..66ac922252f0 100644
  		}
  
  		p->latency_nice = attr->sched_latency_nice;
-@@ -6777,6 +6789,8 @@ void __init sched_init(void)
+@@ -6775,6 +6787,8 @@ void __init sched_init(void)
  		hrtick_rq_init(rq);
  		atomic_set(&rq->nr_iowait, 0);
  		atomic_set(&per_cpu(nr_lat_sensitive, i), 0);
