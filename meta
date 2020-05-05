@@ -1,6 +1,10 @@
 Version: 1
-Previous: None
+Previous: 7d81725ff8dcb7d7b3f9206550bec13210729ee8
 Head: 7c8d8d07e3820beb0c697ce5f7f945c2fd5db753
 Applied:
+  sched-core-set: 7678678d53233f1cc132ec766a662dae032f3c31
+  sched-idle-disable-idle-call: c28dbf7b5dd5bd183347292c81e40e20bac2a661
+  sched-idle-add-debugging-bits: dfa6e3bff5567191d09f356b24d3825f44f94242
+  debug-bits-v2: 7c8d8d07e3820beb0c697ce5f7f945c2fd5db753
 Unapplied:
 Hidden:

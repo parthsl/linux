@@ -1,0 +1,42 @@
+Bottom: 0062e07be04b8592a7542de8be52365a3c3987c5
+Top:    c487bb3d2bcd8d2283682b3a27cafa89d58a898c
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2020-05-04 15:26:40 +0530
+
+sched/idle: Add debugging bits to validate inconsistency in latency
+sensitive task calculations
+
+We monitor the task entering/exiting the scheduler, but there might be
+unhandled situations which can lead to inconsistent value of the
+nr_lat_sensitive counter. This may lead to restricting the use of IDLE
+states despite absence of any latency sensitive workload.
+Hence, add WARN_ON() if a negative value of nr_lat_sensitive value is found.
+
+Signed-off-by: Parth Shah <parth@linux.ibm.com>
+
+
+---
+
+diff --git a/kernel/sched/idle.c b/kernel/sched/idle.c
+index b32631292271..579817ca3fdf 100644
+--- a/kernel/sched/idle.c
++++ b/kernel/sched/idle.c
+@@ -231,6 +231,9 @@ static void cpuidle_idle_call(void)
+ static void do_idle(void)
+ {
+ 	int cpu = smp_processor_id();
++	int pm_disabled = atomic_read(&per_cpu(nr_lat_sensitive, cpu));
++
++	WARN_ON(pm_disabled < 0);
+ 
+ 	/*
+ 	 * If the arch has a polling bit, we maintain an invariant:
+@@ -264,7 +267,7 @@ static void do_idle(void)
+ 		 * idle as we know that the IPI is going to arrive right away.
+ 		 */
+ 		if (cpu_idle_force_poll || tick_check_broadcast_expired() ||
+-		    atomic_read(&per_cpu(nr_lat_sensitive, cpu))) {
++		    pm_disabled) {
+ 			tick_nohz_idle_restart_tick();
+ 			cpu_idle_poll();
+ 		} else {

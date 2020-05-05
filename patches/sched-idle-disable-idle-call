@@ -1,0 +1,37 @@
+Bottom: e25eaa1f15c48fdfa8e4d8bd31d2f79d62326893
+Top:    0062e07be04b8592a7542de8be52365a3c3987c5
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2020-04-20 11:42:39 +0530
+
+sched/idle: Disable idle call on least latency requirements
+
+Restrict the call to deeper idle states when the given CPU has been set for
+the least latency requirements
+
+Signed-off-by: Parth Shah <parth@linux.ibm.com>
+
+
+---
+
+diff --git a/kernel/sched/idle.c b/kernel/sched/idle.c
+index b743bf38f08f..b32631292271 100644
+--- a/kernel/sched/idle.c
++++ b/kernel/sched/idle.c
+@@ -231,6 +231,7 @@ static void cpuidle_idle_call(void)
+ static void do_idle(void)
+ {
+ 	int cpu = smp_processor_id();
++
+ 	/*
+ 	 * If the arch has a polling bit, we maintain an invariant:
+ 	 *
+@@ -262,7 +263,8 @@ static void do_idle(void)
+ 		 * broadcast device expired for us, we don't want to go deep
+ 		 * idle as we know that the IPI is going to arrive right away.
+ 		 */
+-		if (cpu_idle_force_poll || tick_check_broadcast_expired()) {
++		if (cpu_idle_force_poll || tick_check_broadcast_expired() ||
++		    atomic_read(&per_cpu(nr_lat_sensitive, cpu))) {
+ 			tick_nohz_idle_restart_tick();
+ 			cpu_idle_poll();
+ 		} else {
