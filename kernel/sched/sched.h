@@ -211,6 +211,11 @@ static inline int task_has_dl_policy(struct task_struct *p)
 	return dl_policy(p->policy);
 }
 
+static inline int task_is_lat_sensitive(struct task_struct *p)
+{
+	return p->latency_nice == MIN_LATENCY_NICE;
+}
+
 #define cap_scale(v, s) ((v)*(s) >> SCHED_CAPACITY_SHIFT)
 
 /*
