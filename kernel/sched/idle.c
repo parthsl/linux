@@ -233,7 +233,8 @@ static void do_idle(void)
 	int cpu = smp_processor_id();
 	int pm_disabled = atomic_read(&per_cpu(nr_lat_sensitive, cpu));
 
-	WARN_ON(pm_disabled < 0);
+	if (pm_disabled)
+		pr_info("Inconsistent value of nr_lat_sensitive counter\n");
 
 	/*
 	 * If the arch has a polling bit, we maintain an invariant:
