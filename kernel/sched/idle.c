@@ -233,7 +233,7 @@ static void do_idle(void)
 	int cpu = smp_processor_id();
 	int pm_disabled = atomic_read(&per_cpu(nr_lat_sensitive, cpu));
 
-	if (pm_disabled)
+	if (pm_disabled < 0)
 		pr_info("Inconsistent value of nr_lat_sensitive counter\n");
 
 	/*
