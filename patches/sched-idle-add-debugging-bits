@@ -1,5 +1,5 @@
 Bottom: 67cef88dce9ad87900c7bbe461e14ca01e280f09
-Top:    0a346b072584964eeb4e3a84449a27cd5a0417d9
+Top:    b967c99a1264a3953e5343a78eb32be3ab16c0b9
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2020-05-04 15:26:40 +0530
 
@@ -18,7 +18,7 @@ Signed-off-by: Parth Shah <parth@linux.ibm.com>
 ---
 
 diff --git a/kernel/sched/idle.c b/kernel/sched/idle.c
-index b32631292271..5834273378b6 100644
+index b32631292271..6581613189d9 100644
 --- a/kernel/sched/idle.c
 +++ b/kernel/sched/idle.c
 @@ -231,6 +231,10 @@ static void cpuidle_idle_call(void)
@@ -27,7 +27,7 @@ index b32631292271..5834273378b6 100644
  	int cpu = smp_processor_id();
 +	int pm_disabled = atomic_read(&per_cpu(nr_lat_sensitive, cpu));
 +
-+	if (pm_disabled)
++	if (pm_disabled < 0)
 +		pr_info("Inconsistent value of nr_lat_sensitive counter\n");
  
  	/*
