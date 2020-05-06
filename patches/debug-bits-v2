@@ -1,5 +1,5 @@
-Bottom: 826460f014ffae1f2da9b608b972ea4e695686c2
-Top:    07bb130496b1742e85123272fcb68a0ea9e8a044
+Bottom: b967c99a1264a3953e5343a78eb32be3ab16c0b9
+Top:    91f989c7c3afa15327ee813761f6b235e5c7346e
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2020-04-16 12:36:44 +0530
 
@@ -77,12 +77,12 @@ index 7481cd96f391..7534539a58b9 100644
 +SCHED_FEAT(MY_DEBUG, true)
 +SCHED_FEAT(MY_RESET, false)
 diff --git a/kernel/sched/idle.c b/kernel/sched/idle.c
-index 579817ca3fdf..ead97a106628 100644
+index 6581613189d9..658d43a549b1 100644
 --- a/kernel/sched/idle.c
 +++ b/kernel/sched/idle.c
-@@ -235,6 +235,12 @@ static void do_idle(void)
- 
- 	WARN_ON(pm_disabled < 0);
+@@ -236,6 +236,12 @@ static void do_idle(void)
+ 	if (pm_disabled < 0)
+ 		pr_info("Inconsistent value of nr_lat_sensitive counter\n");
  
 +	if (sched_feat(MY_DEBUG)) {
 +		if (pm_disabled != 0)
