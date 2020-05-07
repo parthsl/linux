@@ -6,19 +6,20 @@ Date:   2020-05-05 10:20:17 +0530
 sched/core: Set nr_lat_sensitive counter at various scheduler entry/exit points
 
 Monitor tasks at:
-1. wake_up_new_task (forked tasks will eventually call this)
+1. wake_up_new_task() - forked tasks
 
-2. set_task_cpu (sched_exec eventually calls this)
+2. set_task_cpu() - task migrations, Load balancer
 
-3. __sched_setscheduler (set/unset latency_nice value)
+3. __sched_setscheduler() - set/unset latency_nice value
 Increment the nr_lat_sensitive count on the CPU with task marked with
 latency_nice == -20.
 Similarly, decrement the nr_lat_sensitive counter upon re-marking the task
 with >-20 latency_nice task.
 
-4. finish_task_switch (dying task)
+4. finish_task_switch() - dying task
 
 Signed-off-by: Parth Shah <parth@linux.ibm.com>
+
 
 ---
 
