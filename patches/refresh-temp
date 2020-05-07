@@ -1,0 +1,45 @@
+Bottom: b74db24802ab41983c854ec8aa16ed715e976e2d
+Top:    2347522da2646b3379709552833bcf9a395015cc
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2020-05-07 16:35:17 +0530
+
+Refresh of sched-core-introduce-per_cpu
+
+---
+
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 4ec4cef13088..2d8b76f41d61 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -6606,7 +6606,7 @@ static struct kmem_cache *task_group_cache __read_mostly;
+ 
+ DECLARE_PER_CPU(cpumask_var_t, load_balance_mask);
+ DECLARE_PER_CPU(cpumask_var_t, select_idle_mask);
+-DEFINE_PER_CPU(atomic_t, nr_lat_sensitive);
++DEFINE_PER_CPU(int, nr_lat_sensitive);
+ 
+ void __init sched_init(void)
+ {
+@@ -6738,7 +6738,7 @@ void __init sched_init(void)
+ #endif /* CONFIG_SMP */
+ 		hrtick_rq_init(rq);
+ 		atomic_set(&rq->nr_iowait, 0);
+-		atomic_set(&per_cpu(nr_lat_sensitive, i), 0);
++		per_cpu(nr_lat_sensitive, i) = 0;
+ 	}
+ 
+ 	set_load_weight(&init_task, false);
+diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
+index 540860584502..5c41020c530e 100644
+--- a/kernel/sched/sched.h
++++ b/kernel/sched/sched.h
+@@ -1439,7 +1439,8 @@ DECLARE_PER_CPU(struct sched_domain_shared __rcu *, sd_llc_shared);
+ DECLARE_PER_CPU(struct sched_domain __rcu *, sd_numa);
+ DECLARE_PER_CPU(struct sched_domain __rcu *, sd_asym_packing);
+ DECLARE_PER_CPU(struct sched_domain __rcu *, sd_asym_cpucapacity);
+-DECLARE_PER_CPU(atomic_t, nr_lat_sensitive);
++DECLARE_PER_CPU(int, nr_lat_sensitive);
++
+ extern struct static_key_false sched_asym_cpucapacity;
+ 
+ struct sched_group_capacity {
