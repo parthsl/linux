@@ -12,7 +12,6 @@ this).
 
 Signed-off-by: Parth Shah <parth@linux.ibm.com>
 
-
 ---
 
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
