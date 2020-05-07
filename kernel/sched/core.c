@@ -1745,10 +1745,8 @@ void set_task_cpu(struct task_struct *p, unsigned int new_cpu)
 
 	if (task_cpu(p) != new_cpu) {
 		if (task_is_lat_sensitive(p)) {
-			task_lock(p);
 			per_cpu(nr_lat_sensitive, task_cpu(p))--;
 			per_cpu(nr_lat_sensitive, new_cpu)++;
-			task_unlock(p);
 		}
 
 		if (p->sched_class->migrate_task_rq)
@@ -2976,9 +2974,7 @@ void wake_up_new_task(struct task_struct *p)
 
 #ifdef CONFIG_SMP
 	if (task_is_lat_sensitive(p)) {
-		task_lock(p);
 		per_cpu(nr_lat_sensitive, target_cpu)++;
-		task_unlock(p);
 	}
 #endif
 
@@ -3268,9 +3264,7 @@ static struct rq *finish_task_switch(struct task_struct *prev)
 			prev->sched_class->task_dead(prev);
 
 		if (task_is_lat_sensitive(prev)) {
-			task_lock(prev);
 			per_cpu(nr_lat_sensitive, prev->cpu)--;
-			task_unlock(prev);
 		}
 
 		/*
@@ -4758,7 +4752,6 @@ static void __setscheduler_params(struct task_struct *p,
 	set_load_weight(p, true);
 
 	if (attr->sched_flags & SCHED_FLAG_LATENCY_NICE) {
-		task_lock(p);
 		if (p->state != TASK_DEAD &&
 		    attr->sched_latency_nice != p->latency_nice) {
 			if (attr->sched_latency_nice == MIN_LATENCY_NICE)
@@ -4768,7 +4761,6 @@ static void __setscheduler_params(struct task_struct *p,
 		}
 
 		p->latency_nice = attr->sched_latency_nice;
-		task_unlock(p);
 	}
 }
 
