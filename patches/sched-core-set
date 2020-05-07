@@ -1,5 +1,5 @@
 Bottom: 2347522da2646b3379709552833bcf9a395015cc
-Top:    33693ee5205ca42702481cb1025e82311a24aa36
+Top:    e937185d5671a85f5189f847f049041576809171
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2020-05-05 10:20:17 +0530
 
@@ -23,24 +23,22 @@ Signed-off-by: Parth Shah <parth@linux.ibm.com>
 ---
 
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 2d8b76f41d61..b1df56dd0b05 100644
+index 2d8b76f41d61..bb28fc636e72 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
-@@ -1744,6 +1744,13 @@ void set_task_cpu(struct task_struct *p, unsigned int new_cpu)
+@@ -1744,6 +1744,11 @@ void set_task_cpu(struct task_struct *p, unsigned int new_cpu)
  	trace_sched_migrate_task(p, new_cpu);
  
  	if (task_cpu(p) != new_cpu) {
 +		if (task_is_lat_sensitive(p)) {
-+			task_lock(p);
 +			per_cpu(nr_lat_sensitive, task_cpu(p))--;
 +			per_cpu(nr_lat_sensitive, new_cpu)++;
-+			task_unlock(p);
 +		}
 +
  		if (p->sched_class->migrate_task_rq)
  			p->sched_class->migrate_task_rq(p, new_cpu);
  		p->se.nr_migrations++;
-@@ -2947,6 +2954,7 @@ void wake_up_new_task(struct task_struct *p)
+@@ -2947,6 +2952,7 @@ void wake_up_new_task(struct task_struct *p)
  {
  	struct rq_flags rf;
  	struct rq *rq;
@@ -48,7 +46,7 @@ index 2d8b76f41d61..b1df56dd0b05 100644
  
  	raw_spin_lock_irqsave(&p->pi_lock, rf.flags);
  	p->state = TASK_RUNNING;
-@@ -2960,9 +2968,20 @@ void wake_up_new_task(struct task_struct *p)
+@@ -2960,9 +2966,18 @@ void wake_up_new_task(struct task_struct *p)
  	 * as we're not fully set-up yet.
  	 */
  	p->recent_used_cpu = task_cpu(p);
@@ -61,35 +59,30 @@ index 2d8b76f41d61..b1df56dd0b05 100644
 +
 +#ifdef CONFIG_SMP
 +	if (task_is_lat_sensitive(p)) {
-+		task_lock(p);
 +		per_cpu(nr_lat_sensitive, target_cpu)++;
-+		task_unlock(p);
 +	}
 +#endif
 +
  	update_rq_clock(rq);
  	post_init_entity_util_avg(p);
  
-@@ -3248,6 +3267,12 @@ static struct rq *finish_task_switch(struct task_struct *prev)
+@@ -3248,6 +3263,10 @@ static struct rq *finish_task_switch(struct task_struct *prev)
  		if (prev->sched_class->task_dead)
  			prev->sched_class->task_dead(prev);
  
 +		if (task_is_lat_sensitive(prev)) {
-+			task_lock(prev);
 +			per_cpu(nr_lat_sensitive, prev->cpu)--;
-+			task_unlock(prev);
 +		}
 +
  		/*
  		 * Remove function-return probe instances associated with this
  		 * task and put them back on the free list.
-@@ -4732,8 +4757,19 @@ static void __setscheduler_params(struct task_struct *p,
+@@ -4732,8 +4751,17 @@ static void __setscheduler_params(struct task_struct *p,
  	p->normal_prio = normal_prio(p);
  	set_load_weight(p, true);
  
 -	if (attr->sched_flags & SCHED_FLAG_LATENCY_NICE)
 +	if (attr->sched_flags & SCHED_FLAG_LATENCY_NICE) {
-+		task_lock(p);
 +		if (p->state != TASK_DEAD &&
 +		    attr->sched_latency_nice != p->latency_nice) {
 +			if (attr->sched_latency_nice == MIN_LATENCY_NICE)
@@ -99,7 +92,6 @@ index 2d8b76f41d61..b1df56dd0b05 100644
 +		}
 +
  		p->latency_nice = attr->sched_latency_nice;
-+		task_unlock(p);
 +	}
  }
  
