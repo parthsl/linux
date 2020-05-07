@@ -2979,7 +2979,6 @@ void wake_up_new_task(struct task_struct *p)
 		per_cpu(nr_lat_sensitive, target_cpu)++;
 		if (sched_feat(MY_DEBUG))
 			trace_printk("wakeup new: pid=%d target_cpu=%d dic=%d\n", p->pid, target_cpu, per_cpu(nr_lat_sensitive, target_cpu));
-		task_unlock(p);
 	}
 #endif
 
