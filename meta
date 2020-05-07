@@ -1,10 +1,10 @@
 Version: 1
-Previous: a6c30fe1f3c77bd8d4c2fa92e0454827370bcde1
-Head: 962f9a0a1ed9cc75df2206c1656c765445481043
+Previous: 298137b81979c6ab9bc16b1c52711a0378ab4c31
+Head: 53d4d4e7422d4d40648d641954a9bdc2ace30fef
 Applied:
   sched-core-introduce-per_cpu: 962f9a0a1ed9cc75df2206c1656c765445481043
+  sched-core-set: 53d4d4e7422d4d40648d641954a9bdc2ace30fef
 Unapplied:
-  sched-core-set: 32cc0595a79d26af2921471350e7a20f5d87565f
   sched-idle-disable-idle-call: 572beae63cd7b68704aeb088b4f61cd509e8cb4e
   sched-idle-add-debugging-bits: d79bd9183de8c2815121db9345bb15ae7851d1d5
   debug-bits-v2: 11d8c7da4050f513668416338b2c47ae0828d103

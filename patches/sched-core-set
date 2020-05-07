@@ -1,5 +1,5 @@
-Bottom: b74db24802ab41983c854ec8aa16ed715e976e2d
-Top:    2cb8809e445fc38a51cec3e465534d7f1d4a2c2b
+Bottom: 2347522da2646b3379709552833bcf9a395015cc
+Top:    682bfba7aacdc3bff57b2988fb82f06afbf26bb6
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2020-05-05 10:20:17 +0530
 
@@ -23,7 +23,7 @@ Signed-off-by: Parth Shah <parth@linux.ibm.com>
 ---
 
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 4ec4cef13088..f74c307e56c1 100644
+index 2d8b76f41d61..9be4e83f7a2b 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
 @@ -1744,6 +1744,13 @@ void set_task_cpu(struct task_struct *p, unsigned int new_cpu)
@@ -105,7 +105,7 @@ index 4ec4cef13088..f74c307e56c1 100644
  
  /* Actually do priority change: must hold pi & rq lock. */
 diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index 540860584502..edc0cda8b90e 100644
+index 5c41020c530e..56f885e37451 100644
 --- a/kernel/sched/sched.h
 +++ b/kernel/sched/sched.h
 @@ -211,6 +211,11 @@ static inline int task_has_dl_policy(struct task_struct *p)
