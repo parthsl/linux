@@ -1,0 +1,22 @@
+Bottom: eef24faf47d60bdcd500a10d28b834c8428e5fe4
+Top:    ae4add597217618ee7285f841bf1f4690e0abb80
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2020-05-07 16:39:14 +0530
+
+Refresh of sched-idle-disable-idle-call
+
+---
+
+diff --git a/kernel/sched/idle.c b/kernel/sched/idle.c
+index b32631292271..9b16fa71f114 100644
+--- a/kernel/sched/idle.c
++++ b/kernel/sched/idle.c
+@@ -264,7 +264,7 @@ static void do_idle(void)
+ 		 * idle as we know that the IPI is going to arrive right away.
+ 		 */
+ 		if (cpu_idle_force_poll || tick_check_broadcast_expired() ||
+-		    atomic_read(&per_cpu(nr_lat_sensitive, cpu))) {
++		    per_cpu(nr_lat_sensitive, cpu)) {
+ 			tick_nohz_idle_restart_tick();
+ 			cpu_idle_poll();
+ 		} else {
