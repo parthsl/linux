@@ -1,0 +1,35 @@
+Bottom: e937185d5671a85f5189f847f049041576809171
+Top:    c3edf2f95630502c3cb04664e4b184f775323bb2
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2020-05-07 18:33:56 +0530
+
+Refresh of sched-core-set
+
+---
+
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index bb28fc636e72..ad396c36eba6 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -2973,9 +2973,8 @@ void wake_up_new_task(struct task_struct *p)
+ 	rq = __task_rq_lock(p, &rf);
+ 
+ #ifdef CONFIG_SMP
+-	if (task_is_lat_sensitive(p)) {
++	if (task_is_lat_sensitive(p))
+ 		per_cpu(nr_lat_sensitive, target_cpu)++;
+-	}
+ #endif
+ 
+ 	update_rq_clock(rq);
+@@ -3263,9 +3262,8 @@ static struct rq *finish_task_switch(struct task_struct *prev)
+ 		if (prev->sched_class->task_dead)
+ 			prev->sched_class->task_dead(prev);
+ 
+-		if (task_is_lat_sensitive(prev)) {
++		if (task_is_lat_sensitive(prev))
+ 			per_cpu(nr_lat_sensitive, prev->cpu)--;
+-		}
+ 
+ 		/*
+ 		 * Remove function-return probe instances associated with this
