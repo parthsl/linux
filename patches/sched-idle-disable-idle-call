@@ -1,5 +1,5 @@
 Bottom: 33693ee5205ca42702481cb1025e82311a24aa36
-Top:    eef24faf47d60bdcd500a10d28b834c8428e5fe4
+Top:    ae4add597217618ee7285f841bf1f4690e0abb80
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2020-04-20 11:42:39 +0530
 
@@ -14,7 +14,7 @@ Signed-off-by: Parth Shah <parth@linux.ibm.com>
 ---
 
 diff --git a/kernel/sched/idle.c b/kernel/sched/idle.c
-index b743bf38f08f..b32631292271 100644
+index b743bf38f08f..9b16fa71f114 100644
 --- a/kernel/sched/idle.c
 +++ b/kernel/sched/idle.c
 @@ -231,6 +231,7 @@ static void cpuidle_idle_call(void)
@@ -31,7 +31,7 @@ index b743bf38f08f..b32631292271 100644
  		 */
 -		if (cpu_idle_force_poll || tick_check_broadcast_expired()) {
 +		if (cpu_idle_force_poll || tick_check_broadcast_expired() ||
-+		    atomic_read(&per_cpu(nr_lat_sensitive, cpu))) {
++		    per_cpu(nr_lat_sensitive, cpu)) {
  			tick_nohz_idle_restart_tick();
  			cpu_idle_poll();
  		} else {
