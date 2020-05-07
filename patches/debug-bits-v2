@@ -1,5 +1,5 @@
 Bottom: c8608c36ea7952a25aa21becaa298c1ff1f7acbd
-Top:    c673231681df800f72b1207f788a221798187e36
+Top:    6cd89b5de76c63a597906aafa913d94cf57ddde4
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2020-04-16 12:36:44 +0530
 
@@ -8,7 +8,7 @@ debug bits v2
 ---
 
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index bb28fc636e72..582c18265c98 100644
+index bb28fc636e72..2af40d20d7dd 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
 @@ -1747,6 +1747,8 @@ void set_task_cpu(struct task_struct *p, unsigned int new_cpu)
@@ -20,17 +20,16 @@ index bb28fc636e72..582c18265c98 100644
  		}
  
  		if (p->sched_class->migrate_task_rq)
-@@ -2975,6 +2977,9 @@ void wake_up_new_task(struct task_struct *p)
+@@ -2975,6 +2977,8 @@ void wake_up_new_task(struct task_struct *p)
  #ifdef CONFIG_SMP
  	if (task_is_lat_sensitive(p)) {
  		per_cpu(nr_lat_sensitive, target_cpu)++;
 +		if (sched_feat(MY_DEBUG))
 +			trace_printk("wakeup new: pid=%d target_cpu=%d dic=%d\n", p->pid, target_cpu, per_cpu(nr_lat_sensitive, target_cpu));
-+		task_unlock(p);
  	}
  #endif
  
-@@ -3265,6 +3270,8 @@ static struct rq *finish_task_switch(struct task_struct *prev)
+@@ -3265,6 +3269,8 @@ static struct rq *finish_task_switch(struct task_struct *prev)
  
  		if (task_is_lat_sensitive(prev)) {
  			per_cpu(nr_lat_sensitive, prev->cpu)--;
@@ -39,7 +38,7 @@ index bb28fc636e72..582c18265c98 100644
  		}
  
  		/*
-@@ -4754,10 +4761,16 @@ static void __setscheduler_params(struct task_struct *p,
+@@ -4754,10 +4760,16 @@ static void __setscheduler_params(struct task_struct *p,
  	if (attr->sched_flags & SCHED_FLAG_LATENCY_NICE) {
  		if (p->state != TASK_DEAD &&
  		    attr->sched_latency_nice != p->latency_nice) {
@@ -58,7 +57,7 @@ index bb28fc636e72..582c18265c98 100644
  		}
  
  		p->latency_nice = attr->sched_latency_nice;
-@@ -6767,6 +6780,8 @@ void __init sched_init(void)
+@@ -6767,6 +6779,8 @@ void __init sched_init(void)
  		hrtick_rq_init(rq);
  		atomic_set(&rq->nr_iowait, 0);
  		per_cpu(nr_lat_sensitive, i) = 0;
