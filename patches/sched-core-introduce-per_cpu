@@ -5,7 +5,7 @@ Date:   2020-04-20 11:28:31 +0530
 
 sched/core: Introduce per_cpu counter to track latency sensitive tasks
 
-The "nr_lat_sensitive" per_cpu variable provides hints the possible
+The "nr_lat_sensitive" per_cpu variable provides hints on the possible
 number of latency-sensitive tasks occupying the CPU. This hints further
 helps in inhibiting the CPUIDLE governor from calling deeper IDLE states
 (next patches includes this).
