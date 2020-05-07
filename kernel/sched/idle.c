@@ -241,7 +241,7 @@ static void do_idle(void)
 			trace_printk("cpu-%d pm_disabled=%d\n",cpu,pm_disabled);
 	}
 	if (sched_feat(MY_RESET))
-		atomic_set(&per_cpu(nr_lat_sensitive, cpu), 0);
+		per_cpu(nr_lat_sensitive, cpu) = 0;
 	/*
 	 * If the arch has a polling bit, we maintain an invariant:
 	 *
