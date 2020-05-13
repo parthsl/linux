@@ -1,6 +1,6 @@
 Version: 1
-Previous: 51c7ccf05188f4d53caf4b31ab9135c836789b17
-Head: d6c6701e99b13d66a22c79f51c4670560121c931
+Previous: e24c461a846c5b76bdcad022e7276e22fce9a2ff
+Head: caa38af1e4560ca8974a6f7ce273d27ab333c082
 Applied:
   sched-introduce-latency-nice: 6cbbaf24278d56936ddb48dcf82ce2df6024b830
   sched-core-propagate-parent: 0367cec2e08c72dd9886d21d8549af3b3da3299b
@@ -10,6 +10,6 @@ Applied:
   sched-core-set: 528054518490afe70a7e827db97d08f971f2848f
   sched-idle-disable-idle-call: 9c396b0835a1620459e7f0d23ab348da5daeae48
   sched-idle-add-debugging-bits: caa38af1e4560ca8974a6f7ce273d27ab333c082
-  debug-bits-v2: d6c6701e99b13d66a22c79f51c4670560121c931
 Unapplied:
+  debug-bits-v2: d6c6701e99b13d66a22c79f51c4670560121c931
 Hidden:
