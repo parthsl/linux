@@ -1,5 +1,5 @@
 Bottom: 5c44c78a177f50a4154a61f04e863ac5d56a0003
-Top:    44f6f57cec2ae6d5ded5841407f243fc36690a88
+Top:    0e639ad17117e9c7f1ca1f605ff7d98663389180
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2020-01-16 17:32:30 +0530
 
@@ -14,7 +14,6 @@ latency_nice of the task on every sched_setattr syscall.
 
 Signed-off-by: Parth Shah <parth@linux.ibm.com>
 Reviewed-by: Qais Yousef <qais.yousef@arm.com>
-
 
 ---
 
@@ -40,7 +39,7 @@ index 2e3bc22c6f20..8778c51c7953 100644
  
  #endif /* _UAPI_LINUX_SCHED_H */
 diff --git a/include/uapi/linux/sched/types.h b/include/uapi/linux/sched/types.h
-index c852153ddb0d..626ab61c1145 100644
+index c852153ddb0d..0f41e5d82fb9 100644
 --- a/include/uapi/linux/sched/types.h
 +++ b/include/uapi/linux/sched/types.h
 @@ -10,6 +10,7 @@ struct sched_param {
@@ -56,7 +55,7 @@ index c852153ddb0d..626ab61c1145 100644
   * A task with a max utilization value smaller than 1024 is more likely
   * scheduled on a CPU with no more capacity than the specified value.
 + *
-+ * Latency Tolerance Attributes
++ * latency_nice Attributes
 + * ===========================
 + *
 + * A subset of sched_attr attributes allows to specify the relative latency
