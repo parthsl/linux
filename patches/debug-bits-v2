@@ -1,5 +1,5 @@
-Bottom: 8304b0dc6d8ac4649b2ed6f5905dcaef8ded4ab5
-Top:    6ad8074427c83efb016120fe4f6c35a21f96f423
+Bottom: fcea1ac0117af724cdd74030c543ff1778384c5b
+Top:    8c8a2516b835601bb246c75928c11f632aa6b56b
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2020-04-16 12:36:44 +0530
 
@@ -8,7 +8,7 @@ debug bits v2
 ---
 
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index ad396c36eba6..2af40d20d7dd 100644
+index 67a6a61fd4e5..b3d3aa268def 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
 @@ -1747,6 +1747,8 @@ void set_task_cpu(struct task_struct *p, unsigned int new_cpu)
@@ -46,7 +46,7 @@ index ad396c36eba6..2af40d20d7dd 100644
  
  		/*
  		 * Remove function-return probe instances associated with this
-@@ -4752,10 +4760,16 @@ static void __setscheduler_params(struct task_struct *p,
+@@ -4770,10 +4778,16 @@ static void __setscheduler(struct rq *rq, struct task_struct *p,
  	if (attr->sched_flags & SCHED_FLAG_LATENCY_NICE) {
  		if (p->state != TASK_DEAD &&
  		    attr->sched_latency_nice != p->latency_nice) {
@@ -65,7 +65,7 @@ index ad396c36eba6..2af40d20d7dd 100644
  		}
  
  		p->latency_nice = attr->sched_latency_nice;
-@@ -6765,6 +6779,8 @@ void __init sched_init(void)
+@@ -6769,6 +6783,8 @@ void __init sched_init(void)
  		hrtick_rq_init(rq);
  		atomic_set(&rq->nr_iowait, 0);
  		per_cpu(nr_lat_sensitive, i) = 0;
