@@ -1,5 +1,5 @@
-Bottom: 19a4788524f3c3d756425353d5aff309775ed79f
-Top:    2347522da2646b3379709552833bcf9a395015cc
+Bottom: a134f7cd4a41dbf87b8825a3e8dbd261f9b1e90f
+Top:    6ba65853ccd07c08333826c20be5e06cfd9a2982
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2020-04-20 11:28:31 +0530
 
@@ -16,10 +16,10 @@ Signed-off-by: Parth Shah <parth@linux.ibm.com>
 ---
 
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 2576fd8cacf9..2d8b76f41d61 100644
+index 25140f240747..950607902c09 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
-@@ -6606,6 +6606,7 @@ static struct kmem_cache *task_group_cache __read_mostly;
+@@ -6610,6 +6610,7 @@ static struct kmem_cache *task_group_cache __read_mostly;
  
  DECLARE_PER_CPU(cpumask_var_t, load_balance_mask);
  DECLARE_PER_CPU(cpumask_var_t, select_idle_mask);
@@ -27,7 +27,7 @@ index 2576fd8cacf9..2d8b76f41d61 100644
  
  void __init sched_init(void)
  {
-@@ -6737,6 +6738,7 @@ void __init sched_init(void)
+@@ -6741,6 +6742,7 @@ void __init sched_init(void)
  #endif /* CONFIG_SMP */
  		hrtick_rq_init(rq);
  		atomic_set(&rq->nr_iowait, 0);
