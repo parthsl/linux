@@ -1,0 +1,32 @@
+Bottom: 44f6f57cec2ae6d5ded5841407f243fc36690a88
+Top:    19a4788524f3c3d756425353d5aff309775ed79f
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2020-02-26 11:30:53 +0530
+
+sched/core: Add permission checks for setting the latency_nice value
+
+Since the latency_nice uses the similar infrastructure as NICE, use the
+already existing CAP_SYS_NICE security checks for the latency_nice. This
+should return -EPERM for the non-root user when trying to set the task
+latency_nice value to any lower than the current value.
+
+Signed-off-by: Parth Shah <parth@linux.ibm.com>
+Reviewed-by: Chris Hyser <chris.hyser@oracle.com>
+
+---
+
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 6031ec58c7ae..2576fd8cacf9 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -4896,6 +4896,10 @@ static int __sched_setscheduler(struct task_struct *p,
+ 			return -EINVAL;
+ 		if (attr->sched_latency_nice < MIN_LATENCY_NICE)
+ 			return -EINVAL;
++		/* Use the same security checks as NICE */
++		if (attr->sched_latency_nice < p->latency_nice &&
++		    !capable(CAP_SYS_NICE))
++			return -EPERM;
+ 	}
+ 
+ 	if (pi)

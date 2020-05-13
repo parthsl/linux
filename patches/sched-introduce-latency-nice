@@ -1,0 +1,78 @@
+Bottom: e4eadcc2f068ee01e8fb20c954d88299695748c1
+Top:    2ec1a4ca8046bf73c1ad1370cfaf72065f99f354
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2020-02-25 15:07:35 +0530
+
+sched: Introduce latency-nice as a per-task attribute
+
+Latency-nice indicates the latency requirements of a task with respect
+to the other tasks in the system. The value of the attribute can be within
+the range of [-20, 19] both inclusive to be in-line with the values just
+like task nice values.
+
+latency_nice = -20 indicates the task to have the least latency as
+compared to the tasks having latency_nice = +19.
+
+The latency_nice may affect only the CFS SCHED_CLASS by getting
+latency requirements from the userspace.
+
+Additionally, add debugging bits for newly added latency_nice attribute.
+
+Signed-off-by: Parth Shah <parth@linux.ibm.com>
+Reviewed-by: Qais Yousef <qais.yousef@arm.com>
+
+---
+
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index 09bddd9e69a2..e9fd418fe71d 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -679,6 +679,7 @@ struct task_struct {
+ 	int				static_prio;
+ 	int				normal_prio;
+ 	unsigned int			rt_priority;
++	int				latency_nice;
+ 
+ 	const struct sched_class	*sched_class;
+ 	struct sched_entity		se;
+diff --git a/kernel/sched/debug.c b/kernel/sched/debug.c
+index 8331bc04aea2..2a96dadc9752 100644
+--- a/kernel/sched/debug.c
++++ b/kernel/sched/debug.c
+@@ -958,6 +958,7 @@ void proc_sched_show_task(struct task_struct *p, struct pid_namespace *ns,
+ #endif
+ 	P(policy);
+ 	P(prio);
++	P(latency_nice);
+ 	if (task_has_dl_policy(p)) {
+ 		P(dl.runtime);
+ 		P(dl.deadline);
+diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
+index 1e72d1b3d3ce..b2c86dfe913e 100644
+--- a/kernel/sched/sched.h
++++ b/kernel/sched/sched.h
+@@ -101,6 +101,24 @@ extern long calc_load_fold_active(struct rq *this_rq, long adjust);
+  */
+ #define NS_TO_JIFFIES(TIME)	((unsigned long)(TIME) / (NSEC_PER_SEC / HZ))
+ 
++/*
++ * Latency nice is meant to provide scheduler hints about the relative
++ * latency requirements of a task with respect to other tasks.
++ * Thus a task with latency_nice == 19 can be hinted as the task with no
++ * latency requirements, in contrast to the task with latency_nice == -20
++ * which should be given priority in terms of lower latency.
++ */
++#define MAX_LATENCY_NICE	19
++#define MIN_LATENCY_NICE	-20
++
++#define LATENCY_NICE_WIDTH	\
++	(MAX_LATENCY_NICE - MIN_LATENCY_NICE + 1)
++
++/*
++ * Default tasks should be treated as a task with latency_nice = 0.
++ */
++#define DEFAULT_LATENCY_NICE	0
++
+ /*
+  * Increase resolution of nice-level calculations for 64-bit architectures.
+  * The extra resolution improves shares distribution and load balancing of

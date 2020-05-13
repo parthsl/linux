@@ -1,0 +1,54 @@
+Bottom: 2ec1a4ca8046bf73c1ad1370cfaf72065f99f354
+Top:    5c44c78a177f50a4154a61f04e863ac5d56a0003
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2020-02-25 14:03:35 +0530
+
+sched/core: Propagate parent task's latency requirements to the child task
+
+Clone parent task's latency_nice attribute to the forked child task.
+
+Reset the latency_nice value to default value when the child task is
+set to sched_reset_on_fork.
+
+Also, initialize init_task.latency_nice value with DEFAULT_LATENCY_NICE
+value
+
+Signed-off-by: Parth Shah <parth@linux.ibm.com>
+Reviewed-by: Qais Yousef <qais.yousef@arm.com>
+
+---
+
+diff --git a/init/init_task.c b/init/init_task.c
+index 9e5cbe5eab7b..0d7d865519b8 100644
+--- a/init/init_task.c
++++ b/init/init_task.c
+@@ -69,6 +69,7 @@ struct task_struct init_task
+ 	.prio		= MAX_PRIO - 20,
+ 	.static_prio	= MAX_PRIO - 20,
+ 	.normal_prio	= MAX_PRIO - 20,
++	.latency_nice	= 0,
+ 	.policy		= SCHED_NORMAL,
+ 	.cpus_ptr	= &init_task.cpus_mask,
+ 	.cpus_mask	= CPU_MASK_ALL,
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index c1f923d647ee..ea6d8d6d5a07 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -2852,6 +2852,9 @@ int sched_fork(unsigned long clone_flags, struct task_struct *p)
+ 	 */
+ 	p->prio = current->normal_prio;
+ 
++	/* Propagate the parent's latency requirements to the child as well */
++	p->latency_nice = current->latency_nice;
++
+ 	uclamp_fork(p);
+ 
+ 	/*
+@@ -2868,6 +2871,7 @@ int sched_fork(unsigned long clone_flags, struct task_struct *p)
+ 		p->prio = p->normal_prio = __normal_prio(p);
+ 		set_load_weight(p, false);
+ 
++		p->latency_nice = DEFAULT_LATENCY_NICE;
+ 		/*
+ 		 * We don't need the reset flag anymore after the fork. It has
+ 		 * fulfilled its duty:
