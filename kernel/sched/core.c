@@ -4731,9 +4731,6 @@ static void __setscheduler_params(struct task_struct *p,
 	p->rt_priority = attr->sched_priority;
 	p->normal_prio = normal_prio(p);
 	set_load_weight(p, true);
-
-	if (attr->sched_flags & SCHED_FLAG_LATENCY_NICE)
-		p->latency_nice = attr->sched_latency_nice;
 }
 
 /* Actually do priority change: must hold pi & rq lock. */
@@ -4748,6 +4745,13 @@ static void __setscheduler(struct rq *rq, struct task_struct *p,
 		return;
 
 	__setscheduler_params(p, attr);
+
+	/*
+	 * Change latency_nice value only when SCHED_FLAG_LATENCY_NICE or
+	 * SCHED_FLAG_ALL sched_flag is set.
+	 */
+	if (attr->sched_flags & SCHED_FLAG_LATENCY_NICE)
+		p->latency_nice = attr->sched_latency_nice;
 
 	/*
 	 * Keep a potential priority boosting if called from
