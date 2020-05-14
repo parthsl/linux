@@ -1,5 +1,5 @@
 Bottom: 6275eeee33114987be04e224b76e98b067344975
-Top:    176ad0a74963309e2c364e070b2b5b7c8c0ca430
+Top:    66e1e85ca5c8da024f82b982fa547f51ce1bdb58
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2020-05-05 10:20:17 +0530
 
@@ -24,7 +24,7 @@ Signed-off-by: Parth Shah <parth@linux.ibm.com>
 ---
 
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 038cf92b6aa5..fde98ebd318b 100644
+index 038cf92b6aa5..fe774baf7118 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
 @@ -1744,6 +1744,11 @@ void set_task_cpu(struct task_struct *p, unsigned int new_cpu)
@@ -66,16 +66,16 @@ index 038cf92b6aa5..fde98ebd318b 100644
  	update_rq_clock(rq);
  	post_init_entity_util_avg(p);
  
-@@ -3248,6 +3262,9 @@ static struct rq *finish_task_switch(struct task_struct *prev)
- 		if (prev->sched_class->task_dead)
- 			prev->sched_class->task_dead(prev);
+@@ -3381,6 +3395,9 @@ context_switch(struct rq *rq, struct task_struct *prev,
  
-+		if (task_is_lat_sensitive(prev))
-+			per_cpu(nr_lat_sensitive, prev->cpu)--;
+ 	rq->clock_update_flags &= ~(RQCF_ACT_SKIP|RQCF_REQ_SKIP);
+ 
++	if (prev->state == TASK_DEAD && task_is_lat_sensitive(prev))
++		per_cpu(nr_lat_sensitive, prev->cpu)--;
 +
- 		/*
- 		 * Remove function-return probe instances associated with this
- 		 * task and put them back on the free list.
+ 	prepare_lock_switch(rq, next, rf);
+ 
+ 	/* Here we just switch the register state and the stack. */
 @@ -4747,9 +4764,17 @@ static void __setscheduler(struct rq *rq, struct task_struct *p,
  	/*
  	 * Allow changing latency_nice value independently of static_prio
