@@ -3262,9 +3262,6 @@ static struct rq *finish_task_switch(struct task_struct *prev)
 		if (prev->sched_class->task_dead)
 			prev->sched_class->task_dead(prev);
 
-		if (task_is_lat_sensitive(prev))
-			per_cpu(nr_lat_sensitive, prev->cpu)--;
-
 		/*
 		 * Remove function-return probe instances associated with this
 		 * task and put them back on the free list.
@@ -3397,6 +3394,9 @@ context_switch(struct rq *rq, struct task_struct *prev,
 	}
 
 	rq->clock_update_flags &= ~(RQCF_ACT_SKIP|RQCF_REQ_SKIP);
+
+	if (prev->state == TASK_DEAD && task_is_lat_sensitive(prev))
+		per_cpu(nr_lat_sensitive, prev->cpu)--;
 
 	prepare_lock_switch(rq, next, rf);
 
