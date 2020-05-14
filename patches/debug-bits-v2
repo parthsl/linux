@@ -1,5 +1,5 @@
 Bottom: 91c6c072c19fb53957281f6045c5e8e8718af565
-Top:    91c6c072c19fb53957281f6045c5e8e8718af565
+Top:    bdc3d6b70171e736a9b6adcb48f3e5915786f7fd
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2020-04-16 12:36:44 +0530
 
@@ -7,4 +7,98 @@ debug bits v2
 
 ---
 
-
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 2a12a0e74d92..d2e1ee12de1e 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -1748,6 +1748,9 @@ void set_task_cpu(struct task_struct *p, unsigned int new_cpu)
+ 	if (task_cpu(p) != new_cpu) {
+ 		if (task_is_lat_sensitive(p))
+ 			per_cpu(nr_lat_sensitive, task_cpu(p))--;
++			if (sched_feat(MY_DEBUG))
++				trace_printk("this!=new: pid=%d this=%d new=%d dic=%d dic=%d\n", p->pid, task_cpu(p), new_cpu, per_cpu(nr_lat_sensitive, task_cpu(p)), per_cpu(nr_lat_sensitive, new_cpu));
++		}
+ 
+ 		if (p->sched_class->migrate_task_rq)
+ 			p->sched_class->migrate_task_rq(p, new_cpu);
+@@ -2977,8 +2980,11 @@ void wake_up_new_task(struct task_struct *p)
+ 	rq = __task_rq_lock(p, &rf);
+ 
+ #ifdef CONFIG_SMP
+-	if (task_is_lat_sensitive(p))
++	if (task_is_lat_sensitive(p)) {
+ 		per_cpu(nr_lat_sensitive, target_cpu)++;
++		if (sched_feat(MY_DEBUG))
++			trace_printk("wakeup new: pid=%d target_cpu=%d dic=%d\n", p->pid, target_cpu, per_cpu(nr_lat_sensitive, target_cpu));
++	}
+ #endif
+ 
+ 	update_rq_clock(rq);
+@@ -3399,8 +3405,11 @@ context_switch(struct rq *rq, struct task_struct *prev,
+ 
+ 	rq->clock_update_flags &= ~(RQCF_ACT_SKIP|RQCF_REQ_SKIP);
+ 
+-	if (prev->state == TASK_DEAD && task_is_lat_sensitive(prev))
++	if (prev->state == TASK_DEAD && task_is_lat_sensitive(prev)) {
+ 		per_cpu(nr_lat_sensitive, prev->cpu)--;
++		if (sched_feat(MY_DEBUG))
++			trace_printk("dead task: pid=%d prevcpu=%d dic=%d\n", prev->pid, prev->cpu, per_cpu(nr_lat_sensitive, prev->cpu));
++	}
+ 
+ 	prepare_lock_switch(rq, next, rf);
+ 
+@@ -4771,10 +4780,16 @@ static void __setscheduler(struct rq *rq, struct task_struct *p,
+ 	if (attr->sched_flags & SCHED_FLAG_LATENCY_NICE) {
+ 		if (p->state != TASK_DEAD &&
+ 		    attr->sched_latency_nice != p->latency_nice) {
+-			if (attr->sched_latency_nice == MIN_LATENCY_NICE)
++			if (attr->sched_latency_nice == MIN_LATENCY_NICE) {
+ 				per_cpu(nr_lat_sensitive, task_cpu(p))++;
+-			else if (task_is_lat_sensitive(p))
++				if (sched_feat(MY_DEBUG))
++					trace_printk("set lnice: pid=%d vthiscpu=%d dic=%d\n", p->pid, task_cpu(p), per_cpu(nr_lat_sensitive, task_cpu(p)));
++			}
++			else if (task_is_lat_sensitive(p)) {
+ 				per_cpu(nr_lat_sensitive, task_cpu(p))--;
++				if (sched_feat(MY_DEBUG))
++					trace_printk("unset lnice:pid=%d  thiscpu=%d dic=%d\n", p->pid, task_cpu(p), per_cpu(nr_lat_sensitive, task_cpu(p)));
++			}
+ 		}
+ 
+ 		p->latency_nice = attr->sched_latency_nice;
+@@ -6771,6 +6786,8 @@ void __init sched_init(void)
+ 		hrtick_rq_init(rq);
+ 		atomic_set(&rq->nr_iowait, 0);
+ 		per_cpu(nr_lat_sensitive, i) = 0;
++		if (sched_feat(MY_DEBUG))
++			trace_printk("sched init: thiscpu=%d dic=%d\n", i, per_cpu(nr_lat_sensitive, i));
+ 	}
+ 
+ 	set_load_weight(&init_task, false);
+diff --git a/kernel/sched/features.h b/kernel/sched/features.h
+index 7481cd96f391..7534539a58b9 100644
+--- a/kernel/sched/features.h
++++ b/kernel/sched/features.h
+@@ -90,3 +90,5 @@ SCHED_FEAT(WA_BIAS, true)
+  */
+ SCHED_FEAT(UTIL_EST, true)
+ SCHED_FEAT(UTIL_EST_FASTUP, true)
++SCHED_FEAT(MY_DEBUG, true)
++SCHED_FEAT(MY_RESET, false)
+diff --git a/kernel/sched/idle.c b/kernel/sched/idle.c
+index 7aa0775e69c0..fc9d19afdd88 100644
+--- a/kernel/sched/idle.c
++++ b/kernel/sched/idle.c
+@@ -236,6 +236,12 @@ static void do_idle(void)
+ 	if (pm_disabled < 0)
+ 		pr_info("Inconsistent value of nr_lat_sensitive counter\n");
+ 
++	if (sched_feat(MY_DEBUG)) {
++		if (pm_disabled != 0)
++			trace_printk("cpu-%d pm_disabled=%d\n",cpu,pm_disabled);
++	}
++	if (sched_feat(MY_RESET))
++		per_cpu(nr_lat_sensitive, cpu) = 0;
+ 	/*
+ 	 * If the arch has a polling bit, we maintain an invariant:
+ 	 *
