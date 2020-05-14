@@ -1,5 +1,5 @@
-Bottom: d1daff64a4f75738e31ae3157a0d0b2a258a4613
-Top:    a134f7cd4a41dbf87b8825a3e8dbd261f9b1e90f
+Bottom: f747cb4a6d65cca424ec8acc08af1bd3c69110d3
+Top:    dbbf4719064a246f1684909be13a8920a4bc5c70
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2020-02-26 11:30:53 +0530
 
@@ -16,10 +16,10 @@ Reviewed-by: Chris Hyser <chris.hyser@oracle.com>
 ---
 
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 44bcbf060718..25140f240747 100644
+index 5b89f25ad924..16bf4f4475b8 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
-@@ -4900,6 +4900,10 @@ static int __sched_setscheduler(struct task_struct *p,
+@@ -4899,6 +4899,10 @@ static int __sched_setscheduler(struct task_struct *p,
  			return -EINVAL;
  		if (attr->sched_latency_nice < MIN_LATENCY_NICE)
  			return -EINVAL;
