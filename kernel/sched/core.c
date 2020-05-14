@@ -4744,14 +4744,13 @@ static void __setscheduler(struct rq *rq, struct task_struct *p,
 	if (attr->sched_flags & SCHED_FLAG_KEEP_PARAMS)
 		return;
 
-	__setscheduler_params(p, attr);
-
 	/*
-	 * Change latency_nice value only when SCHED_FLAG_LATENCY_NICE or
-	 * SCHED_FLAG_ALL sched_flag is set.
+	 * Allow changing latency_nice value independently of static_prio
 	 */
 	if (attr->sched_flags & SCHED_FLAG_LATENCY_NICE)
 		p->latency_nice = attr->sched_latency_nice;
+	else if (attr->sched_flags != SCHED_FLAG_LATENCY_NICE)
+		__setscheduler_params(p, attr);
 
 	/*
 	 * Keep a potential priority boosting if called from
