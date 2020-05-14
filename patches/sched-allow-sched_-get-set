@@ -1,5 +1,5 @@
 Bottom: 5c44c78a177f50a4154a61f04e863ac5d56a0003
-Top:    d1daff64a4f75738e31ae3157a0d0b2a258a4613
+Top:    f747cb4a6d65cca424ec8acc08af1bd3c69110d3
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2020-01-16 17:32:30 +0530
 
@@ -83,24 +83,25 @@ index c852153ddb0d..0f41e5d82fb9 100644
  
  #endif /* _UAPI_LINUX_SCHED_TYPES_H */
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index ea6d8d6d5a07..44bcbf060718 100644
+index ea6d8d6d5a07..5b89f25ad924 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
-@@ -4746,6 +4746,13 @@ static void __setscheduler(struct rq *rq, struct task_struct *p,
+@@ -4744,7 +4744,13 @@ static void __setscheduler(struct rq *rq, struct task_struct *p,
+ 	if (attr->sched_flags & SCHED_FLAG_KEEP_PARAMS)
+ 		return;
  
- 	__setscheduler_params(p, attr);
- 
+-	__setscheduler_params(p, attr);
 +	/*
-+	 * Change latency_nice value only when SCHED_FLAG_LATENCY_NICE or
-+	 * SCHED_FLAG_ALL sched_flag is set.
++	 * Allow changing latency_nice value independently of static_prio
 +	 */
 +	if (attr->sched_flags & SCHED_FLAG_LATENCY_NICE)
 +		p->latency_nice = attr->sched_latency_nice;
-+
++	else if (attr->sched_flags != SCHED_FLAG_LATENCY_NICE)
++		__setscheduler_params(p, attr);
+ 
  	/*
  	 * Keep a potential priority boosting if called from
- 	 * sched_setscheduler().
-@@ -4888,6 +4895,13 @@ static int __sched_setscheduler(struct task_struct *p,
+@@ -4888,6 +4894,13 @@ static int __sched_setscheduler(struct task_struct *p,
  			return retval;
  	}
  
@@ -114,7 +115,7 @@ index ea6d8d6d5a07..44bcbf060718 100644
  	if (pi)
  		cpuset_read_lock();
  
-@@ -4922,6 +4936,9 @@ static int __sched_setscheduler(struct task_struct *p,
+@@ -4922,6 +4935,9 @@ static int __sched_setscheduler(struct task_struct *p,
  			goto change;
  		if (attr->sched_flags & SCHED_FLAG_UTIL_CLAMP)
  			goto change;
@@ -124,7 +125,7 @@ index ea6d8d6d5a07..44bcbf060718 100644
  
  		p->sched_reset_on_fork = reset_on_fork;
  		retval = 0;
-@@ -5170,6 +5187,9 @@ static int sched_copy_attr(struct sched_attr __user *uattr, struct sched_attr *a
+@@ -5170,6 +5186,9 @@ static int sched_copy_attr(struct sched_attr __user *uattr, struct sched_attr *a
  	    size < SCHED_ATTR_SIZE_VER1)
  		return -EINVAL;
  
@@ -134,7 +135,7 @@ index ea6d8d6d5a07..44bcbf060718 100644
  	/*
  	 * XXX: Do we want to be lenient like existing syscalls; or do we want
  	 * to be strict and return an error on out-of-bounds values?
-@@ -5399,6 +5419,8 @@ SYSCALL_DEFINE4(sched_getattr, pid_t, pid, struct sched_attr __user *, uattr,
+@@ -5399,6 +5418,8 @@ SYSCALL_DEFINE4(sched_getattr, pid_t, pid, struct sched_attr __user *, uattr,
  	else
  		kattr.sched_nice = task_nice(p);
  
