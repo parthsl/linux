@@ -593,6 +593,8 @@ static struct rq *dl_task_offline_migration(struct rq *rq, struct task_struct *p
 	raw_spin_unlock(&dl_b->lock);
 
 	set_task_cpu(p, later_rq->cpu);
+	if (task_is_lat_sensitive(p))
+		per_cpu(nr_lat_sensitive, rq->cpu)++;
 	double_unlock_balance(later_rq, rq);
 
 	return later_rq;
@@ -2105,6 +2107,10 @@ retry:
 	deactivate_task(rq, next_task, 0);
 	set_task_cpu(next_task, later_rq->cpu);
 
+	if (task_is_lat_sensitive(next_task))
+		per_cpu(nr_lat_sensitive, later_rq->cpu)++;
+
+
 	/*
 	 * Update the later_rq clock here, because the clock is used
 	 * by the cpufreq_update_util() inside __add_running_bw().
@@ -2198,6 +2204,9 @@ static void pull_dl_task(struct rq *this_rq)
 
 			deactivate_task(src_rq, p, 0);
 			set_task_cpu(p, this_cpu);
+			if (task_is_lat_sensitive(p))
+				per_cpu(nr_lat_sensitive, this_cpu)++;
+
 			activate_task(this_rq, p, 0);
 			dmin = p->dl.deadline;
 

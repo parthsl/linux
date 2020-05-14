@@ -7719,6 +7719,10 @@ static void attach_one_task(struct rq *rq, struct task_struct *p)
 	struct rq_flags rf;
 
 	rq_lock(rq, &rf);
+
+	if (task_is_lat_sensitive(p))
+		per_cpu(nr_lat_sensitive, rq->cpu)++;
+
 	update_rq_clock(rq);
 	attach_task(rq, p);
 	rq_unlock(rq, &rf);
@@ -7741,6 +7745,8 @@ static void attach_tasks(struct lb_env *env)
 		p = list_first_entry(tasks, struct task_struct, se.group_node);
 		list_del_init(&p->se.group_node);
 
+		if (task_is_lat_sensitive(p))
+			per_cpu(nr_lat_sensitive, env->dst_cpu)++;
 		attach_task(env->dst_rq, p);
 	}
 
