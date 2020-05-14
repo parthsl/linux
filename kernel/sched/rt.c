@@ -1924,6 +1924,10 @@ retry:
 
 	deactivate_task(rq, next_task, 0);
 	set_task_cpu(next_task, lowest_rq->cpu);
+
+	if (task_is_lat_sensitive(next_task))
+		per_cpu(nr_lat_sensitive, lowest_rq->cpu)++;
+
 	activate_task(lowest_rq, next_task, 0);
 	ret = 1;
 
@@ -2196,6 +2200,8 @@ static void pull_rt_task(struct rq *this_rq)
 
 			deactivate_task(src_rq, p, 0);
 			set_task_cpu(p, this_cpu);
+			if (task_is_lat_sensitive(p))
+				per_cpu(nr_lat_sensitive, this_rq->cpu)++;
 			activate_task(this_rq, p, 0);
 			/*
 			 * We continue with the search, just in

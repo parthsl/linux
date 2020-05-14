@@ -1493,6 +1493,8 @@ static struct rq *move_queued_task(struct rq *rq, struct rq_flags *rf,
 
 	rq_lock(rq, rf);
 	BUG_ON(task_cpu(p) != new_cpu);
+	if (task_is_lat_sensitive(p))
+		per_cpu(nr_lat_sensitive, new_cpu)++;
 	enqueue_task(rq, p, 0);
 	p->on_rq = TASK_ON_RQ_QUEUED;
 	check_preempt_curr(rq, p, 0);
@@ -1744,10 +1746,8 @@ void set_task_cpu(struct task_struct *p, unsigned int new_cpu)
 	trace_sched_migrate_task(p, new_cpu);
 
 	if (task_cpu(p) != new_cpu) {
-		if (task_is_lat_sensitive(p)) {
+		if (task_is_lat_sensitive(p))
 			per_cpu(nr_lat_sensitive, task_cpu(p))--;
-			per_cpu(nr_lat_sensitive, new_cpu)++;
-		}
 
 		if (p->sched_class->migrate_task_rq)
 			p->sched_class->migrate_task_rq(p, new_cpu);
@@ -1774,6 +1774,8 @@ static void __migrate_swap_task(struct task_struct *p, int cpu)
 
 		deactivate_task(src_rq, p, 0);
 		set_task_cpu(p, cpu);
+		if (task_is_lat_sensitive(p))
+			per_cpu(nr_lat_sensitive, cpu)++;
 		activate_task(dst_rq, p, 0);
 		check_preempt_curr(dst_rq, p, 0);
 
@@ -2633,6 +2635,8 @@ try_to_wake_up(struct task_struct *p, unsigned int state, int wake_flags)
 		wake_flags |= WF_MIGRATED;
 		psi_ttwu_dequeue(p);
 		set_task_cpu(p, cpu);
+		if (task_is_lat_sensitive(p))
+			per_cpu(nr_lat_sensitive, cpu)++;
 	}
 
 #else /* CONFIG_SMP */
