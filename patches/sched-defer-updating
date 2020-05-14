@@ -1,0 +1,17 @@
+Bottom: 66e1e85ca5c8da024f82b982fa547f51ce1bdb58
+Top:    66e1e85ca5c8da024f82b982fa547f51ce1bdb58
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2020-05-14 11:29:10 +0530
+
+sched: Defer updating nr_lat_sensitive update to activate_task process
+
+set_task_cpu() does not hold new_cpu's rq lock, this may result in race
+condition when trying to update per_cpu nr_lat_sensitive counter.
+
+Hence defer this counter update to the time when we do activate_task to the
+new CPU where we do hold the new_cpu's rq lock.
+
+
+---
+
+
