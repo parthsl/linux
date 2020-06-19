@@ -641,6 +641,9 @@ DECLARE_TRACE(sched_util_est_cfs_tp,
 DECLARE_TRACE(sched_util_est_se_tp,
 	TP_PROTO(struct sched_entity *se),
 	TP_ARGS(se));
+DECLARE_TRACE(sched_update_nr_running_tp,
+	TP_PROTO(int cpu, int change, unsigned int nr_running),
+	TP_ARGS(cpu, change, nr_running));
 
 #endif /* _TRACE_SCHED_H */
 

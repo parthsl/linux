@@ -75,6 +75,15 @@
 #include "cpupri.h"
 #include "cpudeadline.h"
 
+#ifdef SCHED_CREATE_TRACE_POINTS
+#define CREATE_TRACE_POINTS
+#endif
+#include <trace/events/sched.h>
+
+#ifdef SCHED_CREATE_TRACE_POINTS
+#undef CREATE_TRACE_POINTS
+#endif
+
 #ifdef CONFIG_SCHED_DEBUG
 # define SCHED_WARN_ON(x)	WARN_ONCE(x, #x)
 #else
@@ -1970,6 +1979,7 @@ static inline void add_nr_running(struct rq *rq, unsigned count)
 	unsigned prev_nr = rq->nr_running;
 
 	rq->nr_running = prev_nr + count;
+	trace_sched_update_nr_running_tp(cpu_of(rq), count, rq->nr_running);
 
 #ifdef CONFIG_SMP
 	if (prev_nr < 2 && rq->nr_running >= 2) {
@@ -1984,6 +1994,8 @@ static inline void add_nr_running(struct rq *rq, unsigned count)
 static inline void sub_nr_running(struct rq *rq, unsigned count)
 {
 	rq->nr_running -= count;
+	trace_sched_update_nr_running_tp(cpu_of(rq), -count, rq->nr_running);
+
 	/* Check if we still need preemption */
 	sched_update_tick_dependency(rq);
 }
