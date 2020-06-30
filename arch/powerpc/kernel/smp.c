@@ -1316,7 +1316,7 @@ void start_secondary(void *unused)
 	 * per-core basis because one core in the pair might be disabled.
 	 */
 	if (!cpumask_equal(cpu_l2_cache_mask(cpu), sibling_mask(cpu)))
-		shared_caches = true;
+		shared_caches = false;
 
 	set_numa_node(numa_cpu_lookup_table[cpu]);
 	set_numa_mem(local_memory_node(numa_cpu_lookup_table[cpu]));
@@ -1356,10 +1356,22 @@ static int powerpc_smt_flags(void)
 }
 #endif
 
+static int powerpc_shared_hemisphere_flags(void)
+{
+	return SD_SHARE_PKG_RESOURCES;
+}
+
+static const struct cpumask *shared_hemisphere_mask(int cpu)
+{
+	return cpu_hemisphere_cache_mask(cpu);
+}
+
+
 static struct sched_domain_topology_level powerpc_topology[] = {
 #ifdef CONFIG_SCHED_SMT
 	{ cpu_smt_mask, powerpc_smt_flags, SD_INIT_NAME(SMT) },
 #endif
+	{ shared_hemisphere_mask, powerpc_shared_hemisphere_flags, SD_INIT_NAME(HEMISHPERE) },
 	{ cpu_cpu_mask, SD_INIT_NAME(DIE) },
 	{ NULL, },
 };
@@ -1375,11 +1387,6 @@ static int powerpc_shared_cache_flags(void)
 	return SD_SHARE_PKG_RESOURCES;
 }
 
-static int powerpc_shared_hemisphere_flags(void)
-{
-	return SD_SHARE_PKG_RESOURCES;
-}
-
 /*
  * We can't just pass cpu_l2_cache_mask() directly because
  * returns a non-const pointer and the compiler barfs on that.
@@ -1387,11 +1394,6 @@ static int powerpc_shared_hemisphere_flags(void)
 static const struct cpumask *shared_cache_mask(int cpu)
 {
 	return cpu_l2_cache_mask(cpu);
-}
-
-static const struct cpumask *shared_hemisphere_mask(int cpu)
-{
-	return cpu_hemisphere_cache_mask(cpu);
 }
 
 #ifdef CONFIG_SCHED_SMT
@@ -1406,7 +1408,6 @@ static struct sched_domain_topology_level power9_topology[] = {
 	{ cpu_smt_mask, powerpc_smt_flags, SD_INIT_NAME(SMT) },
 #endif
 	{ shared_cache_mask, powerpc_shared_cache_flags, SD_INIT_NAME(CACHE) },
-	{ shared_hemisphere_mask, powerpc_shared_hemisphere_flags, SD_INIT_NAME(HEMISHPERE) },
 	{ cpu_cpu_mask, SD_INIT_NAME(DIE) },
 	{ NULL, },
 };
