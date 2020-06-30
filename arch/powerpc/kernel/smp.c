@@ -78,10 +78,12 @@ bool has_big_cores;
 DEFINE_PER_CPU(cpumask_var_t, cpu_sibling_map);
 DEFINE_PER_CPU(cpumask_var_t, cpu_smallcore_map);
 DEFINE_PER_CPU(cpumask_var_t, cpu_l2_cache_map);
+DEFINE_PER_CPU(cpumask_var_t, cpu_hemisphere_cache_map);
 DEFINE_PER_CPU(cpumask_var_t, cpu_core_map);
 
 EXPORT_PER_CPU_SYMBOL(cpu_sibling_map);
 EXPORT_PER_CPU_SYMBOL(cpu_l2_cache_map);
+EXPORT_PER_CPU_SYMBOL(cpu_hemisphere_cache_map);
 EXPORT_PER_CPU_SYMBOL(cpu_core_map);
 EXPORT_SYMBOL_GPL(has_big_cores);
 
@@ -858,6 +860,8 @@ void __init smp_prepare_cpus(unsigned int max_cpus)
 					GFP_KERNEL, cpu_to_node(cpu));
 		zalloc_cpumask_var_node(&per_cpu(cpu_l2_cache_map, cpu),
 					GFP_KERNEL, cpu_to_node(cpu));
+		zalloc_cpumask_var_node(&per_cpu(cpu_hemisphere_cache_map, cpu),
+					GFP_KERNEL, cpu_to_node(cpu));
 		zalloc_cpumask_var_node(&per_cpu(cpu_core_map, cpu),
 					GFP_KERNEL, cpu_to_node(cpu));
 		/*
@@ -873,6 +877,7 @@ void __init smp_prepare_cpus(unsigned int max_cpus)
 	/* Init the cpumasks so the boot CPU is related to itself */
 	cpumask_set_cpu(boot_cpuid, cpu_sibling_mask(boot_cpuid));
 	cpumask_set_cpu(boot_cpuid, cpu_l2_cache_mask(boot_cpuid));
+	cpumask_set_cpu(boot_cpuid, cpu_hemisphere_cache_mask(boot_cpuid));
 	cpumask_set_cpu(boot_cpuid, cpu_core_mask(boot_cpuid));
 
 	init_big_cores();
@@ -1162,6 +1167,7 @@ static void remove_cpu_from_masks(int cpu)
 	for_each_cpu(i, cpu_core_mask(cpu)) {
 		set_cpus_unrelated(cpu, i, cpu_core_mask);
 		set_cpus_unrelated(cpu, i, cpu_l2_cache_mask);
+		set_cpus_unrelated(cpu, i, cpu_hemisphere_cache_mask);
 		set_cpus_unrelated(cpu, i, cpu_sibling_mask);
 		if (has_big_cores)
 			set_cpus_unrelated(cpu, i, cpu_smallcore_mask);
@@ -1205,6 +1211,14 @@ int get_physical_package_id(int cpu)
 }
 EXPORT_SYMBOL_GPL(get_physical_package_id);
 
+int get_logical_hemisphere_id(int cpu)
+{
+	/*
+	 * Hacky way to indicate the total number of CPUs in hemisphere is 44
+	 */
+	return cpu/44;
+}
+
 static void add_cpu_to_masks(int cpu)
 {
 	int first_thread = cpu_first_thread_sibling(cpu);
@@ -1230,6 +1244,18 @@ static void add_cpu_to_masks(int cpu)
 		set_cpus_related(cpu, i, cpu_l2_cache_mask);
 	update_mask_by_l2(cpu, cpu_l2_cache_mask);
 
+	/*
+	 * Set hemisphere domain
+	 */
+	for_each_cpu(i, cpu_l2_cache_mask(cpu))
+		set_cpus_related(cpu, i, cpu_hemisphere_cache_mask);
+
+	for_each_cpu(i, cpu_online_mask) {
+		if (get_logical_hemisphere_id(cpu) == get_logical_hemisphere_id(i)) {
+			set_cpus_related(cpu, i, cpu_hemisphere_cache_mask);
+			trace_printk("cpu=%d i=%d\n",cpu, i);
+		}
+	}
 	/*
 	 * Copy the cache sibling mask into core sibling mask and mark
 	 * any CPUs on the same chip as this CPU.
@@ -1343,6 +1369,11 @@ static int powerpc_shared_cache_flags(void)
 	return SD_SHARE_PKG_RESOURCES;
 }
 
+static int powerpc_shared_hemisphere_flags(void)
+{
+	return SD_SHARE_PKG_RESOURCES;
+}
+
 /*
  * We can't just pass cpu_l2_cache_mask() directly because
  * returns a non-const pointer and the compiler barfs on that.
@@ -1350,6 +1381,11 @@ static int powerpc_shared_cache_flags(void)
 static const struct cpumask *shared_cache_mask(int cpu)
 {
 	return cpu_l2_cache_mask(cpu);
+}
+
+static const struct cpumask *shared_hemisphere_mask(int cpu)
+{
+	return cpu_hemisphere_cache_mask(cpu);
 }
 
 #ifdef CONFIG_SCHED_SMT
@@ -1364,6 +1400,7 @@ static struct sched_domain_topology_level power9_topology[] = {
 	{ cpu_smt_mask, powerpc_smt_flags, SD_INIT_NAME(SMT) },
 #endif
 	{ shared_cache_mask, powerpc_shared_cache_flags, SD_INIT_NAME(CACHE) },
+	{ shared_hemisphere_mask, powerpc_shared_hemisphere_flags, SD_INIT_NAME(HEMISHPERE) },
 	{ cpu_cpu_mask, SD_INIT_NAME(DIE) },
 	{ NULL, },
 };
