@@ -1898,6 +1898,8 @@ static bool topology_span_sane(struct sched_domain_topology_level *tl,
 	 * breaks the linking done for an earlier span.
 	 */
 	for_each_cpu(i, cpu_map) {
+		char buf[1024];
+
 		if (i == cpu)
 			continue;
 		/*
@@ -1907,8 +1909,18 @@ static bool topology_span_sane(struct sched_domain_topology_level *tl,
 		 * overlaps
 		 */
 		if (!cpumask_equal(tl->mask(cpu), tl->mask(i)) &&
-		    cpumask_intersects(tl->mask(cpu), tl->mask(i)))
+		    cpumask_intersects(tl->mask(cpu), tl->mask(i))) {
+			char buf[1024];
+			pr_emerg("[SCHED-DOMAIN]: Name = %s\n", tl->name);
+
+			cpumap_print_to_pagebuf(true, buf, tl->mask(cpu));
+			pr_emerg("[SCHED-DOMAIN]: CPU %d. Mask %s\n", cpu, buf);
+
+			cpumap_print_to_pagebuf(true, buf, tl->mask(i));
+			pr_emerg("[SCHED-DOMAIN]: CPU %d. Mask %s\n", i, buf);
+
 			return false;
+		}
 	}
 
 	return true;
