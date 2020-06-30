@@ -248,7 +248,7 @@ set_table_entry(struct ctl_table *entry,
 static struct ctl_table *
 sd_alloc_ctl_domain_table(struct sched_domain *sd)
 {
-	struct ctl_table *table = sd_alloc_ctl_entry(9);
+	struct ctl_table *table = sd_alloc_ctl_entry(11);
 
 	if (table == NULL)
 		return NULL;
@@ -261,7 +261,9 @@ sd_alloc_ctl_domain_table(struct sched_domain *sd)
 	set_table_entry(&table[5], "flags",		  &sd->flags,		    sizeof(int),  0644, proc_dointvec_minmax);
 	set_table_entry(&table[6], "max_newidle_lb_cost", &sd->max_newidle_lb_cost, sizeof(long), 0644, proc_doulongvec_minmax);
 	set_table_entry(&table[7], "name",		  sd->name,	       CORENAME_MAX_SIZE, 0444, proc_dostring);
-	/* &table[8] is terminator */
+	set_table_entry(&table[8], "span[0]",		  &sd->span[0],		sizeof(unsigned long), 0444, proc_doulongvec_minmax);
+	set_table_entry(&table[9], "span_weight",		  &sd->span_weight,		sizeof(unsigned long), 0444, proc_doulongvec_minmax);
+	/* &table[10] is terminator */
 
 	return table;
 }
