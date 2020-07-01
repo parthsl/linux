@@ -1356,11 +1356,6 @@ static int powerpc_smt_flags(void)
 }
 #endif
 
-static int powerpc_shared_hemisphere_flags(void)
-{
-	return SD_SHARE_PKG_RESOURCES;
-}
-
 static const struct cpumask *shared_hemisphere_mask(int cpu)
 {
 	return cpu_hemisphere_cache_mask(cpu);
@@ -1371,7 +1366,7 @@ static struct sched_domain_topology_level powerpc_topology[] = {
 #ifdef CONFIG_SCHED_SMT
 	{ cpu_smt_mask, powerpc_smt_flags, SD_INIT_NAME(SMT) },
 #endif
-	{ shared_hemisphere_mask, powerpc_shared_hemisphere_flags, SD_INIT_NAME(HEMISHPERE) },
+	{ shared_hemisphere_mask, SD_INIT_NAME(HEMISHPERE) },
 	{ cpu_cpu_mask, SD_INIT_NAME(DIE) },
 	{ NULL, },
 };
