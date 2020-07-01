@@ -8,3 +8,5 @@ Set SMT sd as LLC
 This unsets the new pseudo HEMISPHERE domain as LLC and sets SMT domain as
 LLC domain. This makes select_idle_sibling() to use only 4-CPUs on P9
 systems for waking up a task.
+
+Signed-off-by: Parth Shah <parth@linux.ibm.com>
