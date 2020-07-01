@@ -1,11 +1,11 @@
 Version: 1
-Previous: 8a58e84cc187a1f2054d2506be4ee00883fa143f
-Head: 10ae54fe840688d20b5175f710288ec9c6228e40
+Previous: d77772e14598e35dabaf6763c7c1dc3acec9acdd
+Head: 09382cc54728b33028fa52828a106280704729fd
 Applied:
   add-hemisphere-sd: 0e4eb34cd2dd0433c70a267f713f4ee02472a90c
   add-hemisphere-sd-for-p8: 09382cc54728b33028fa52828a106280704729fd
-  set-smt-sd-as-llc: 10ae54fe840688d20b5175f710288ec9c6228e40
 Unapplied:
+  set-smt-sd-as-llc: 10ae54fe840688d20b5175f710288ec9c6228e40
   add-sched_debug-printks-during: 764050dff2458861fb1cc9a99dbe6ebe11945d77
   sched-debug-add-cpumask-info: 1b9fdb240dcb05000b7a4cec9d69c17e42966e40
 Hidden:
