@@ -3,6 +3,14 @@ Top:    9f1ba5c326d799ace8f1a2468d4c2a44212f8327
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2020-06-30 11:27:27 +0530
 
-Add hemisphere sd
+powerpc: Add pseudo HEMISPHERE sd as new LLC domain
+
+This makes P9 topology as follows:
+SMT
+HEMISPHERE
+DIE
+NUMA
+
+where HEMISPHERE is set as LLC domain to be used for task wakeups.
 
 Signed-off-by: Parth Shah <parth@linux.ibm.com>
