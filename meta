@@ -1,11 +1,10 @@
 Version: 1
-Previous: 7d82caacb1c4cbf48c6c98227dab5b7946c847b8
-Head: e128964c4b8057af3aecf4ee1ee1459d2af49fc7
+Previous: 8a2dbc18215d857da86cf83cc11360172a95082d
+Head: ec0c684731a5844a82307e563634df008715bcea
 Applied:
   add-hemisphere-sd: 0e4eb34cd2dd0433c70a267f713f4ee02472a90c
   add-hemisphere-sd-for-p8: 09382cc54728b33028fa52828a106280704729fd
-  powerpc-set-hemi: d13683ed42c70154587136ed87e4bc895aaa5a9d
-  set-smt-sd-as-llc: e128964c4b8057af3aecf4ee1ee1459d2af49fc7
+  set-smt-sd-as-llc: ec0c684731a5844a82307e563634df008715bcea
 Unapplied:
   add-sched_debug-printks-during: 764050dff2458861fb1cc9a99dbe6ebe11945d77
   sched-debug-add-cpumask-info: 1b9fdb240dcb05000b7a4cec9d69c17e42966e40
