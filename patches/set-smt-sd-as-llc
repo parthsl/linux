@@ -1,9 +1,9 @@
-Bottom: 7fa64fb32090e10e080ac29bdda977a87b0ee65b
-Top:    7fa64fb32090e10e080ac29bdda977a87b0ee65b
+Bottom: 78e2bf098f3e8d3967ebf421dd7b455b37a65e15
+Top:    78e2bf098f3e8d3967ebf421dd7b455b37a65e15
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2020-07-01 11:11:12 +0530
 
-powerpc: Set SMT sd as LLC domain
+Set SMT sd as LLC
 
 This unsets the new pseudo HEMISPHERE domain as LLC and sets SMT domain as
 LLC domain. This makes select_idle_sibling() to use only 4-CPUs on P9
