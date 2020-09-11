@@ -1,0 +1,12 @@
+Bottom: 6e8c79e2f79ccc3e8fe4cdf903a345401611ca4e
+Top:    838e9cd08e910356ba7d3d7a7861b9a87a6de3ee
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2020-09-11 14:38:19 +0530
+
+sched/fair: Use available_idle_cpu abstraction everywhere
+
+
+---
+
+kernel/sched/fair.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)

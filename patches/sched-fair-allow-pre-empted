@@ -1,0 +1,19 @@
+Bottom: 025c1b2b59bc1b538e33284028eea95510d8cf54
+Top:    6e8c79e2f79ccc3e8fe4cdf903a345401611ca4e
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2020-09-11 14:38:19 +0530
+
+sched/fair: Allow pre-empted idle CPUs to be used for waking tasks
+
+Pre-empted idle CPUs are not considered for task wakeup as the vCPU is
+guaranteed to be really idle. Hence, optimize the wakeup path when the
+select_idle_cpu and select_idle_smt is not able to find any CPU and so use
+the pre-empted idle CPU (if any available) instead.
+
+Signed-off-by: Parth Shah <parth@linux.ibm.com>
+
+
+---
+
+kernel/sched/fair.c | 36 +++++++++++++++++++++++++-----------
+ 1 file changed, 25 insertions(+), 11 deletions(-)

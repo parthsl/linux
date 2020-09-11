@@ -1,0 +1,21 @@
+Bottom: 73b13881e29f6c2bec1c56571f613fed0e59de9f
+Top:    e3eb060af82fdfa48a596b04f887af3502fe222d
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2020-09-11 14:38:17 +0530
+
+sched/fair: Consider SCHED_IDLE CPUs for select_idle_core
+
+select_idle_core() searches for a core in sd_llc with all the
+available_idle_cpu(), which don't count the sched_idle_cpu(). Hence
+consider the CPUs running only SCHED_IDLE class tasks for task wakeup.
+
+The __update_idle_core() keeps track of the presence of any idle
+core in the sd_llc. So align this with sched_idle_cpu selection.
+
+Signed-off-by: Parth Shah <parth@linux.ibm.com>
+
+
+---
+
+kernel/sched/fair.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)

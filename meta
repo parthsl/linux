@@ -1,6 +1,12 @@
 Version: 1
-Previous: None
-Head: bcf876870b95592b52519ed4aafcf9d95999bc9c
+Previous: 294cbff23f84c7f7c7d42eb4bdcf3309828e747e
+Head: fc4e2a2855b942c87b9c4f19c342f17692137b65
 Applied:
+  sched-fair-consider-sched_idle: c7af6d1937f3213ad2d89fa4661b102e43c5a206
+  sched-move-available_idle_cpu: 9f06a9ca9256acb5839aaed780a653bdaa6919b5
+  sched-fair-fix-idle-time: 6ad83b1fa8936cd12f5273cf9e5649c3ebc2e443
+  sched-fair-paraphrase: e36804b5983db77b49bd0d3ad4fcdd1fce57cb62
+  sched-fair-allow-pre-empted: a8f19c7b59239ee4c51b6d3c1647d26f195e699a
+  sched-fair-use: fc4e2a2855b942c87b9c4f19c342f17692137b65
 Unapplied:
 Hidden:
