@@ -6196,13 +6196,7 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 		}
 
 		if (best_cpu == -1 && icl)
-		if (max_icl < icl) {
-			max_icl = icl;
 			best_cpu = cpu;
-
-			if (max_icl >= cpu_non_preempted_idle)
-				goto out_cpu;
-		}
 	}
 
 out_cpu:
