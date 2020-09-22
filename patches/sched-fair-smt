@@ -1,5 +1,5 @@
 Bottom: 3b1e5295ff6eb1b3a3e243605e85be4429cd48cc
-Top:    3b1e5295ff6eb1b3a3e243605e85be4429cd48cc
+Top:    601d64f449836f2a36e557c4c277fb114f20ab87
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2020-09-22 17:15:07 +0530
 
@@ -8,4 +8,5 @@ sched/fair: smt
 
 ---
 
-
+kernel/sched/fair.c | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
