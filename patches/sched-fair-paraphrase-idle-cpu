@@ -3,7 +3,20 @@ Top:    3b1e5295ff6eb1b3a3e243605e85be4429cd48cc
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2020-09-22 15:43:07 +0530
 
-sched/fair: Paraphrase idle-cpu classification
+sched/fair: Paraphrase idle-cpu classification for available_idle_cpu
+
+The available_idle_cpu() differentiates between the CPUs which are idle or
+which has VCPU preempted. With the addition of sched_idle_cpu() checks,
+there are several code-paths where this both checks are used in conjunction
+with each other. So paraphrase the available_idle_cpu() to allow
+classification of different CPU Idle types.
+
+cpu_idle_type is arranged in reverse order of their priority to be used for
+task enqueueing, i.e.
+1. CPU is busy
+2. CPU is idle but VCPU may have been preempted
+3. CPU is available for queueing and VCPU is non-preempted
+4. CPU is running SCHED_IDLE class task(s)
 
 
 ---
