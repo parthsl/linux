@@ -7,8 +7,8 @@ sched/fair: Prefer preempted idle CPU over busy CPU in select_idle_smt
 
 select_idle_smt() uses available_idle_cpu() method to identify any
 non-preempted idle CPU in smt domain. The system may use busier CPU if
-select_idle_smt() fails to find any, which is optimized to prefer preempted CPU
-over busy CPUs
+select_idle_smt() fails to find any, which is optimized to prefer preempted
+CPU over busy CPUs
 
 Signed-off-by: Parth Shah <parth@linux.ibm.com>
 
