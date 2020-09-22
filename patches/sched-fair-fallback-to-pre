@@ -17,6 +17,7 @@ latency.
 This patch implicitly fixes accounting problem which was not measured when
 select_idle_sibling returns -1 at nr=0.
 
+schbench in 2 PowerPC KVM guests (88 cpus, 4 threads per core)
 Baseline:
 =========
 $> schbench -m 66 -t 2 -r 60 -c 1000 -s 10000
