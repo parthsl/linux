@@ -5738,13 +5738,13 @@ enum idle_cpu_level {
  */
 static int idle_cpu_level(int cpu)
 {
-        if (!idle_cpu(cpu))
-                return sched_idle_cpu(cpu) ? cpu_sched_idle : cpu_busy;
+	if (!idle_cpu(cpu))
+		return sched_idle_cpu(cpu) ? cpu_sched_idle : cpu_busy;
 
-        if (vcpu_is_preempted(cpu))
-                return cpu_preempted_idle;
+	if (vcpu_is_preempted(cpu))
+		return cpu_preempted_idle;
 
-        return cpu_non_preempted_idle;
+	return cpu_non_preempted_idle;
 }
 
 /*
