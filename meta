@@ -1,8 +1,9 @@
 Version: 1
-Previous: 9b96a4d1562b07ed2084aa9e6a9af82beb07e622
-Head: 131e1bf52dffe1666e1fbecde45c2e2ec7f747b7
+Previous: 23b49d6cbbbaa9a6f1b3491467455d95f6751b23
+Head: 59df3e5a124fba19e6e95a801152c2c78c90d77c
 Applied:
   migrate-available-idle-cpu: 131e1bf52dffe1666e1fbecde45c2e2ec7f747b7
+  refresh-temp: 59df3e5a124fba19e6e95a801152c2c78c90d77c
 Unapplied:
   sched-fair-fallback-to-pre: c0ace3758df894c7c14aca7eca734ae11560f3d2
 Hidden:

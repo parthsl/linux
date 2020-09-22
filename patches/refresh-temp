@@ -1,0 +1,12 @@
+Bottom: 5e2f608b8559b2c840e868be5a96be0f76c49828
+Top:    477340fba826bd97f06bb3aca302ee6036759c21
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2020-09-22 15:42:42 +0530
+
+Refresh of migrate-available-idle-cpu
+
+---
+
+kernel/sched/core.c | 17 -----------------
+ kernel/sched/fair.c | 17 +++++++++++++++++
+ 2 files changed, 17 insertions(+), 17 deletions(-)
