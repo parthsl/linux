@@ -3,7 +3,13 @@ Top:    477340fba826bd97f06bb3aca302ee6036759c21
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2020-09-22 15:41:33 +0530
 
-migrate available idle cpu
+sched: Move available_idle_cpu to fair.c
+
+All callers of available_idle_cpu are in kernel/sched/fair.c
+So move the function definition to fair.c
+
+No functional change.
+
 
 Signed-off-by: Parth Shah <parth@linux.ibm.com>
 
