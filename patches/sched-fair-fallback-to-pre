@@ -16,6 +16,32 @@ better spreads the workload during task wakeup therby decreasing latency.
 This patch implicitly fixes accounting problem which was not measured when
 select_idle_sibling returns -1 at nr=0.
 
+Baseline:
+=========
+$> schbench -m 66 -t 2 -r 60 -c 1000 -s 10000
+Latency percentiles (usec)
+        50.0000th: 48
+        75.0000th: 53
+        90.0000th: 61
+        95.0000th: 128
+        *99.0000th: 929
+        99.5000th: 1026
+        99.9000th: 1062
+        min=0, max=2878
+
+With patch:
+==========
+$> schbench -m 66 -t 2 -r 60 -c 1000 -s 10000
+Latency percentiles (usec)
+        50.0000th: 51
+        75.0000th: 62
+        90.0000th: 75
+        95.0000th: 79
+        *99.0000th: 91
+        99.5000th: 103
+        99.9000th: 169
+        min=0, max=1174
+
 Signed-off-by: Parth Shah <parth@linux.ibm.com>
 
 
