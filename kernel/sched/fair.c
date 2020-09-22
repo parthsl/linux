@@ -6136,6 +6136,7 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 	u64 time;
 	int this = smp_processor_id();
 	int cpu, nr = INT_MAX;
+	int pick_cpu = -1;
 
 	this_sd = rcu_dereference(*this_cpu_ptr(&sd_llc));
 	if (!this_sd)
@@ -6164,16 +6165,21 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 	cpumask_and(cpus, sched_domain_span(sd), p->cpus_ptr);
 
 	for_each_cpu_wrap(cpu, cpus, target) {
-		if (!--nr)
-			return -1;
-		if (available_idle_cpu(cpu) || sched_idle_cpu(cpu))
+		if (!--nr) {
+			pick_cpu = -1;
 			break;
+		}
+
+		if (available_idle_cpu(cpu) || sched_idle_cpu(cpu)) {
+			pick_cpu = cpu;
+			break;
+		}
 	}
 
 	time = cpu_clock(this) - time;
 	update_avg(&this_sd->avg_scan_cost, time);
 
-	return cpu;
+	return pick_cpu;
 }
 
 /*
