@@ -1,0 +1,11 @@
+Bottom: 8dac96af766e1f541cb05f133b12d769ff747fd4
+Top:    894e77853383815470ef8cfe2819ab1469625a8b
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2020-09-22 16:43:28 +0530
+
+Refresh of sched-fair-paraphrase-idle-cpu
+
+---
+
+kernel/sched/fair.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
