@@ -13,6 +13,9 @@ target cpu itself which is definitely not available_idle_cpu().
 Hence, fallback to idle_cpu() in absence of any such available_idle_cpu(), which
 better spreads the workload during task wakeup therby decreasing latency.
 
+This patch implicitly fixes accounting problem which was not measured when
+select_idle_sibling returns -1 at nr=0.
+
 
 ---
 
