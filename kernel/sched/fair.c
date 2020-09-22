@@ -6155,9 +6155,9 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 	u64 avg_cost, avg_idle;
 	u64 time;
 	int this = smp_processor_id();
-	int cpu, nr = INT_MAX, max_icl = -1;
+	int cpu, nr = INT_MAX;
 	int best_cpu = -1;
-	enum idle_cpu_level icl;
+	enum idle_cpu_level icl, max_icl = busy_cpu;
 
 	this_sd = rcu_dereference(*this_cpu_ptr(&sd_llc));
 	if (!this_sd)
