@@ -1,0 +1,19 @@
+Bottom: 5e2f608b8559b2c840e868be5a96be0f76c49828
+Top:    5e2f608b8559b2c840e868be5a96be0f76c49828
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2020-09-22 14:53:55 +0530
+
+sched/fair: Fallback to pre-empted idle CPU in absence of any available_idle_cpu
+
+select_idle_sibling finds available_idle_cpu() in LLC domain, but the definition
+of available_idle_cpu() includes the CPU has nr_running=0 and
+!vcpu_is_preempted(). In absence of any such available_idle_cpu, it returns
+target cpu itself which is definitely not available_idle_cpu().
+
+Hence, fallback to idle_cpu() in absence of any such available_idle_cpu(), which
+better spreads the workload during task wakeup therby decreasing latency.
+
+
+---
+
+
