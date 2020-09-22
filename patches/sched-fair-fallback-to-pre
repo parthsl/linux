@@ -5,13 +5,14 @@ Date:   2020-09-22 14:53:55 +0530
 
 sched/fair: Fallback to pre-empted idle CPU in absence of any available_idle_cpu
 
-select_idle_sibling finds available_idle_cpu() in LLC domain, but the definition
-of available_idle_cpu() includes the CPU has nr_running=0 and
+select_idle_sibling finds available_idle_cpu() in LLC domain, but the
+definition of available_idle_cpu() includes the CPU has nr_running=0 and
 !vcpu_is_preempted(). In absence of any such available_idle_cpu, it returns
 target cpu itself which is definitely not available_idle_cpu().
 
-Hence, fallback to idle_cpu() in absence of any such available_idle_cpu(), which
-better spreads the workload during task wakeup therby decreasing latency.
+Hence, fallback to idle_cpu() in absence of any such available_idle_cpu(),
+which better spreads the workload during task wakeup therby decreasing
+latency.
 
 This patch implicitly fixes accounting problem which was not measured when
 select_idle_sibling returns -1 at nr=0.

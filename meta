@@ -1,9 +1,9 @@
 Version: 1
-Previous: f10c8e66d0f69dd1ff62b4dfb08efa8cc19f9589
-Head: 0bdf6965f276b03f3d29e597fd9a7f4314659aee
+Previous: ee8d632386c3100c81fcedbfb61dd27297887629
+Head: 7898109b10f58ec3eecd12e90fed9b051450a2e1
 Applied:
   migrate-available-idle-cpu: bc09fb09a827401c57419d6763314d02064d15fa
-  sched-fair-fallback-to-pre: 0bdf6965f276b03f3d29e597fd9a7f4314659aee
+  sched-fair-fallback-to-pre: 7898109b10f58ec3eecd12e90fed9b051450a2e1
 Unapplied:
   sched-fair-paraphrase-idle-cpu: 31ef8d47a7036ccdc26826a2e636a7c68f95b894
   sched-fair-smt: 5f5924338879ea3d72c3e90163b6bcdd3f4b63b4
