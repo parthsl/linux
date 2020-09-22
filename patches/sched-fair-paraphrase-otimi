@@ -1,4 +1,4 @@
-Bottom: 894e77853383815470ef8cfe2819ab1469625a8b
+Bottom: 3b1e5295ff6eb1b3a3e243605e85be4429cd48cc
 Top:    db33ba434c7bfd1bd2f153e4e0b6c7548039b6b2
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2020-09-22 16:44:32 +0530
@@ -8,5 +8,5 @@ sched/fair: paraphrase otimi
 
 ---
 
-kernel/sched/fair.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+kernel/sched/fair.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
