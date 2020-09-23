@@ -5720,22 +5720,42 @@ static unsigned long capacity_of(int cpu)
 	return cpu_rq(cpu)->cpu_capacity;
 }
 
-/**
- * available_idle_cpu - is a given CPU idle for enqueuing work.
- * @cpu: the CPU in question.
- *
- * Return: 1 if the CPU is currently idle. 0 otherwise.
+/*
+ * Scheduler differentiates between different idle levels of CPUs, the
+ * descending priority order of selecting such CPU for scheduling activites is
+ * defined here.
  */
-static int available_idle_cpu(int cpu)
+enum idle_cpu_level {
+	cpu_busy = 0,
+	cpu_preempted_idle,
+	cpu_non_preempted_idle,
+	cpu_sched_idle
+};
+
+/*
+ * idle_cpu_level - is a given CPU idle for enqueuing work.
+ * @cpu: the CPU in question.
+ */
+static int idle_cpu_level(int cpu)
 {
 	if (!idle_cpu(cpu))
-		return 0;
+		return sched_idle_cpu(cpu) ? cpu_sched_idle : cpu_busy;
 
 	if (vcpu_is_preempted(cpu))
-		return 0;
+		return cpu_preempted_idle;
 
-	return 1;
+	return cpu_non_preempted_idle;
 }
+
+/*
+ * This backports the default behavior currently in use
+ */
+#define available_idle_cpu(cpu) ((idle_cpu_level(cpu)) == cpu_non_preempted_idle)
+/*
+ * CPU with no task or with only SCHED_IDLE task(s) can be easily picked for
+ * task wakeup.
+ */
+#define is_idle_cpu(cpu)        ((idle_cpu_level(cpu)) >= cpu_non_preempted_idle)
 
 static void record_wakee(struct task_struct *p)
 {
@@ -6137,6 +6157,7 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 	int this = smp_processor_id();
 	int cpu, nr = INT_MAX;
 	int best_cpu = -1;
+	enum idle_cpu_level icl, max_icl = cpu_busy;
 
 	this_sd = rcu_dereference(*this_cpu_ptr(&sd_llc));
 	if (!this_sd)
@@ -6167,12 +6188,15 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 	for_each_cpu_wrap(cpu, cpus, target) {
 		if (!--nr)
 			goto out_cpu;
-		if (available_idle_cpu(cpu) || sched_idle_cpu(cpu)) {
+
+		icl = idle_cpu_level(cpu);
+		if (max_icl < icl) {
+			max_icl = icl;
 			best_cpu = cpu;
-			goto out_cpu;
+
+			if (max_icl >= cpu_non_preempted_idle)
+				goto out_cpu;
 		}
-		if (best_cpu == -1 && idle_cpu(cpu))
-			best_cpu = cpu;
 	}
 
 out_cpu:
