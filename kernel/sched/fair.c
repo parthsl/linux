@@ -6147,7 +6147,7 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 	cpumask_and(cpus, sched_domain_span(sd), p->cpus_ptr);
 
 	for_each_cpu_wrap(cpu, cpus, target) {
-		if (!--nr)
+		if (!nr--)
 			return -1;
 		if (available_idle_cpu(cpu) || sched_idle_cpu(cpu))
 			break;
