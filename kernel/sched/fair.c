@@ -5726,7 +5726,7 @@ static unsigned long capacity_of(int cpu)
  *
  * Return: 1 if the CPU is currently idle. 0 otherwise.
  */
-int available_idle_cpu(int cpu)
+static int available_idle_cpu(int cpu)
 {
 	if (!idle_cpu(cpu))
 		return 0;
