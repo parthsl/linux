@@ -6676,6 +6676,9 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_f
 	int want_affine = 0;
 	int sync = (wake_flags & WF_SYNC) && !(current->flags & PF_EXITING);
 
+	if (cpumask_test_cpu(new_cpu, p->cpus_ptr))
+		new_cpu = cpumask_first(p->cpus_ptr);
+
 	if (sd_flag & SD_BALANCE_WAKE) {
 		record_wakee(p);
 
