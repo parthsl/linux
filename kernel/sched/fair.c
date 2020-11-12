@@ -5462,6 +5462,18 @@ static int sched_idle_cpu(int cpu)
 }
 #endif
 
+#if defined (CONFIG_SMP) && (TIF_POLLING_NRFLAG)
+static int polling_idle_cpu(int cpu)
+{
+	return test_tsk_thread_flag(rq->idle, TIF_POLLING_NRFLAG);
+}
+#else
+static int polling_idle_cpu(int cpu)
+{
+	return 0;
+}	
+#endif
+
 /*
  * The enqueue_task method is called before nr_running is
  * increased. Here we update the fair scheduling stats and
