@@ -5462,6 +5462,19 @@ static int sched_idle_cpu(int cpu)
 }
 #endif
 
+#if defined (CONFIG_SMP) && (TIF_POLLING_NRFLAG)
+static int polling_idle_cpu(int cpu)
+{
+	struct rq* rq = cpu_rq(cpu);
+	return test_tsk_thread_flag(rq->idle, TIF_POLLING_NRFLAG);
+}
+#else
+static int polling_idle_cpu(int cpu)
+{
+	return 0;
+}
+#endif
+
 /*
  * The enqueue_task method is called before nr_running is
  * increased. Here we update the fair scheduling stats and
@@ -6167,7 +6180,9 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 	for_each_cpu_wrap(cpu, cpus, target) {
 		if (!--nr)
 			goto out_cpu;
-		if (available_idle_cpu(cpu) || sched_idle_cpu(cpu)) {
+		if (available_idle_cpu(cpu)) {
+			best_cpu = cpu;
+		} else if (sched_idle_cpu(cpu) || polling_idle_cpu(cpu)) {
 			best_cpu = cpu;
 			goto out_cpu;
 		}
