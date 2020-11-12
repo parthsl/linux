@@ -1,0 +1,11 @@
+Bottom: 5e2f608b8559b2c840e868be5a96be0f76c49828
+Top:    5e2f608b8559b2c840e868be5a96be0f76c49828
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2020-11-12 11:55:35 +0530
+
+sched/fair: Detect if CPU is in snooze or not
+
+
+---
+
+
