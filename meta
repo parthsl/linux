@@ -1,9 +1,8 @@
 Version: 1
-Previous: ace5bb6a8ed6ac9b242504f955ef40cd87288010
-Head: 9ca3593b981a5066fb9abe430e3c0d97dc569ab0
+Previous: 7cbe1ff2a60b6e1e7e842480f037861029278527
+Head: 0c7584828f5c258d12b797fed8397af0036bad8b
 Applied:
-  snooze-detect: 3ed19618eab11dca4d8180d1188bd32ff931561e
-  refresh-temp: 9ca3593b981a5066fb9abe430e3c0d97dc569ab0
+  snooze-detect: 0c7584828f5c258d12b797fed8397af0036bad8b
 Unapplied:
   migrate-available-idle-cpu: 3cf6368711c3028064938ac8235e6906a35cc54f
   sched-fair-fallback-to-pre: 49d0b59e7fa9db8f25693e5f1f792bba3a2b16a1
