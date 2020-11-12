@@ -5465,6 +5465,7 @@ static int sched_idle_cpu(int cpu)
 #if defined (CONFIG_SMP) && (TIF_POLLING_NRFLAG)
 static int polling_idle_cpu(int cpu)
 {
+	struct rq* rq = cpu_rq(cpu);
 	return test_tsk_thread_flag(rq->idle, TIF_POLLING_NRFLAG);
 }
 #else
