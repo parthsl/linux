@@ -1,0 +1,12 @@
+Bottom: 6f9c97c162a99bbf5f2e877e32957068ff04c601
+Top:    192613391435571bab78b90a1dfbb1282599f65c
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2020-11-13 12:18:11 +0530
+
+sched/fair: Detect if CPU is in snooze or not
+
+
+---
+
+kernel/sched/fair.c | 17 ++++++++++++++++-
+ 1 file changed, 16 insertions(+), 1 deletion(-)
