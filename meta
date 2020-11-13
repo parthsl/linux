@@ -1,8 +1,7 @@
 Version: 1
-Previous: 7480dd010e197f3ea5015e1519906b61fea564c8
-Head: e0573e33f444958ada9e5bdfe44b8a81163e44bb
+Previous: b5a788f6302fe32e0f8a62b732ba4573c5c2c76b
+Head: 264b7a4e61023827fcb0ea89666620ce13ae66c5
 Applied:
-  sched-fair-fallback-to-pre: 48c0b9229378aaa66b2c432dc7afe96d3b607cf7
-  snooze-detect: e0573e33f444958ada9e5bdfe44b8a81163e44bb
+  sched-fair-classify-and-prefer: 264b7a4e61023827fcb0ea89666620ce13ae66c5
 Unapplied:
 Hidden:

@@ -1,0 +1,21 @@
+Bottom: 798567b0d3305ebd96dc6955554c72b8322558fe
+Top:    192613391435571bab78b90a1dfbb1282599f65c
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2020-11-13 12:21:38 +0530
+
+sched/fair: Classify and prefer a CPU in polling state during task wakeup
+
+Introduce a new method to classify if a CPU is in polling state, which can
+be used to wakeup a task on. Since the polling CPU can be woken up quickly,
+it is more preferable to use a CPU which are in polling state over the one
+which are in deep idle states.
+
+So, make select_idle_cpu() to prefer a CPU in polling state over an idle
+CPU.
+
+Signed-off-by: Parth Shah <parth@linux.ibm.com>
+
+---
+
+kernel/sched/fair.c | 29 +++++++++++++++++++++++++----
+ 1 file changed, 25 insertions(+), 4 deletions(-)
