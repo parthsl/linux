@@ -6162,18 +6162,15 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 
 	for_each_cpu_wrap(cpu, cpus, target) {
 		if (!--nr)
-			goto out_cpu;
+			return -1;
 		if (available_idle_cpu(cpu)) {
 			best_cpu = cpu;
 		} else if (sched_idle_cpu(cpu) || polling_idle_cpu(cpu)) {
 			best_cpu = cpu;
-			goto out_cpu;
+			break;
 		}
-		if (best_cpu == -1 && idle_cpu(cpu))
-			best_cpu = cpu;
 	}
 
-out_cpu:
 	time = cpu_clock(this) - time;
 	update_avg(&this_sd->avg_scan_cost, time);
 
