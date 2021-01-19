@@ -6023,6 +6023,8 @@ static inline int find_idlest_cpu(struct sched_domain *sd, struct task_struct *p
 DEFINE_STATIC_KEY_FALSE(sched_smt_present);
 EXPORT_SYMBOL_GPL(sched_smt_present);
 
+int sched_smt_weight __read_mostly = 1;
+
 static inline void set_idle_cores(int cpu, int val)
 {
 	struct sched_domain_shared *sds;
@@ -6137,6 +6139,8 @@ static int select_idle_smt(struct task_struct *p, struct sched_domain *sd, int t
 
 #else /* CONFIG_SCHED_SMT */
 
+#define sched_smt_weight	1
+
 static inline int select_idle_core(struct task_struct *p, struct sched_domain *sd, int target)
 {
 	return -1;
@@ -6148,6 +6152,8 @@ static inline int select_idle_smt(struct task_struct *p, struct sched_domain *sd
 }
 
 #endif /* CONFIG_SCHED_SMT */
+
+#define sis_min_cores		2
 
 /*
  * Scan the LLC domain for idle CPUs; this is dynamically regulated by
@@ -6179,10 +6185,12 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 		avg_cost = this_sd->avg_scan_cost + 1;
 
 		span_avg = sd->span_weight * avg_idle;
-		if (span_avg > 4*avg_cost)
+		if (span_avg > sis_min_cores*avg_cost)
 			nr = div_u64(span_avg, avg_cost);
 		else
-			nr = 4;
+			nr = sis_min_cores;
+
+		nr *= sched_smt_weight;
 
 		time = cpu_clock(this);
 	}
