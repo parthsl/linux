@@ -2921,7 +2921,9 @@ int kvm_vcpu_provide_idle_hint(struct kvm_vcpu *target)
 	if (!task)
 		return ret;
 
+	trace_printk("t8: checking for idle hint\n");
 	ret = get_idle_hint(task);
+	trace_printk("t21: exiting idle hint\n");
 
 	return ret;
 }

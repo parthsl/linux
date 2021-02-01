@@ -910,7 +910,9 @@ static int kvmppc_provide_idle_hint(struct kvm_vcpu *vcpu)
 
 	ret =  kvm_vcpu_provide_idle_hint(vcpu);
 
+	trace_printk("t11:setting return value ret=%d\n", ret);
 	kvmppc_set_gpr(vcpu, 4, (unsigned int)ret);
+	trace_printk("t12:setted return value ret=%d\n", ret);
 
 	return H_SUCCESS;
 }
@@ -945,6 +947,7 @@ int kvmppc_pseries_do_hcall(struct kvm_vcpu *vcpu)
 	case H_IDLEHINT:
 		target = kvmppc_get_gpr(vcpu, 4);
 		tvcpu = kvmppc_find_vcpu(vcpu->kvm, target);
+		trace_printk("t7: vcpu%d is target to %lu\n", vcpu->vcpu_id, target);
 		if (!tvcpu) {
 			ret = H_PARAMETER;
 			break;
