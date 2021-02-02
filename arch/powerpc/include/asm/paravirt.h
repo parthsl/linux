@@ -87,8 +87,6 @@ static inline void prod_cpu(int cpu)
 #define vcpu_is_preempted vcpu_is_preempted
 static inline bool vcpu_is_preempted(int cpu)
 {
-	int is_idle;
-
 	if (!is_shared_processor())
 		return false;
 
@@ -106,17 +104,9 @@ static inline bool vcpu_is_preempted(int cpu)
 	}
 #endif
 
-	trace_printk("t3: cpu%d will be checked\n", cpu);
-	if (yield_count_of(cpu) & 1) {
-		trace_printk("t4: cpu%d will be checked\n", cpu);
-		pcpu_available_instantly(cpu, &is_idle);
+	if (yield_count_of(cpu) & 1)
+		return true;
 
-		if (!is_idle) {
-			trace_printk("t5: cpu%d is idle hinted\n", cpu);
-			return true;
-		}
-		trace_printk("t6: cpu%d is idle hinted\n", cpu);
-	}
 	return false;
 }
 
