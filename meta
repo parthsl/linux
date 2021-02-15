@@ -1,8 +1,7 @@
 Version: 1
-Previous: f860ed85668a4ab739a880b0552a05739b37ce99
-Head: 82ce8b3eb3f8b1fab706bd62bf8d5bcc539fa100
+Previous: 661342e920c678a546f3d1c3603c38fa40aaf222
+Head: 70f50aea7af070ae3e55e023782502781969ed66
 Applied:
   sched-core-add-new-tracpoint: 70f50aea7af070ae3e55e023782502781969ed66
-  refresh-temp: 82ce8b3eb3f8b1fab706bd62bf8d5bcc539fa100
 Unapplied:
 Hidden:
