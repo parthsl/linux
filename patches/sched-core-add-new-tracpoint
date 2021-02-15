@@ -3,7 +3,16 @@ Top:    95781373d07bd959ea4b287e0b8b1556c7cf93c6
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2021-02-15 15:56:47 +0530
 
-sched/core: Add new tracpoint
+sched/core: Add new tracepoint to track waker_cpu for sched_wakeup event
+
+sched:sched_wakeup trace events provides information about the time and the
+target_cpu of a waking task. But the wakeup can be done asynchornously by
+target_cpu itself when the waker_cpu and target_cpu do not share cache, it
+becomes impossible to find a waker_cpu from this even alone.
+
+So, add a new tracepoint in ttwu_queue() to keep track of the waker_cpu
+responsible for the sched_wakeup events. This is exported as an event but
+needs to be registered and define prototype as an external module.
 
 
 ---

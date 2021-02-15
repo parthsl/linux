@@ -1,7 +1,7 @@
 Version: 1
-Previous: 493a85e05e12983a8ef94a052066581636abaaae
-Head: 042497aeb245fe9d4d636749e3c25743086a2d41
+Previous: 1e05988f20ad2c4d3295e2f9afe6fbf370181e4d
+Head: 70f50aea7af070ae3e55e023782502781969ed66
 Applied:
-  sched-core-add-new-tracpoint: 042497aeb245fe9d4d636749e3c25743086a2d41
+  sched-core-add-new-tracpoint: 70f50aea7af070ae3e55e023782502781969ed66
 Unapplied:
 Hidden:
