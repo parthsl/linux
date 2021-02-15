@@ -734,6 +734,10 @@ DECLARE_TRACE(sched_update_nr_running_tp,
 	TP_PROTO(struct rq *rq, int change),
 	TP_ARGS(rq, change));
 
+DECLARE_TRACE(sched_wakeup_queue_tp,
+	TP_PROTO(int waker_cpu, task_struct *p),
+	TP_ARGS(waker_cpu, p));
+
 #endif /* _TRACE_SCHED_H */
 
 /* This part must be outside protection */
