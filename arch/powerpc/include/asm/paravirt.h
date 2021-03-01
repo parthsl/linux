@@ -41,6 +41,14 @@ static inline void yield_to_any(void)
 {
 	plpar_hcall_norets(H_CONFER, -1, 0);
 }
+
+static inline void pcpu_available_instantly(int vcpu, unsigned long *is_idle)
+{
+	unsigned long retbuf[PLPAR_HCALL_BUFSIZE];
+
+	if (plpar_hcall(H_IDLE_HINT, retbuf, vcpu) == H_SUCCESS)
+		*is_idle = retbuf[0];
+}
 #else
 static inline bool is_shared_processor(void)
 {
@@ -75,6 +83,8 @@ static inline void prod_cpu(int cpu)
 #define vcpu_is_preempted vcpu_is_preempted
 static inline bool vcpu_is_preempted(int cpu)
 {
+	unsigned long is_idle = 0;
+
 	if (!is_shared_processor())
 		return false;
 
@@ -92,8 +102,12 @@ static inline bool vcpu_is_preempted(int cpu)
 	}
 #endif
 
-	if (yield_count_of(cpu) & 1)
-		return true;
+	if (yield_count_of(cpu) & 1) {
+		pcpu_available_instantly(cpu, &is_idle);
+
+		if (!is_idle)
+			return true;
+	}
 	return false;
 }
 
