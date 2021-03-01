@@ -5656,13 +5656,20 @@ int idle_cpu(int cpu)
  */
 int available_idle_cpu(int cpu)
 {
+	int is_idle;
+
 	if (!idle_cpu(cpu))
 		return 0;
 
-	trace_printk("t1: cpu%d is idle now checking for preemted?\n", cpu);
-	if (vcpu_is_preempted(cpu))
-		return 0;
-	trace_printk("t2: cpu%d is not preempted\n", cpu);
+	if (vcpu_is_preempted(cpu)) {
+		trace_printk("t1: cpu%d is idle now checking for preemted?\n", cpu);
+		pcpu_available_instantly(cpu, &is_idle);
+
+		if (!is_idle) {
+			trace_printk("t2: cpu%d is not preempted\n", cpu);
+			return 0;
+		}
+	}
 
 	return 1;
 }
