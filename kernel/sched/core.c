@@ -5659,8 +5659,10 @@ int available_idle_cpu(int cpu)
 	if (!idle_cpu(cpu))
 		return 0;
 
+	trace_printk("t1: cpu%d is idle now checking for preemted?\n", cpu);
 	if (vcpu_is_preempted(cpu))
 		return 0;
+	trace_printk("t2: cpu%d is not preempted\n", cpu);
 
 	return 1;
 }
@@ -6817,6 +6819,8 @@ int __sched get_idle_hint(struct task_struct *p)
 	int ret = 0;
 	if (p->sched_class->get_idle_hint)
 		ret = p->sched_class->get_idle_hint(p);
+
+	trace_printk("t22: exiting get_idle_hint with ret=%d\n", ret);
 	return ret;
 }
 EXPORT_SYMBOL_GPL(get_idle_hint);

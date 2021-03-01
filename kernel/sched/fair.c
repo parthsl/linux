@@ -7240,8 +7240,10 @@ static int get_idle_hint_fair(struct task_struct *p)
 {
 	unsigned int prev_cpu = task_cpu(p);
 
+	trace_printk("t9: p checked for idle\n");
 	if (available_idle_cpu(prev_cpu) || sched_idle_cpu(prev_cpu))
 		return 1;
+	trace_printk("t10: p is not idle\n");
 
 	return 0;
 }

@@ -106,11 +106,16 @@ static inline bool vcpu_is_preempted(int cpu)
 	}
 #endif
 
+	trace_printk("t3: cpu%d will be checked\n", cpu);
 	if (yield_count_of(cpu) & 1) {
+		trace_printk("t4: cpu%d will be checked\n", cpu);
 		pcpu_available_instantly(cpu, &is_idle);
 
-		if (!is_idle)
+		if (!is_idle) {
+			trace_printk("t5: cpu%d is idle hinted\n", cpu);
 			return true;
+		}
+		trace_printk("t6: cpu%d is idle hinted\n", cpu);
 	}
 	return false;
 }
