@@ -1,0 +1,17 @@
+Bottom: afc9120c1c40c0dc78d2e9c78a5970e68f5241d0
+Top:    83e46581faac0dd96600ded5ad7e8c9e232e7049
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2021-03-01 12:46:11 +0530
+
+sched: Use H_IDLEHINT hcall to find if a vcpu can be scheduled instantly
+
+A vcpu can *not* be scheduled instantly only if it is preempted and
+hypervisor can not guarantee that its correspoding prev_cpu is also idle.
+
+Signed-off-by: Parth Shah <parth@linux.ibm.com>
+
+
+---
+
+arch/powerpc/include/asm/paravirt.h | 22 ++++++++++++++++++++--
+ 1 file changed, 20 insertions(+), 2 deletions(-)

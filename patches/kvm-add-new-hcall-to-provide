@@ -1,0 +1,27 @@
+Bottom: 54016ed97001939c1662de9846545346ba8ceb2d
+Top:    afc9120c1c40c0dc78d2e9c78a5970e68f5241d0
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2021-03-01 12:46:10 +0530
+
+kvm: Add new hcall to provide hint if a vcpu can be scheduled instantly.
+
+H_IDLEHINT is a new hcall introduced to provide a hint to the guest of whether a
+vcpu can be scheduled instantly or not. This is currently done by looking at the
+prev_cpu of the task corresponding to a vcpu (which will be optimized in
+future).
+
+Signed-off-by: Parth Shah <parth@linux.ibm.com>
+
+
+---
+
+arch/powerpc/include/asm/hvcall.h |  3 ++-
+ arch/powerpc/kvm/book3s_hv.c      | 22 ++++++++++++++++++++++
+ arch/powerpc/kvm/trace_hv.h       |  1 +
+ include/linux/kvm_host.h          |  1 +
+ include/linux/sched.h             |  1 +
+ kernel/sched/core.c               |  9 +++++++++
+ kernel/sched/fair.c               | 12 ++++++++++++
+ kernel/sched/sched.h              |  1 +
+ virt/kvm/kvm_main.c               | 20 ++++++++++++++++++++
+ 9 files changed, 69 insertions(+), 1 deletion(-)
