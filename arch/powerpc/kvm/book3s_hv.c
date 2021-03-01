@@ -904,6 +904,17 @@ static int kvmppc_get_yield_count(struct kvm_vcpu *vcpu)
 	return yield_count;
 }
 
+static int kvmppc_provide_idle_hint(struct kvm_vcpu *vcpu)
+{
+	int ret = 0;
+
+	ret =  kvm_vcpu_provide_idle_hint(vcpu);
+
+	kvmppc_set_gpr(vcpu, 4, (unsigned int)ret);
+
+	return H_SUCCESS;
+}
+
 int kvmppc_pseries_do_hcall(struct kvm_vcpu *vcpu)
 {
 	unsigned long req = kvmppc_get_gpr(vcpu, 3);
@@ -930,6 +941,15 @@ int kvmppc_pseries_do_hcall(struct kvm_vcpu *vcpu)
 		smp_mb();
 		if (tvcpu->arch.ceded)
 			kvmppc_fast_vcpu_kick_hv(tvcpu);
+		break;
+	case H_IDLEHINT:
+		target = kvmppc_get_gpr(vcpu, 4);
+		tvcpu = kvmppc_find_vcpu(vcpu->kvm, target);
+		if (!tvcpu) {
+			ret = H_PARAMETER;
+			break;
+		}
+		ret = kvmppc_provide_idle_hint(tvcpu);
 		break;
 	case H_CONFER:
 		target = kvmppc_get_gpr(vcpu, 4);
@@ -1145,6 +1165,7 @@ static int kvmppc_hcall_impl_hv(unsigned long cmd)
 	case H_CEDE:
 	case H_PROD:
 	case H_CONFER:
+	case H_IDLEHINT:
 	case H_REGISTER_VPA:
 	case H_SET_MODE:
 	case H_LOGICAL_CI_LOAD:
@@ -5359,6 +5380,7 @@ static unsigned int default_hcall_list[] = {
 	H_PROD,
 	H_CONFER,
 	H_REGISTER_VPA,
+	H_IDLEHINT,
 #ifdef CONFIG_KVM_XICS
 	H_EOI,
 	H_CPPR,
