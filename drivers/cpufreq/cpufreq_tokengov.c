@@ -102,9 +102,7 @@ unsigned int max_of(struct avg_load_per_quad avgload, int flag)
 	return max_load;
 }
 
-static const int cpusperquad = 4;
-
-void calc_mips(struct tgdbs *tgg, int cpu, int first_quad_cpu)
+void calc_mips(struct tgdbs *tgg, int cpu, int first_quad_cpu, int cpusperquad)
 {
 	long long int ips;
 	int thread_index = cpu - first_quad_cpu;
@@ -130,13 +128,12 @@ void calc_mips(struct tgdbs *tgg, int cpu, int first_quad_cpu)
 	tgg->last_instructions[thread_index] = tgg->instructions[thread_index];
 
 }
-void calc_policy_mips(struct tgdbs *tgg, int first_quad_cpu)
+void calc_policy_mips(struct tgdbs *tgg, int first_quad_cpu, int cpusperquad)
 {
 	int cpu;
-	int thread_index;
 
 	for (cpu=first_quad_cpu; cpu<(first_quad_cpu+cpusperquad); cpu++)
-		calc_mips(tgg, cpu, first_quad_cpu);
+		calc_mips(tgg, cpu, first_quad_cpu, cpusperquad);
 
 	tgg->policy_mips = tgg->cpu_mips[0];
 	for (cpu=first_quad_cpu; cpu<(first_quad_cpu+cpusperquad); cpu++)
@@ -154,6 +151,7 @@ static void tg_update(struct cpufreq_policy *policy)
 	int first_thread_in_quad = (policy->cpu/16)*16;
 	int mips_increased = 0;
 
+
 	if (bostonv == 9)
 	{
 		/* No need to run tokengov on other socket */
@@ -161,7 +159,7 @@ static void tg_update(struct cpufreq_policy *policy)
 		if (policy->cpu > 55)
 			first_thread_in_quad = ((policy->cpu - 56)/16)*16 + 56;
 	}
-	//pr_info("cpu=%d first_thread in quad=%d\n",policy->cpu, first_thread_in_quad);
+	//trace_printk("cpu=%d first_thread in quad=%d\n",policy->cpu, first_thread_in_quad);
 	avg_load_per_quad[first_thread_in_quad].load[(policy->cpu-first_thread_in_quad)/4] = load;
 
 	// Token passing is for only first thread in quad
@@ -169,7 +167,10 @@ static void tg_update(struct cpufreq_policy *policy)
 
 	// should be called by first quad cpu only
 	// which goes and calculates for each cpu in that quad
-	calc_policy_mips(tgg, first_thread_in_quad);
+	if (bostonv == 9 && policy->cpu==48)
+		calc_policy_mips(tgg, first_thread_in_quad, 4);
+	else
+		calc_policy_mips(tgg, first_thread_in_quad, 4);
 
 	load = max_of(avg_load_per_quad[first_thread_in_quad],0);
 
@@ -195,16 +196,19 @@ static void tg_update(struct cpufreq_policy *policy)
 	else
 		tgg->taking_token = 0;
 
+	/*
 	if(debug && policy->cpu==0)
 		trace_printk("last_ramp=%u required_token=%u\n",tgg->last_ramp_up, required_tokens);
+	*/
 
 	if(debug && pool_turn==policy_id)
-		trace_printk("quad %d mips=%lld %u %u\n",policy->cpu, tgg->policy_mips, load, tgg->my_tokens);
+		trace_printk("my turn quad %d mips=%lld %u %u\n",policy->cpu, tgg->policy_mips, load, tgg->my_tokens);
 	else if(debug)
 		trace_printk("quad %d mips=%lld %u %u\n",policy->cpu, tgg->policy_mips, load, tgg->my_tokens);
 
 	//if token_pool reached to me, then only  i will doante/accept tokens
 	if(pool_turn == policy_id) {
+
 		if(required_tokens <= tgg->my_tokens){//donate
 			pool += (tgg->my_tokens - required_tokens);
 			tgg->my_tokens -= (tgg->my_tokens - required_tokens);
@@ -257,6 +261,8 @@ static void tg_update(struct cpufreq_policy *policy)
 			tgg->my_tokens -= (tgg->my_tokens - fair_tokens);
 			if(tgg->my_tokens > 100)trace_printk("%u:::::::%u\n",tgg->my_tokens , fair_tokens);
 		}
+
+		//trace_printk("cpu %d pool_turn %d\n",policy->cpu, pool_turn);
 
 		if (bostonv == 16)
 			pool_turn = (pool_turn+4)%npolicies;//+4 bcz jumping by 3 policies to next quad; policy is per core(or 4 SMTs)
@@ -352,7 +358,7 @@ static void tg_free(struct policy_dbs_info *policy_dbs)
 static int tg_init(struct dbs_data *dbs_data)
 {
 	dbs_data->tuners = &pool;
-	pool = 200; //Two can be at max freq
+	pool = 150; //Two can be at max freq
 	tokens_in_system = pool;
 	barrier = 0;
 	return 0;
@@ -377,7 +383,6 @@ static void build_P9_topology(struct cpufreq_policy *policy){
 
 	//setup nr_cpus
 	P9.nr_cpus = P9.nr_policies * P9.smt_mode;
-	printk("nr_policies=%u %u\n",P9.nr_policies, P9.nr_cpus);
 	npolicies = P9.nr_policies;
 
 	cpu_to_policy_map = kzalloc(sizeof(int)*P9.nr_cpus,GFP_KERNEL);
@@ -425,7 +430,6 @@ static void tg_start(struct cpufreq_policy *policy)
 	{
 		init_perf_event(tmp);
 		enable_perf_event(tmp);
-		pr_info("perf inited on cpu=%d\n",tmp);
 	}
 }
 
