@@ -208,8 +208,8 @@ static void tg_update(struct cpufreq_policy *policy)
 			return;
 		}
 		//if (policy->cpu >= 48) return;
-		if (policy->cpu > 55)
-			first_thread_in_quad = ((policy->cpu - 56)/16)*16 + 56;
+		if (policy->cpu > 71)
+			first_thread_in_quad = ((policy->cpu - 72)/16)*16 + 72;
 	}
 	//trace_printk("cpu=%d first_thread in quad=%d\n",policy->cpu, first_thread_in_quad);
 	avg_load_per_quad[first_thread_in_quad].load[(policy->cpu-first_thread_in_quad)/4] = load;
@@ -228,10 +228,10 @@ static void tg_update(struct cpufreq_policy *policy)
 	// which goes and calculates for each cpu in that quad
 
 
-	if (bostonv == 9 && policy->cpu==48)
-		calc_policy_mips(tgg, first_thread_in_quad, 1);
+	if (bostonv == 9 && policy->cpu==64)
+		calc_policy_mips(tgg, first_thread_in_quad, 4);
 	else
-		calc_policy_mips(tgg, first_thread_in_quad, 1);
+		calc_policy_mips(tgg, first_thread_in_quad, 4);
 	
 	//if ( policy->cpu == 0 )//&& tgg->last_policy_mips > 10*tgg->policy_mips )
 	//	trace_printk("last MIPS=%llu current MIPS=%llu\n",tgg->last_policy_mips, tgg->policy_mips);
@@ -362,8 +362,8 @@ static void tg_update(struct cpufreq_policy *policy)
 		else {
 			if (policy->cpu >= 72)
 				pool_turn = cpu_to_policy_map[0];
-			else if (policy->cpu == 48)
-				pool_turn = cpu_to_policy_map[56];
+			else if (policy->cpu == 64)
+				pool_turn = cpu_to_policy_map[72];
 			else
 				pool_turn = cpu_to_policy_map[policy->cpu+16];
 		}
