@@ -152,7 +152,10 @@ static void tg_update(struct cpufreq_policy *policy)
 	int first_thread_in_quad = (policy->cpu/16)*16;
 	int mips_increased = 0;
 	unsigned long start,start2,end;
-
+	//min_f = policy->cpuinfo.min_freq;
+	//max_f = policy->cpuinfo.max_freq;
+	min_f = 2166000;	
+	max_f = 3800000;
 
 	start = mftb();
 	//trace_printk("cpu=%d start time=%lu\n",policy->cpu, start);
@@ -162,7 +165,11 @@ static void tg_update(struct cpufreq_policy *policy)
 	if (bostonv == 9)
 	{
 		/* No need to run tokengov on other socket */
-		if (policy->cpu >= 48) return;
+		if (policy->cpu >= 88) {
+			__cpufreq_driver_target(policy, min_f, CPUFREQ_RELATION_C);
+			return;
+		}
+		//if (policy->cpu >= 48) return;
 		if (policy->cpu > 55)
 			first_thread_in_quad = ((policy->cpu - 56)/16)*16 + 56;
 	}
@@ -170,7 +177,10 @@ static void tg_update(struct cpufreq_policy *policy)
 	avg_load_per_quad[first_thread_in_quad].load[(policy->cpu-first_thread_in_quad)/4] = load;
 
 	// Token passing is for only first thread in quad
-	if(policy->cpu != first_thread_in_quad) return;
+	if(policy->cpu != first_thread_in_quad) {
+		__cpufreq_driver_target(policy, min_f, CPUFREQ_RELATION_C);
+		return;
+	}
 
 	start2 = mftb()-start;
 	//trace_printk("cpu=%d start for pool time=%lu\n",policy->cpu, start2);
@@ -189,10 +199,6 @@ static void tg_update(struct cpufreq_policy *policy)
 
 	/* Calculate the next frequency proportional to load */
 
-	//min_f = policy->cpuinfo.min_freq;
-	//max_f = policy->cpuinfo.max_freq;
-	min_f = 2166000;	
-	max_f = 3800000;
 
 	required_tokens = load;
 
@@ -200,8 +206,10 @@ static void tg_update(struct cpufreq_policy *policy)
 	 * If MIPS is not increasing then possibly the wirkload is 
 	 * frequency insensitive and hence dont accept/donate tokens
 	 */
-	if(tgg->taking_token)
+	if(tgg->taking_token) {
 		if(tgg->policy_mips*12/10 > tgg->mips_when_boosted)mips_increased = 1;
+		trace_printk("%llu %llu %u\n",tgg->policy_mips, tgg->mips_when_boosted, tgg->last_ramp_up);
+	}
 	if(tgg->taking_token && mips_increased)
 		tgg->taking_token = 0;
 	else if(tgg->taking_token && !mips_increased && required_tokens > tgg->my_tokens)
@@ -280,8 +288,10 @@ static void tg_update(struct cpufreq_policy *policy)
 		if (bostonv == 16)
 			pool_turn = (pool_turn+4)%npolicies;//+4 bcz jumping by 3 policies to next quad; policy is per core(or 4 SMTs)
 		else {
-			if (policy->cpu >= 32)
+			if (policy->cpu >= 72)
 				pool_turn = cpu_to_policy_map[0];
+			else if (policy->cpu == 48)
+				pool_turn = cpu_to_policy_map[56];
 			else
 				pool_turn = cpu_to_policy_map[policy->cpu+16];
 		}
