@@ -2,24 +2,21 @@
 #include <linux/percpu-defs.h>
 #include "cpufreq_governor.h"
 
-static DEFINE_PER_CPU(struct perf_event_attr, pea_obj);
 static DEFINE_PER_CPU(struct perf_event*, pe);
+static struct perf_event_attr pea[100];
 
-struct perf_event_attr pea;
-struct perf_event* pee;
-
-static int init_perf_event(int cpu, enum perf_hw_id event)
+static int init_perf_event(int cpu)
 {
-	struct perf_event_attr pea_obj = per_cpu(pea_obj, cpu);
-	struct perf_event *pe = per_cpu(pe, cpu);
-	pea_obj.type = PERF_TYPE_HARDWARE;
-	pea_obj.size = sizeof(struct perf_event_attr);
-	pea_obj.config = event;
-	pea_obj.disabled = 1;
-	pea_obj.inherit = 1;
-	pea_obj.exclude_guest = 1;
+	struct perf_event_attr *pea_obj = &pea[cpu];
 
-	pe = perf_event_create_kernel_counter(&pea_obj, cpu, NULL, NULL, NULL);
+	pea_obj->type = PERF_TYPE_HARDWARE;
+	pea_obj->size = sizeof(struct perf_event_attr);
+	pea_obj->config = PERF_COUNT_HW_CPU_CYCLES;
+	pea_obj->disabled = 1;
+	pea_obj->inherit = 1;
+	pea_obj->exclude_guest = 1;
+
+	per_cpu(pe,cpu) = perf_event_create_kernel_counter(pea_obj, cpu, NULL, NULL, NULL);
 	/*
 
 	if (!pe){
@@ -45,7 +42,13 @@ static inline long long int read_perf_event(int cpu)
 static inline void free_perf_event(struct cpufreq_policy* policy)
 {
 	int cpu;
-	for_each_cpu(cpu, policy->cpus)
+	//perf_event_disable(per_cpu(pe,0));
+	//perf_event_release_kernel(per_cpu(pe,0));
+	
+	for_each_cpu(cpu, policy->cpus){
+		perf_event_disable(per_cpu(pe,cpu));
 		perf_event_release_kernel(per_cpu(pe,cpu));
+	}
+	
 	return;
 }
