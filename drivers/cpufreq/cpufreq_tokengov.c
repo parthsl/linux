@@ -53,7 +53,9 @@ struct tgdbs {
 	long long last_policy_mips;
 	long long last_instructions[CPUS_PER_QUAD];
 	long long instructions[CPUS_PER_QUAD];
-	long long mips[CPUS_PER_QUAD];
+	long long mips[CPUS_PER_QUAD][BUCKET_SIZE];
+	long long cpu_mips[CPUS_PER_QUAD];
+	int bucket_pointer[CPUS_PER_QUAD];
 	long long last_mips[CPUS_PER_QUAD];
 	long long mips_when_boosted;
 };
@@ -106,13 +108,18 @@ void calc_mips(struct tgdbs *tgg, int cpu, int first_quad_cpu)
 	tgg->instructions[thread_index] = read_perf_event(cpu);
 
 	ips = tgg->instructions[thread_index] - tgg->last_instructions[thread_index];
-	tgg->last_mips[thread_index] = tgg->mips[thread_index];
+	tgg->last_mips[thread_index] = tgg->mips[thread_index][tgg->bucket_pointer[thread_index]];
 	
 	if(avg_load_per_quad[first_quad_cpu].load[thread_index/4]<10)
-		tgg->mips[thread_index] = 0;
+		tgg->mips[thread_index][tgg->bucket_pointer[thread_index]] = 0;
 	else
-		tgg->mips[thread_index] = (tgg->mips[thread_index]*PAST_MIPS_WEIGHT + ips*CURRENT_MIPS_WEIGHT)/10;
-	
+		tgg->mips[thread_index][tgg->bucket_pointer[thread_index]] = (tgg->mips[thread_index][tgg->bucket_pointer[thread_index]]*PAST_MIPS_WEIGHT + ips*CURRENT_MIPS_WEIGHT)/10;
+	tgg->bucket_pointer[thread_index] = (tgg->bucket_pointer[thread_index]+1)%BUCKET_SIZE;
+
+	tgg->cpu_mips[thread_index] = 0;
+	for(ips=0;ips<BUCKET_SIZE;  ips++)
+		tgg->cpu_mips[thread_index] += tgg->mips[thread_index][ips]/BUCKET_SIZE;
+
 	tgg->last_instructions[thread_index] = tgg->instructions[thread_index];
 
 }
@@ -125,13 +132,13 @@ void calc_policy_mips(struct tgdbs *tgg, int first_quad_cpu){
 		calc_mips(tgg, cpu, first_quad_cpu);
 
 	/* Set maximum MIPS among all cpu as policy's CPU */
-	tgg->policy_mips = tgg->mips[0];
+	tgg->policy_mips = tgg->cpu_mips[0];
 	for(cpu=first_quad_cpu; cpu<(first_quad_cpu+cpusperquad); cpu++)
-		tgg->policy_mips = tgg->policy_mips < tgg->mips[cpu-first_quad_cpu] ? tgg->mips[cpu-first_quad_cpu]:tgg->policy_mips;
+		tgg->policy_mips = tgg->policy_mips < tgg->cpu_mips[cpu-first_quad_cpu] ? tgg->cpu_mips[cpu-first_quad_cpu]:tgg->policy_mips;
 
 	if(debug && first_quad_cpu == 48){
 		thread_index = 49 - first_quad_cpu;
-		pr_info("thread_index=%d %lld %lld : %lld\n",thread_index, tgg->last_mips[thread_index], tgg->mips[thread_index], tgg->policy_mips);
+		pr_info("thread_index=%d %lld %lld : %lld\n",thread_index, tgg->last_mips[thread_index], tgg->mips[thread_index][0], tgg->policy_mips);
 	}
 }
 /*
