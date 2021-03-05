@@ -61,6 +61,7 @@ struct tgdbs {
 	long long last_mips[CPUS_PER_QUAD];
 	long long mips_when_boosted;
 	int taking_token;
+	unsigned long start,end;
 
 	/* Ramp up freq giving factor */
 	unsigned int last_ramp_up;
@@ -150,7 +151,13 @@ static void tg_update(struct cpufreq_policy *policy)
 	struct tgdbs *tgg  = &tg_data[policy_id];
 	int first_thread_in_quad = (policy->cpu/16)*16;
 	int mips_increased = 0;
+	unsigned long start,start2,end;
 
+
+	start = mftb();
+	trace_printk("cpu=%d start time=%lu\n",policy->cpu, start);
+	trace_printk("cpu=%d laststartdiff=%lu\n",policy->cpu, start-tgg->start);
+	tgg->start = start;
 
 	if (bostonv == 9)
 	{
@@ -165,6 +172,9 @@ static void tg_update(struct cpufreq_policy *policy)
 	// Token passing is for only first thread in quad
 	if(policy->cpu != first_thread_in_quad) return;
 
+	start2 = mftb()-start;
+	trace_printk("cpu=%d start for pool time=%lu\n",policy->cpu, start2);
+	trace_printk("cpu=%d lastenddiff=%lu\n",policy->cpu, start-tgg->end);
 	// should be called by first quad cpu only
 	// which goes and calculates for each cpu in that quad
 	if (bostonv == 9 && policy->cpu==48)
@@ -279,6 +289,9 @@ static void tg_update(struct cpufreq_policy *policy)
 	/* Set new frequency based on avaialble tokens */
 	freq_next = min_f + (tgg->my_tokens) * (max_f - min_f) / 100;
 	__cpufreq_driver_target(policy, freq_next, CPUFREQ_RELATION_C);
+	end = mftb() - start;
+	trace_printk("cpu=%d end time=%lu\n",policy->cpu, end);
+	tgg->end = mftb();
 }
 
 static unsigned int tg_dbs_update(struct cpufreq_policy *policy)
