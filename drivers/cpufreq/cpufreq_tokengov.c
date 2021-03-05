@@ -13,11 +13,10 @@
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 
 #include <linux/cpu.h>
-#include <linux/percpu-defs.h>
 #include <linux/slab.h>
 #include <linux/tick.h>
 #include <linux/sched/cpufreq.h>
-#include "cpufreq_governor.h"
+#include "cpufreq_tokengov.h"
 
 /* Scenario-4 specific tunables */
 static unsigned int pool;
@@ -44,6 +43,10 @@ struct tgdbs {
 	unsigned int my_tokens;
 	unsigned int starvation;
 	int set_fair_mode;
+	long long last_cycles;
+	long long cycles;
+	long long last_instructions;
+	long long instructions;
 };
 
 struct tgdbs * tg_data;
@@ -94,7 +97,7 @@ static void tg_update(struct cpufreq_policy *policy)
 	unsigned int policy_id = cpu_to_policy_map[policy->cpu];
 	unsigned int need_tokens;
 	struct tgdbs *tgg = &tg_data[policy_id];
-
+	u64 enabled=0, running=0;
 	int first_thread_in_quad = (policy->cpu/16)*16;
 
 	avg_load_per_quad[first_thread_in_quad].load[(policy->cpu-first_thread_in_quad)/4] = load;
@@ -105,6 +108,11 @@ static void tg_update(struct cpufreq_policy *policy)
 	load = max_of(avg_load_per_quad[first_thread_in_quad],0);
 
 	/* Calculate the next frequency proportional to load */
+	if(policy->cpu ==0){
+		tgg->instructions = perf_event_read_value(pee, &enabled, &running);
+		pr_info("%lld\n",tgg->instructions - tgg->last_instructions);
+		tgg->last_instructions = tgg->instructions;
+	}
 
 	min_f = policy->cpuinfo.min_freq;
 	max_f = policy->cpuinfo.max_freq;
@@ -230,6 +238,8 @@ static struct policy_dbs_info *tg_alloc(void)
 static void tg_free(struct policy_dbs_info *policy_dbs)
 {
 	kfree(to_dbs_info(policy_dbs));
+	perf_event_disable(pee);
+	perf_event_release_kernel(pee);
 }
 
 static int tg_init(struct dbs_data *dbs_data)
@@ -292,6 +302,17 @@ static void tg_start(struct cpufreq_policy *policy)
 		pool_mode = GREEDY;
 		fair_tokens = tokens_in_system/P9.nr_policies;
 		printk("Fair part=%u\n",fair_tokens);
+
+		/* Read perf based inctructions counter from hardware */
+		pea.type = PERF_TYPE_HARDWARE;
+		pea.size = sizeof(struct perf_event_attr);
+		pea.config = PERF_COUNT_HW_CPU_CYCLES;
+		pea.disabled = 1;
+		pea.inherit = 1;
+		pea.exclude_guest = 1;
+
+		pee = perf_event_create_kernel_counter(&pea, policy->cpu, NULL, NULL, NULL);
+		perf_event_enable(pee);
 		barrier=1;
 	}
 	while(barrier==0);
