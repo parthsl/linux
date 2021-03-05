@@ -39,6 +39,8 @@ static int debug;
 
 static DEFINE_MUTEX(gov_dbs_tokenpool_mutex);
 
+const unsigned int ramp_up_limit = 32;
+
 struct tg_topology {
 	unsigned int smt_mode;
 	unsigned int nr_cpus;
@@ -59,6 +61,9 @@ struct tgdbs {
 	long long last_mips[CPUS_PER_QUAD];
 	long long mips_when_boosted;
 	int taking_token;
+
+	/* Ramp up freq giving factor */
+	unsigned int last_ramp_up;
 };
 
 struct tgdbs * tg_data;
@@ -136,11 +141,6 @@ void calc_policy_mips(struct tgdbs *tgg, int first_quad_cpu){
 	tgg->policy_mips = tgg->cpu_mips[0];
 	for(cpu=first_quad_cpu; cpu<(first_quad_cpu+cpusperquad); cpu++)
 		tgg->policy_mips = tgg->policy_mips < tgg->cpu_mips[cpu-first_quad_cpu] ? tgg->cpu_mips[cpu-first_quad_cpu]:tgg->policy_mips;
-
-	if(debug && first_quad_cpu == 48){
-		thread_index = 49 - first_quad_cpu;
-		pr_info("thread_index=%d %lld %lld : %lld\n",thread_index, tgg->last_mips[thread_index], tgg->mips[thread_index][0], tgg->policy_mips);
-	}
 }
 /*
  * Every sampling_rate, we check, if current idle time is less than 20%
@@ -167,15 +167,14 @@ static void tg_update(struct cpufreq_policy *policy)
 	// which goes and calculates for each cpu in that quad
 	calc_policy_mips(tgg, first_thread_in_quad);
 
-	if(debug)
-		trace_printk("quad %d mips=%lld\n",policy->cpu,tg_data[policy_id].policy_mips);
-
 	load = max_of(avg_load_per_quad[first_thread_in_quad],0);
 
 	/* Calculate the next frequency proportional to load */
-	
-	min_f = policy->cpuinfo.min_freq;
-	max_f = policy->cpuinfo.max_freq;
+
+	//min_f = policy->cpuinfo.min_freq;
+	//max_f = policy->cpuinfo.max_freq;
+	min_f = 2166000;	
+	max_f = 3800000;
 
 	required_tokens = load;
 
@@ -192,6 +191,9 @@ static void tg_update(struct cpufreq_policy *policy)
 	else
 		tgg->taking_token = 0;
 
+	if(debug && policy->cpu==0)
+		trace_printk("last_ramp=%u required_token=%u\n",tgg->last_ramp_up, required_tokens);
+
 	//if token_pool reached to me, then only  i will doante/accept tokens
 	if(pool_turn == policy_id){
 		if(required_tokens <= tgg->my_tokens){//donate
@@ -199,6 +201,7 @@ static void tg_update(struct cpufreq_policy *policy)
 			tgg->my_tokens -= (tgg->my_tokens - required_tokens);
 			tgg->taking_token = 0;
 			if(tgg->my_tokens > 100)printk("%u:::::::%u\n",tgg->my_tokens , required_tokens);
+			tgg->last_ramp_up = 1;
 		}
 		else{
 			if(pool==0){//if not getting tokens for 32 loops then starve
@@ -210,10 +213,13 @@ static void tg_update(struct cpufreq_policy *policy)
 			}
 			else {
 				//need_tokens = (required_tokens - tgg->my_tokens);
-				if((required_tokens - tgg->my_tokens)>0)
-					need_tokens = 1;
-				else
-					need_tokens = 0;
+				need_tokens = tgg->last_ramp_up ? tgg->last_ramp_up*2 : 1;
+				need_tokens = need_tokens > ramp_up_limit ? ramp_up_limit : need_tokens;
+
+				if((required_tokens - tgg->my_tokens) < need_tokens)
+					need_tokens = (required_tokens - tgg->my_tokens);
+
+				tgg->last_ramp_up = need_tokens;
 		
 				if(pool > need_tokens){//pool has sufficient tokens
 					tgg->my_tokens += need_tokens;
@@ -223,6 +229,7 @@ static void tg_update(struct cpufreq_policy *policy)
 				}
 				else{//pool has fewer token than required. so get all that available
 					tgg->my_tokens += pool;
+					tgg->last_ramp_up += pool;
 					if(tgg->my_tokens > 100)printk("%u:::::::%u\n",tgg->my_tokens , pool);
 					pool = 0;
 					tgg->mips_when_boosted = tgg->policy_mips;
@@ -387,7 +394,8 @@ static void tg_start(struct cpufreq_policy *policy)
 	while(barrier==0);
 	tg_data[cpu_to_policy_map[policy->cpu]].set_fair_mode = 0;
 	tg_data[cpu_to_policy_map[policy->cpu]].my_tokens = 0;
-	pr_info("I'm cpu=%d policies=%u\n",policy->cpu, npolicies);
+	tg_data[cpu_to_policy_map[policy->cpu]].last_ramp_up = 1;
+	pr_info("I'm cpu=%d policies=%u\n",policy->cpu, cpu_to_policy_map[policy->cpu]);
 
 	/* Read perf based inctructions counter from hardware */
 	for_each_cpu(tmp, policy->cpus)
