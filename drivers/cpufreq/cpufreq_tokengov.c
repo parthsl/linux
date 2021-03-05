@@ -155,14 +155,14 @@ static void tg_update(struct cpufreq_policy *policy)
 
 
 	start = mftb();
-	trace_printk("cpu=%d start time=%lu\n",policy->cpu, start);
-	trace_printk("cpu=%d laststartdiff=%lu\n",policy->cpu, start-tgg->start);
+	//trace_printk("cpu=%d start time=%lu\n",policy->cpu, start);
+	//trace_printk("cpu=%d laststartdiff=%lu\n",policy->cpu, start-tgg->start);
 	tgg->start = start;
 
 	if (bostonv == 9)
 	{
 		/* No need to run tokengov on other socket */
-		if (policy->cpu >= 88) return;
+		if (policy->cpu >= 48) return;
 		if (policy->cpu > 55)
 			first_thread_in_quad = ((policy->cpu - 56)/16)*16 + 56;
 	}
@@ -173,15 +173,18 @@ static void tg_update(struct cpufreq_policy *policy)
 	if(policy->cpu != first_thread_in_quad) return;
 
 	start2 = mftb()-start;
-	trace_printk("cpu=%d start for pool time=%lu\n",policy->cpu, start2);
-	trace_printk("cpu=%d lastenddiff=%lu\n",policy->cpu, start-tgg->end);
+	//trace_printk("cpu=%d start for pool time=%lu\n",policy->cpu, start2);
+	//trace_printk("cpu=%d lastenddiff=%lu\n",policy->cpu, start-tgg->end);
+	
 	// should be called by first quad cpu only
 	// which goes and calculates for each cpu in that quad
+
+
 	if (bostonv == 9 && policy->cpu==48)
 		calc_policy_mips(tgg, first_thread_in_quad, 4);
 	else
 		calc_policy_mips(tgg, first_thread_in_quad, 4);
-
+	
 	load = max_of(avg_load_per_quad[first_thread_in_quad],0);
 
 	/* Calculate the next frequency proportional to load */
@@ -211,10 +214,10 @@ static void tg_update(struct cpufreq_policy *policy)
 		trace_printk("last_ramp=%u required_token=%u\n",tgg->last_ramp_up, required_tokens);
 	*/
 
-	if(debug && pool_turn==policy_id)
+	if(!debug && pool_turn==policy_id)
 		trace_printk("my turn quad %d mips=%lld %u %u\n",policy->cpu, tgg->policy_mips, load, tgg->my_tokens);
-	else if(debug)
-		trace_printk("quad %d mips=%lld %u %u\n",policy->cpu, tgg->policy_mips, load, tgg->my_tokens);
+	//else if(debug)
+	//	trace_printk("quad %d mips=%lld %u %u\n",policy->cpu, tgg->policy_mips, load, tgg->my_tokens);
 
 	//if token_pool reached to me, then only  i will doante/accept tokens
 	if(pool_turn == policy_id) {
@@ -277,9 +280,7 @@ static void tg_update(struct cpufreq_policy *policy)
 		if (bostonv == 16)
 			pool_turn = (pool_turn+4)%npolicies;//+4 bcz jumping by 3 policies to next quad; policy is per core(or 4 SMTs)
 		else {
-			if (policy->cpu == 48)
-				pool_turn = cpu_to_policy_map[56];
-			else if (policy->cpu == 72)
+			if (policy->cpu >= 32)
 				pool_turn = cpu_to_policy_map[0];
 			else
 				pool_turn = cpu_to_policy_map[policy->cpu+16];
@@ -290,16 +291,16 @@ static void tg_update(struct cpufreq_policy *policy)
 	freq_next = min_f + (tgg->my_tokens) * (max_f - min_f) / 100;
 	__cpufreq_driver_target(policy, freq_next, CPUFREQ_RELATION_C);
 	end = mftb() - start;
-	trace_printk("cpu=%d end time=%lu\n",policy->cpu, end);
+	//trace_printk("cpu=%d end time=%lu\n",policy->cpu, end);
 	tgg->end = mftb();
 }
 
 static unsigned int tg_dbs_update(struct cpufreq_policy *policy)
 {
-	trace_printk("cpu=%d tgdbs start time=%lu\n",policy->cpu,mftb());
+	//trace_printk("cpu=%d tgdbs start time=%lu\n",policy->cpu,mftb());
 
 	tg_update(policy);
-	trace_printk("cpu=%d tgdbs end=%lu\n",policy->cpu, mftb());
+	//trace_printk("cpu=%d tgdbs end=%lu\n",policy->cpu, mftb());
 
 	return 8000;
 }
