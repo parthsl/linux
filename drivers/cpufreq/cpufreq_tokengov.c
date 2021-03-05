@@ -296,7 +296,10 @@ static void tg_update(struct cpufreq_policy *policy)
 
 static unsigned int tg_dbs_update(struct cpufreq_policy *policy)
 {
+	trace_printk("cpu=%d tgdbs start time=%lu\n",policy->cpu,mftb());
+
 	tg_update(policy);
+	trace_printk("cpu=%d tgdbs end=%lu\n",policy->cpu, mftb());
 
 	return 8000;
 }
