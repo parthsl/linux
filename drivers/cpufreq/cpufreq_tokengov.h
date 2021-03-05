@@ -11,7 +11,7 @@ static int init_perf_event(int cpu)
 
 	pea_obj->type = PERF_TYPE_HARDWARE;
 	pea_obj->size = sizeof(struct perf_event_attr);
-	pea_obj->config = PERF_COUNT_HW_CPU_CYCLES;
+	pea_obj->config = PERF_COUNT_HW_INSTRUCTIONS;
 	pea_obj->disabled = 1;
 	pea_obj->inherit = 1;
 	pea_obj->exclude_guest = 1;
