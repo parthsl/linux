@@ -102,10 +102,6 @@ static void tg_update(struct cpufreq_policy *policy)
 	// Token passing is for only first thread in quad
 	if(policy->cpu != first_thread_in_quad) return;
 
-	if(policy->cpu == 16)
-
-	load = max_of(avg_load_per_quad[first_thread_in_quad],0);
-	else
 	load = max_of(avg_load_per_quad[first_thread_in_quad],0);
 
 	/* Calculate the next frequency proportional to load */
@@ -131,7 +127,12 @@ static void tg_update(struct cpufreq_policy *policy)
 				}
 			}
 			else {
-				need_tokens = (required_tokens - tgg->my_tokens);
+				//need_tokens = (required_tokens - tgg->my_tokens);
+				if((required_tokens - tgg->my_tokens)>0)
+					need_tokens = 1;
+				else
+					need_tokens = 0;
+		
 				if(pool > need_tokens){//pool has sufficient tokens
 					tgg->my_tokens += need_tokens;
 					if(tgg->my_tokens > 100)printk("%u:::::::%u\n",tgg->my_tokens , need_tokens);
@@ -202,7 +203,7 @@ static ssize_t show_central_pool(struct gov_attr_set *attr_set, char *buf)
 
 	for(i=0;i<P9.nr_cpus; i+=16)
 	{
-		printk("policy=%d-%u:%u:%u:%u",i,avg_load_per_quad[i].load[0],avg_load_per_quad[i].load[1],avg_load_per_quad[i].load[2],avg_load_per_quad[i].load[3]);
+		printk("policy=%d-%u:%u:%u:%u:%u",i,avg_load_per_quad[i].load[0],avg_load_per_quad[i].load[1],avg_load_per_quad[i].load[2],avg_load_per_quad[i].load[3],max_of(avg_load_per_quad[i],0));
 	}
 	
 	return sprintf(buf, "pool=%u, turn for policy %u total %u policies\n", pool, pool_turn, npolicies);
@@ -234,7 +235,7 @@ static void tg_free(struct policy_dbs_info *policy_dbs)
 static int tg_init(struct dbs_data *dbs_data)
 {
 	dbs_data->tuners = &pool;
-	pool = 100; //Two can be at max freq
+	pool = 200; //Two can be at max freq
 	tokens_in_system = pool;
 	barrier = 0;
 	return 0;
