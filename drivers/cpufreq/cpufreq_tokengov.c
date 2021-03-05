@@ -18,8 +18,11 @@
 
 #define BUCKET_SIZE 10
 #define PAST_MIPS_WEIGHT 8
-#define CURRENT_MIPS_WEIGHT (1-PAST_MIPS_WEIGHT)
+#define CURRENT_MIPS_WEIGHT (10-PAST_MIPS_WEIGHT)
 #define CPUS_PER_QUAD 16
+#define TO_MS	1000000
+/* MIPS_PERIOD in ms */
+#define MIPS_PERIOD	100
 
 /* Boston system version, 9 or 16 */
 const int bostonv = 9;
@@ -34,6 +37,9 @@ static unsigned int tokens_in_system;
 static unsigned int fair_tokens;
 
 static unsigned int npolicies;
+
+static int scaledown = 9;
+static int scaleup = 300;
 
 static int debug;
 
@@ -62,6 +68,7 @@ struct tgdbs {
 	int bucket_pointer[CPUS_PER_QUAD];
 	u64	last_mips[CPUS_PER_QUAD];
 	u64	mips_when_boosted;
+	int	mips_updated;
 	int taking_token;
 	unsigned long start,end;
 
@@ -116,15 +123,18 @@ void calc_mips(struct tgdbs *tgg, int cpu, int first_quad_cpu, int cpusperquad)
 	if(thread_index>=cpusperquad)
 		pr_info("bcz %d %d\n",cpu,first_quad_cpu);
 
+	tgg->timestamp[thread_index] = mftb();
+	time_passed = tgg->timestamp[thread_index] - tgg->last_timestamp[thread_index];
+	time_passed /= TO_MS;
+	if(time_passed<=0) time_passed = 1;
+	if (time_passed < MIPS_PERIOD) return ;
+
+	/* Read Perf counters */
 	perf_instr = read_perf_event(cpu);
 	tgg->instructions[thread_index] = perf_instr;
-	tgg->timestamp[thread_index] = mftb();
 
 	ips = tgg->instructions[thread_index] - tgg->last_instructions[thread_index];
 	
-	time_passed = tgg->timestamp[thread_index] - tgg->last_timestamp[thread_index];
-	time_passed /= 1000000;
-	if(time_passed<=0) time_passed = 1;
 
 	tgg->last_mips[thread_index] = tgg->mips[thread_index][tgg->bucket_pointer[thread_index]];
 	
@@ -135,13 +145,21 @@ void calc_mips(struct tgdbs *tgg, int cpu, int first_quad_cpu, int cpusperquad)
 		//tgg->mips[thread_index][tgg->bucket_pointer[thread_index]] = ips;
 	tgg->bucket_pointer[thread_index] = (tgg->bucket_pointer[thread_index]+1)%BUCKET_SIZE;
 
-	tgg->cpu_mips[thread_index] = 0;
+	if (debug && cpu == 0)	
+	trace_printk("mlips=%llu time=%llu\n", ips, time_passed);
+	
+	ips = ips/time_passed;
+	tgg->cpu_mips[thread_index] = (tgg->cpu_mips[thread_index]*PAST_MIPS_WEIGHT + ips*CURRENT_MIPS_WEIGHT)/10;
+	if (debug && cpu == 0)	
+	trace_printk("mips = %llu ips=%llu time=%llu\n", tgg->cpu_mips[thread_index], ips, time_passed);
+	/*
 	for(iter = 0; iter<BUCKET_SIZE;  iter++)
 		tgg->cpu_mips[thread_index] += tgg->mips[thread_index][iter]/BUCKET_SIZE;
 	tgg->cpu_mips[thread_index] /= time_passed;
-
+	*/
 	tgg->last_instructions[thread_index] = tgg->instructions[thread_index];
 	tgg->last_timestamp[thread_index] = tgg->timestamp[thread_index];
+	tgg->mips_updated = 1;
 }
 void calc_policy_mips(struct tgdbs *tgg, int first_quad_cpu, int cpusperquad)
 {
@@ -166,6 +184,8 @@ static void tg_update(struct cpufreq_policy *policy)
 	int first_thread_in_quad = (policy->cpu/16)*16;
 	int mips_increased = 0;
 	unsigned long start,start2,end;
+	u64 expected_mips, instruction_diff;
+
 	//min_f = policy->cpuinfo.min_freq;
 	//max_f = policy->cpuinfo.max_freq;
 	min_f = 2166000;	
@@ -205,9 +225,9 @@ static void tg_update(struct cpufreq_policy *policy)
 
 
 	if (bostonv == 9 && policy->cpu==48)
-		calc_policy_mips(tgg, first_thread_in_quad, 4);
+		calc_policy_mips(tgg, first_thread_in_quad, 1);
 	else
-		calc_policy_mips(tgg, first_thread_in_quad, 4);
+		calc_policy_mips(tgg, first_thread_in_quad, 1);
 	
 	//if ( policy->cpu == 0 )//&& tgg->last_policy_mips > 10*tgg->policy_mips )
 	//	trace_printk("last MIPS=%llu current MIPS=%llu\n",tgg->last_policy_mips, tgg->policy_mips);
@@ -219,25 +239,36 @@ static void tg_update(struct cpufreq_policy *policy)
 
 	required_tokens = load;
 
+	if (!tgg->mips_updated && required_tokens >= tgg->my_tokens) return ;
+	tgg->mips_updated = 0;
+
 	/* In case of increase in load, check if MIPS also increased
 	 * If MIPS is not increasing then possibly the wirkload is 
 	 * frequency insensitive and hence dont accept/donate tokens
 	 */
+	instruction_diff = (17000*tgg->last_ramp_up)/2; //instruction_diff is really MIPS diff
+	expected_mips = tgg->mips_when_boosted + instruction_diff;
+	expected_mips -= (instruction_diff*5/100); //keep 5% error margin
+
 	if(tgg->taking_token) {
-		if(tgg->policy_mips*2 > 3*tgg->mips_when_boosted) {
+		if ( tgg->policy_mips > expected_mips) {
 			mips_increased = 1;
-			trace_printk("dff: %llu %llu %u\n",tgg->policy_mips, tgg->mips_when_boosted, tgg->last_ramp_up);
+			if ( policy->cpu == 0)
+			trace_printk("dff: %llu %llu %u %llu\n",tgg->policy_mips, tgg->mips_when_boosted, tgg->last_ramp_up, expected_mips);
 		}
 		else {
-			trace_printk("regret: %llu %llu %u\n",tgg->policy_mips, tgg->mips_when_boosted, tgg->last_ramp_up);
+			if ( policy->cpu == 0)
+			trace_printk("regret: %llu %llu %u %llu\n",tgg->policy_mips, tgg->mips_when_boosted, tgg->last_ramp_up, expected_mips);
 		}
 	}
 	if(tgg->taking_token && mips_increased)
 		tgg->taking_token = 0;
 	else if(tgg->taking_token && !mips_increased && required_tokens > tgg->my_tokens)
 		required_tokens = tgg->my_tokens-1;
-	else
+	else if (tgg->taking_token){
 		tgg->taking_token = 0;
+		required_tokens = tgg->my_tokens;
+	}
 
 	/*
 	if(debug && policy->cpu==0)
@@ -257,7 +288,7 @@ static void tg_update(struct cpufreq_policy *policy)
 			tgg->my_tokens -= (tgg->my_tokens - required_tokens);
 			tgg->taking_token = 0;
 			if(tgg->my_tokens > 100)trace_printk("%u:::::::%u\n",tgg->my_tokens , required_tokens);
-			tgg->last_ramp_up = 1;
+			tgg->last_ramp_up = 0;
 		}
 		else{
 			if(pool==0) {//if not getting tokens for 32 loops then starve
@@ -344,14 +375,19 @@ static struct dbs_governor tg_dbs_gov;
 static ssize_t store_central_pool(struct gov_attr_set *attr_set, const char *buf,
 				size_t count)
 {
-	unsigned int input;
+	int input;
 	int ret;
 
-	ret = sscanf(buf, "%u", &input);
+	ret = sscanf(buf, "%d", &input);
 	if (ret != 1)
 		return -EINVAL;
 
 	if(input==0)debug = ~debug;
+	if (input<0) {
+		scaledown = -1*input;
+		trace_printk("scaledown=%d\n",scaledown);
+		return count;
+	}
 
 	mutex_lock(&gov_dbs_tokenpool_mutex);
 	pool += input;
@@ -472,7 +508,8 @@ static void tg_start(struct cpufreq_policy *policy)
 	while(barrier==0);
 	tg_data[cpu_to_policy_map[policy->cpu]].set_fair_mode = 0;
 	tg_data[cpu_to_policy_map[policy->cpu]].my_tokens = 0;
-	tg_data[cpu_to_policy_map[policy->cpu]].last_ramp_up = 1;
+	tg_data[cpu_to_policy_map[policy->cpu]].last_ramp_up = 0;
+	tg_data[cpu_to_policy_map[policy->cpu]].mips_updated = 0;
 	pr_info("I'm cpu=%d policies=%d\n",policy->cpu, cpu_to_policy_map[policy->cpu]);
 	/* Read perf based inctructions counter from hardware */
 	
