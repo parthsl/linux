@@ -24,7 +24,7 @@ static unsigned int pool;
 static unsigned int pool_turn;
 enum pool_mode {GREEDY, FAIR} pool_mode;
 
-const unsigned int starvation_threshold = 32;
+const unsigned int starvation_threshold = 320000;
 static unsigned int tokens_in_system;
 static unsigned int fair_tokens;
 
@@ -64,6 +64,23 @@ static inline struct tg_policy_dbs_info *to_dbs_info(struct policy_dbs_info *pol
 	        return container_of(policy_dbs, struct tg_policy_dbs_info, policy_dbs);
 }
 
+struct avg_load_per_quad {
+	unsigned int load[4];
+};
+
+struct avg_load_per_quad* avg_load_per_quad;
+
+unsigned int max_of(struct avg_load_per_quad avgload, int flag)
+{
+	int i = 1;
+	unsigned int max_load = avgload.load[0];
+	if(flag)
+		printk("llll%u:%u:%u:%u\n",avgload.load[0],avgload.load[1],avgload.load[2],avgload.load[3]);
+	for(; i<4; i++)
+		max_load = max_load < avgload.load[i] ? avgload.load[i]: max_load;
+
+	return max_load;
+}
 /*
  * Every sampling_rate, we check, if current idle time is less than 20%
  * (default), then we try to increase frequency. Else, we adjust the frequency
@@ -78,13 +95,23 @@ static void tg_update(struct cpufreq_policy *policy)
 	unsigned int need_tokens;
 	struct tgdbs *tgg = &tg_data[policy_id];
 
+	int first_thread_in_quad = (policy->cpu/16)*16;
+
+	avg_load_per_quad[first_thread_in_quad].load[(policy->cpu-first_thread_in_quad)/4] = load;
+
+	// Token passing is for only first thread in quad
+	if(policy->cpu != first_thread_in_quad) return;
+
+	if(policy->cpu == 16)
+
+	load = max_of(avg_load_per_quad[first_thread_in_quad],0);
+	else
+	load = max_of(avg_load_per_quad[first_thread_in_quad],0);
+
 	/* Calculate the next frequency proportional to load */
 
 	min_f = policy->cpuinfo.min_freq;
 	max_f = policy->cpuinfo.max_freq;
-
-	if(debug)
-		printk("Cpu=%d token=%d\n",policy->cpu,tgg->my_tokens);
 
 	required_tokens = load;
 
@@ -127,7 +154,7 @@ static void tg_update(struct cpufreq_policy *policy)
 			tgg->my_tokens -= (tgg->my_tokens - fair_tokens);
 			if(tgg->my_tokens > 100)printk("%u:::::::%u\n",tgg->my_tokens , fair_tokens);
 		}
-		pool_turn = (pool_turn + 1)%npolicies;
+		pool_turn = (pool_turn + 4)%npolicies;
 	}
 	
 	/* Set new frequency based on avaialble tokens */
@@ -172,6 +199,12 @@ static ssize_t show_central_pool(struct gov_attr_set *attr_set, char *buf)
 	{
 		printk("policy=%d:%d\n",i,tg_data[i].my_tokens );
 	}
+
+	for(i=0;i<P9.nr_cpus; i+=16)
+	{
+		printk("policy=%d-%u:%u:%u:%u",i,avg_load_per_quad[i].load[0],avg_load_per_quad[i].load[1],avg_load_per_quad[i].load[2],avg_load_per_quad[i].load[3]);
+	}
+	
 	return sprintf(buf, "pool=%u, turn for policy %u total %u policies\n", pool, pool_turn, npolicies);
 }
 
@@ -209,6 +242,9 @@ static int tg_init(struct dbs_data *dbs_data)
 
 static void tg_exit(struct dbs_data *dbs_data)
 {
+	kfree(cpu_to_policy_map);
+	kfree(avg_load_per_quad);
+	kfree(tg_data);
 }
 
 static void build_P9_topology(struct cpufreq_policy *policy){
@@ -222,13 +258,15 @@ static void build_P9_topology(struct cpufreq_policy *policy){
 
 	//setup nr_cpus
 	P9.nr_cpus = P9.nr_policies * P9.smt_mode;
+	printk("nr_policies=%u\n",P9.nr_policies);
 	npolicies = P9.nr_policies;
 
-	cpu_to_policy_map = kzalloc(sizeof(int),GFP_KERNEL);
+	cpu_to_policy_map = kzalloc(sizeof(int)*P9.nr_policies,GFP_KERNEL);
 
 	iter = 0;
 	list_for_each_entry(iterator, &policy->policy_list, policy_list){
 		cpu_to_policy_map[iterator->cpu] = iter;
+		printk("policy-cpu=%d id=%d\n",iterator->cpu,iter);
 		iter++;
 	}
 }
@@ -244,9 +282,11 @@ static void tg_start(struct cpufreq_policy *policy)
 			P9.nr_policies++;
 		}
 
-		tg_data = kzalloc(sizeof(struct per_policy_ds*)*P9.nr_policies, GFP_KERNEL);
+		tg_data = kzalloc(sizeof(struct tgdbs)*P9.nr_policies, GFP_KERNEL);
 
 		build_P9_topology(policy);
+		
+		avg_load_per_quad = kzalloc(sizeof(struct avg_load_per_quad)*P9.nr_cpus, GFP_KERNEL);
 		pool_turn = 0;
 		pool_mode = GREEDY;
 		fair_tokens = tokens_in_system/P9.nr_policies;
