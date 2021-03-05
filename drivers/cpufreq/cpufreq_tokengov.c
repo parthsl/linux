@@ -108,6 +108,7 @@ void calc_mips(struct tgdbs *tgg, int cpu, int first_quad_cpu)
 {
 	long long int ips;
 	int thread_index = cpu - first_quad_cpu;
+
 	if(thread_index>=cpusperquad)
 		pr_info("bcz %d %d\n",cpu,first_quad_cpu);
 
@@ -129,17 +130,14 @@ void calc_mips(struct tgdbs *tgg, int cpu, int first_quad_cpu)
 	tgg->last_instructions[thread_index] = tgg->instructions[thread_index];
 
 }
-
 void calc_policy_mips(struct tgdbs *tgg, int first_quad_cpu)
 {
 	int cpu;
 	int thread_index;
 
-	/* will break for b9 if cpusperquad>8 */
 	for (cpu=first_quad_cpu; cpu<(first_quad_cpu+cpusperquad); cpu++)
 		calc_mips(tgg, cpu, first_quad_cpu);
 
-	/* Set maximum MIPS among all cpu as policy's CPU */
 	tgg->policy_mips = tgg->cpu_mips[0];
 	for (cpu=first_quad_cpu; cpu<(first_quad_cpu+cpusperquad); cpu++)
 		tgg->policy_mips = tgg->policy_mips < tgg->cpu_mips[cpu-first_quad_cpu] ? tgg->cpu_mips[cpu-first_quad_cpu]:tgg->policy_mips;
@@ -152,15 +150,18 @@ static void tg_update(struct cpufreq_policy *policy)
 	unsigned int freq_next, min_f, max_f;
 	unsigned int policy_id = cpu_to_policy_map[policy->cpu];
 	unsigned int need_tokens;
-	struct tgdbs *tgg = &tg_data[policy_id];
+	struct tgdbs *tgg  = &tg_data[policy_id];
 	int first_thread_in_quad = (policy->cpu/16)*16;
 	int mips_increased = 0;
 
-	/* No need to run tokengov on other socket */
-	if (policy->cpu >= 88) return;
-	if (policy->cpu > 48)
-		first_thread_in_quad = first_thread_in_quad + 8;
-
+	if (bostonv == 9)
+	{
+		/* No need to run tokengov on other socket */
+		if (policy->cpu >= 88) return;
+		if (policy->cpu > 55)
+			first_thread_in_quad = ((policy->cpu - 56)/16)*16 + 56;
+	}
+	//pr_info("cpu=%d first_thread in quad=%d\n",policy->cpu, first_thread_in_quad);
 	avg_load_per_quad[first_thread_in_quad].load[(policy->cpu-first_thread_in_quad)/4] = load;
 
 	// Token passing is for only first thread in quad
@@ -194,17 +195,16 @@ static void tg_update(struct cpufreq_policy *policy)
 	else
 		tgg->taking_token = 0;
 
-	/*
 	if(debug && policy->cpu==0)
 		trace_printk("last_ramp=%u required_token=%u\n",tgg->last_ramp_up, required_tokens);
-	*/
 
 	if(debug && pool_turn==policy_id)
 		trace_printk("quad %d mips=%lld %u %u\n",policy->cpu, tgg->policy_mips, load, tgg->my_tokens);
 	else if(debug)
 		trace_printk("quad %d mips=%lld %u %u\n",policy->cpu, tgg->policy_mips, load, tgg->my_tokens);
+
 	//if token_pool reached to me, then only  i will doante/accept tokens
-	if(pool_turn == policy_id){
+	if(pool_turn == policy_id) {
 		if(required_tokens <= tgg->my_tokens){//donate
 			pool += (tgg->my_tokens - required_tokens);
 			tgg->my_tokens -= (tgg->my_tokens - required_tokens);
@@ -213,9 +213,9 @@ static void tg_update(struct cpufreq_policy *policy)
 			tgg->last_ramp_up = 1;
 		}
 		else{
-			if(pool==0){//if not getting tokens for 32 loops then starve
+			if(pool==0) {//if not getting tokens for 32 loops then starve
 				tgg->starvation++;
-				if(tgg->starvation >= starvation_threshold){
+				if(tgg->starvation >= starvation_threshold) {
 					pool_mode = FAIR;
 					tgg->set_fair_mode = 1;
 				}
@@ -257,7 +257,17 @@ static void tg_update(struct cpufreq_policy *policy)
 			tgg->my_tokens -= (tgg->my_tokens - fair_tokens);
 			if(tgg->my_tokens > 100)trace_printk("%u:::::::%u\n",tgg->my_tokens , fair_tokens);
 		}
-		pool_turn = (pool_turn+1)%npolicies;//+4 bcz jumping by 3 policies to next quad; policy is per core(or 4 SMTs)
+
+		if (bostonv == 16)
+			pool_turn = (pool_turn+4)%npolicies;//+4 bcz jumping by 3 policies to next quad; policy is per core(or 4 SMTs)
+		else {
+			if (policy->cpu == 48)
+				pool_turn = cpu_to_policy_map[56];
+			else if (policy->cpu == 72)
+				pool_turn = cpu_to_policy_map[0];
+			else
+				pool_turn = cpu_to_policy_map[policy->cpu+16];
+		}
 	}
 	
 	/* Set new frequency based on avaialble tokens */
@@ -300,15 +310,17 @@ static ssize_t show_central_pool(struct gov_attr_set *attr_set, char *buf)
 	int i;
 	for(i=0;i<npolicies;i++)
 	{
-		trace_printk("policy->cpu=%d:%d %lld\n",i,tg_data[i].my_tokens, tg_data[i].policy_mips);
+		trace_printk("policy id=%d:%d %lld\n",i,tg_data[i].my_tokens, tg_data[i].policy_mips);
 	}
 
+
+/*	
 	for(i=0;i<P9.nr_cpus; i+=16)
 	{
 		trace_printk("quad policy=%d-%u:%u:%u:%u::::::%u %lld",i,avg_load_per_quad[i].load[0],avg_load_per_quad[i].load[1],avg_load_per_quad[i].load[2],avg_load_per_quad[i].load[3],max_of(avg_load_per_quad[i],0),tg_data[cpu_to_policy_map[i]].policy_mips);
-	}
+	}	
+*/	
 
-	
 	return sprintf(buf, "pool=%u, turn for policy %u total %u policies\n", pool, pool_turn, npolicies);
 }
 
@@ -332,8 +344,9 @@ static struct policy_dbs_info *tg_alloc(void)
 
 static void tg_free(struct policy_dbs_info *policy_dbs)
 {
+	if(policy_dbs->policy)
+		free_perf_event(policy_dbs->policy);
 	kfree(to_dbs_info(policy_dbs));
-	free_perf_event(policy_dbs->policy);
 }
 
 static int tg_init(struct dbs_data *dbs_data)
@@ -352,6 +365,7 @@ static void tg_exit(struct dbs_data *dbs_data)
 	kfree(tg_data);
 }
 
+
 static void build_P9_topology(struct cpufreq_policy *policy){
 	unsigned int iter;
 	struct cpufreq_policy *iterator;
@@ -363,15 +377,15 @@ static void build_P9_topology(struct cpufreq_policy *policy){
 
 	//setup nr_cpus
 	P9.nr_cpus = P9.nr_policies * P9.smt_mode;
-	trace_printk("nr_policies=%u\n",P9.nr_policies);
+	printk("nr_policies=%u %u\n",P9.nr_policies, P9.nr_cpus);
 	npolicies = P9.nr_policies;
 
-	cpu_to_policy_map = kzalloc(sizeof(int)*P9.nr_policies,GFP_KERNEL);
+	cpu_to_policy_map = kzalloc(sizeof(int)*P9.nr_cpus,GFP_KERNEL);
 
 	iter = 0;
 	list_for_each_entry(iterator, &policy->policy_list, policy_list){
 		cpu_to_policy_map[iterator->cpu] = iter;
-		trace_printk("policy-cpu=%d id=%d\n",iterator->cpu,iter);
+		printk("policy-cpu=%d id=%d\n",iterator->cpu,iter);
 		iter++;
 	}
 }
@@ -396,7 +410,7 @@ static void tg_start(struct cpufreq_policy *policy)
 		pool_turn = 0;
 		pool_mode = GREEDY;
 		fair_tokens = tokens_in_system/P9.nr_policies;
-		trace_printk("Fair part=%u\n",fair_tokens);
+		printk("Fair part=%u\n",fair_tokens);
 
 		barrier=1;
 	}
@@ -404,9 +418,9 @@ static void tg_start(struct cpufreq_policy *policy)
 	tg_data[cpu_to_policy_map[policy->cpu]].set_fair_mode = 0;
 	tg_data[cpu_to_policy_map[policy->cpu]].my_tokens = 0;
 	tg_data[cpu_to_policy_map[policy->cpu]].last_ramp_up = 1;
-	pr_info("I'm cpu=%d policies=%u\n",policy->cpu, cpu_to_policy_map[policy->cpu]);
-
+	pr_info("I'm cpu=%d policies=%d\n",policy->cpu, cpu_to_policy_map[policy->cpu]);
 	/* Read perf based inctructions counter from hardware */
+	
 	for_each_cpu(tmp, policy->cpus)
 	{
 		init_perf_event(tmp);
