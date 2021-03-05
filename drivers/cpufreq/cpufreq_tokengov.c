@@ -1,9 +1,7 @@
 /*
- *  drivers/cpufreq/cpufreq_ondemand.c
+ *  drivers/cpufreq/cpufreq_tokengov.c
  *
- *  Copyright (C)  2001 Russell King
- *            (C)  2003 Venkatesh Pallipadi <venkatesh.pallipadi@intel.com>.
- *                      Jun Nakajima <jun.nakajima@intel.com>
+ *  Copyright (C)  2019 Parth Shah <parth@linux.ibm.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -21,8 +19,10 @@
 #define BUCKET_SIZE 10
 #define PAST_MIPS_WEIGHT 6
 #define CURRENT_MIPS_WEIGHT 4
-
 #define CPUS_PER_QUAD 16
+
+/* Boston system version, 9 or 16 */
+const int bostonv = 9;
 
 /* Scenario-4 specific tunables */
 static unsigned int pool;
@@ -95,7 +95,7 @@ unsigned int max_of(struct avg_load_per_quad avgload, int flag)
 	int i = 1;
 	unsigned int max_load = avgload.load[0];
 	if(flag)
-		printk("llll%u:%u:%u:%u\n",avgload.load[0],avgload.load[1],avgload.load[2],avgload.load[3]);
+		trace_printk("llll%u:%u:%u:%u\n",avgload.load[0],avgload.load[1],avgload.load[2],avgload.load[3]);
 	for(; i<4; i++)
 		max_load = max_load < avgload.load[i] ? avgload.load[i]: max_load;
 
@@ -130,23 +130,21 @@ void calc_mips(struct tgdbs *tgg, int cpu, int first_quad_cpu)
 
 }
 
-void calc_policy_mips(struct tgdbs *tgg, int first_quad_cpu){
+void calc_policy_mips(struct tgdbs *tgg, int first_quad_cpu)
+{
 	int cpu;
 	int thread_index;
 
-	for(cpu=first_quad_cpu; cpu<(first_quad_cpu+cpusperquad); cpu++)
+	/* will break for b9 if cpusperquad>8 */
+	for (cpu=first_quad_cpu; cpu<(first_quad_cpu+cpusperquad); cpu++)
 		calc_mips(tgg, cpu, first_quad_cpu);
 
 	/* Set maximum MIPS among all cpu as policy's CPU */
 	tgg->policy_mips = tgg->cpu_mips[0];
-	for(cpu=first_quad_cpu; cpu<(first_quad_cpu+cpusperquad); cpu++)
+	for (cpu=first_quad_cpu; cpu<(first_quad_cpu+cpusperquad); cpu++)
 		tgg->policy_mips = tgg->policy_mips < tgg->cpu_mips[cpu-first_quad_cpu] ? tgg->cpu_mips[cpu-first_quad_cpu]:tgg->policy_mips;
 }
-/*
- * Every sampling_rate, we check, if current idle time is less than 20%
- * (default), then we try to increase frequency. Else, we adjust the frequency
- * proportional to load.
- */
+
 static void tg_update(struct cpufreq_policy *policy)
 {
 	unsigned int load = dbs_update(policy);
@@ -157,6 +155,11 @@ static void tg_update(struct cpufreq_policy *policy)
 	struct tgdbs *tgg = &tg_data[policy_id];
 	int first_thread_in_quad = (policy->cpu/16)*16;
 	int mips_increased = 0;
+
+	/* No need to run tokengov on other socket */
+	if (policy->cpu >= 88) return;
+	if (policy->cpu > 48)
+		first_thread_in_quad = first_thread_in_quad + 8;
 
 	avg_load_per_quad[first_thread_in_quad].load[(policy->cpu-first_thread_in_quad)/4] = load;
 
@@ -206,7 +209,7 @@ static void tg_update(struct cpufreq_policy *policy)
 			pool += (tgg->my_tokens - required_tokens);
 			tgg->my_tokens -= (tgg->my_tokens - required_tokens);
 			tgg->taking_token = 0;
-			if(tgg->my_tokens > 100)printk("%u:::::::%u\n",tgg->my_tokens , required_tokens);
+			if(tgg->my_tokens > 100)trace_printk("%u:::::::%u\n",tgg->my_tokens , required_tokens);
 			tgg->last_ramp_up = 1;
 		}
 		else{
@@ -229,14 +232,14 @@ static void tg_update(struct cpufreq_policy *policy)
 		
 				if(pool > need_tokens){//pool has sufficient tokens
 					tgg->my_tokens += need_tokens;
-					if(tgg->my_tokens > 100)printk("%u:::::::%u\n",tgg->my_tokens , need_tokens);
+					if(tgg->my_tokens > 100)trace_printk("%u:::::::%u\n",tgg->my_tokens , need_tokens);
 					pool -= need_tokens;
 					tgg->mips_when_boosted = tgg->policy_mips;
 				}
 				else{//pool has fewer token than required. so get all that available
 					tgg->my_tokens += pool;
 					tgg->last_ramp_up += pool;
-					if(tgg->my_tokens > 100)printk("%u:::::::%u\n",tgg->my_tokens , pool);
+					if(tgg->my_tokens > 100)trace_printk("%u:::::::%u\n",tgg->my_tokens , pool);
 					pool = 0;
 					tgg->mips_when_boosted = tgg->policy_mips;
 				}
@@ -252,9 +255,9 @@ static void tg_update(struct cpufreq_policy *policy)
 		if(pool_mode == FAIR && tgg->my_tokens > fair_tokens){
 			pool += (tgg->my_tokens-fair_tokens);
 			tgg->my_tokens -= (tgg->my_tokens - fair_tokens);
-			if(tgg->my_tokens > 100)printk("%u:::::::%u\n",tgg->my_tokens , fair_tokens);
+			if(tgg->my_tokens > 100)trace_printk("%u:::::::%u\n",tgg->my_tokens , fair_tokens);
 		}
-		pool_turn = (pool_turn + 4)%npolicies;//+4 bcz jumping by 3 policies to next quad; policy is per core(or 4 SMTs)
+		pool_turn = (pool_turn+1)%npolicies;//+4 bcz jumping by 3 policies to next quad; policy is per core(or 4 SMTs)
 	}
 	
 	/* Set new frequency based on avaialble tokens */
@@ -297,12 +300,12 @@ static ssize_t show_central_pool(struct gov_attr_set *attr_set, char *buf)
 	int i;
 	for(i=0;i<npolicies;i++)
 	{
-		printk("policy->cpu=%d:%d %lld\n",i,tg_data[i].my_tokens, tg_data[i].policy_mips);
+		trace_printk("policy->cpu=%d:%d %lld\n",i,tg_data[i].my_tokens, tg_data[i].policy_mips);
 	}
 
 	for(i=0;i<P9.nr_cpus; i+=16)
 	{
-		printk("quad policy=%d-%u:%u:%u:%u::::::%u %lld",i,avg_load_per_quad[i].load[0],avg_load_per_quad[i].load[1],avg_load_per_quad[i].load[2],avg_load_per_quad[i].load[3],max_of(avg_load_per_quad[i],0),tg_data[cpu_to_policy_map[i]].policy_mips);
+		trace_printk("quad policy=%d-%u:%u:%u:%u::::::%u %lld",i,avg_load_per_quad[i].load[0],avg_load_per_quad[i].load[1],avg_load_per_quad[i].load[2],avg_load_per_quad[i].load[3],max_of(avg_load_per_quad[i],0),tg_data[cpu_to_policy_map[i]].policy_mips);
 	}
 
 	
@@ -336,7 +339,7 @@ static void tg_free(struct policy_dbs_info *policy_dbs)
 static int tg_init(struct dbs_data *dbs_data)
 {
 	dbs_data->tuners = &pool;
-	pool = 120; //Two can be at max freq
+	pool = 200; //Two can be at max freq
 	tokens_in_system = pool;
 	barrier = 0;
 	return 0;
@@ -360,7 +363,7 @@ static void build_P9_topology(struct cpufreq_policy *policy){
 
 	//setup nr_cpus
 	P9.nr_cpus = P9.nr_policies * P9.smt_mode;
-	printk("nr_policies=%u\n",P9.nr_policies);
+	trace_printk("nr_policies=%u\n",P9.nr_policies);
 	npolicies = P9.nr_policies;
 
 	cpu_to_policy_map = kzalloc(sizeof(int)*P9.nr_policies,GFP_KERNEL);
@@ -368,7 +371,7 @@ static void build_P9_topology(struct cpufreq_policy *policy){
 	iter = 0;
 	list_for_each_entry(iterator, &policy->policy_list, policy_list){
 		cpu_to_policy_map[iterator->cpu] = iter;
-		printk("policy-cpu=%d id=%d\n",iterator->cpu,iter);
+		trace_printk("policy-cpu=%d id=%d\n",iterator->cpu,iter);
 		iter++;
 	}
 }
@@ -393,7 +396,7 @@ static void tg_start(struct cpufreq_policy *policy)
 		pool_turn = 0;
 		pool_mode = GREEDY;
 		fair_tokens = tokens_in_system/P9.nr_policies;
-		printk("Fair part=%u\n",fair_tokens);
+		trace_printk("Fair part=%u\n",fair_tokens);
 
 		barrier=1;
 	}
