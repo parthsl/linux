@@ -24,7 +24,7 @@
 /* MIPS_PERIOD in ms */
 #define MIPS_PERIOD	100
 #define MIPS_DROP_MARGIN	110
-#define DROP_THRESHOLD	5
+#define DROP_THRESHOLD	1
 
 /* Boston system version, 9 or 16 */
 const int bostonv = 9;
@@ -74,6 +74,7 @@ struct tgdbs {
 	int	mips_updated;
 	int taking_token;
 	int	drop_threshold;
+	int	is_dropped;
 	unsigned long start,end;
 
 	/* Ramp up freq giving factor */
@@ -246,12 +247,13 @@ static void tg_update(struct cpufreq_policy *policy)
 	/* Don't perform any action for MIPS_PERIOD if we want tokens as we dont have any MIPS info */
 	if (!tgg->mips_updated && required_tokens >= tgg->my_tokens) return ;
 	tgg->mips_updated = 0;
+	if (pool_turn != policy_id) return ;
 
 	/* In case of increase in load, check if MIPS also increased
 	 * If MIPS is not increasing then possibly the wirkload is 
 	 * frequency insensitive and hence dont accept/donate tokens
 	 */
-	instruction_diff = (17000*tgg->last_ramp_up)/2; //instruction_diff is really MIPS diff
+	instruction_diff = (17000*tgg->last_ramp_up)*2/3; //instruction_diff is really MIPS diff
 	expected_mips = tgg->mips_when_boosted + instruction_diff;
 	expected_mips -= (instruction_diff*5/100); //keep 5% error margin
 
@@ -272,12 +274,11 @@ static void tg_update(struct cpufreq_policy *policy)
 		required_tokens = tgg->my_tokens-1;
 	else if (tgg->taking_token){
 		tgg->taking_token = 0;
-		required_tokens = tgg->my_tokens;
 	}
 
 	if ( tgg->policy_mips*MIPS_DROP_MARGIN < 100*tgg->policy_last_mips ) {
-		if(--tgg->drop_threshold) {
-			required_tokens = tgg->my_tokens/2;
+		if(!--tgg->drop_threshold) {
+			tgg->is_dropped = 1;
 			if ( policy->cpu == 0)
 				trace_printk("dropped: %llu %llu\n",tgg->policy_mips, tgg->policy_last_mips);
 		}
@@ -301,6 +302,11 @@ static void tg_update(struct cpufreq_policy *policy)
 
 	//if token_pool reached to me, then only  i will doante/accept tokens
 	if(pool_turn == policy_id) {
+
+		if (tgg->is_dropped) {
+			required_tokens = tgg->my_tokens*0;
+			tgg->is_dropped = 0;
+		}
 
 		if(required_tokens <= tgg->my_tokens){//donate
 			pool += (tgg->my_tokens - required_tokens);
@@ -530,6 +536,7 @@ static void tg_start(struct cpufreq_policy *policy)
 	tg_data[cpu_to_policy_map[policy->cpu]].last_ramp_up = 0;
 	tg_data[cpu_to_policy_map[policy->cpu]].mips_updated = 0;
 	tg_data[cpu_to_policy_map[policy->cpu]].drop_threshold = DROP_THRESHOLD;
+	tg_data[cpu_to_policy_map[policy->cpu]].is_dropped = 0;
 	pr_info("I'm cpu=%d policies=%d\n",policy->cpu, cpu_to_policy_map[policy->cpu]);
 	/* Read perf based inctructions counter from hardware */
 	
