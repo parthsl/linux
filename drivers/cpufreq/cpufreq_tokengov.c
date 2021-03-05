@@ -19,11 +19,14 @@
 #include <linux/sched/cpufreq.h>
 #include "cpufreq_governor.h"
 
-
+/* Scenario-4 specific tunables */
 static unsigned int pool;
 static unsigned int pool_turn;
-enum pool_mode{greedy, fair};
-enum pool_mode pool_mode;
+enum pool_mode {GREEDY, FAIR} pool_mode;
+
+const unsigned int starvation_threshold = 32;
+static unsigned int tokens_in_system;
+static unsigned int fair_tokens;
 
 static unsigned int npolicies;
 
@@ -39,6 +42,8 @@ struct tg_topology {
 
 struct tgdbs {
 	unsigned int my_tokens;
+	unsigned int starvation;
+	int set_fair_mode;
 };
 
 struct tgdbs * tg_data;
@@ -71,7 +76,7 @@ static void tg_update(struct cpufreq_policy *policy)
 	unsigned int freq_next, min_f, max_f;
 	unsigned int policy_id = cpu_to_policy_map[policy->cpu];
 	unsigned int need_tokens;
-	unsigned int *my_tokens = &tg_data[policy_id].my_tokens;
+	struct tgdbs *tgg = &tg_data[policy_id];
 
 	/* Calculate the next frequency proportional to load */
 
@@ -79,32 +84,54 @@ static void tg_update(struct cpufreq_policy *policy)
 	max_f = policy->cpuinfo.max_freq;
 
 	if(debug)
-		printk("Cpu=%d token=%d\n",policy->cpu,*my_tokens);
+		printk("Cpu=%d token=%d\n",policy->cpu,tgg->my_tokens);
 
 	required_tokens = load;
 
 	//if token_pool reached to me, then only  i will doante/accept tokens
 	if(pool_turn == policy_id){
-		if(required_tokens < *my_tokens){//donate
-			pool += (*my_tokens - required_tokens);
-			*my_tokens -= (*my_tokens - required_tokens);
+		if(required_tokens < tgg->my_tokens){//donate
+			pool += (tgg->my_tokens - required_tokens);
+			tgg->my_tokens -= (tgg->my_tokens - required_tokens);
+			if(tgg->my_tokens > 100)printk("%u:::::::%u\n",tgg->my_tokens , required_tokens);
 		}
 		else{
-			need_tokens = (required_tokens - *my_tokens);
-			if(pool > need_tokens){
-				*my_tokens += need_tokens;
-				pool -= need_tokens;
+			if(pool==0){//if not getting tokens for 32 loops then starve
+				tgg->starvation++;
+				if(tgg->starvation >= starvation_threshold){
+					pool_mode = FAIR;
+					tgg->set_fair_mode = 1;
+				}
 			}
-			else{
-				*my_tokens += pool;
-				pool = 0;
+			else {
+				need_tokens = (required_tokens - tgg->my_tokens);
+				if(pool > need_tokens){//pool has sufficient tokens
+					tgg->my_tokens += need_tokens;
+					if(tgg->my_tokens > 100)printk("%u:::::::%u\n",tgg->my_tokens , need_tokens);
+					pool -= need_tokens;
+				}
+				else{
+					tgg->my_tokens += pool;
+					if(tgg->my_tokens > 100)printk("%u:::::::%u\n",tgg->my_tokens , pool);
+					pool = 0;
+				}
+				if(tgg->set_fair_mode==1){
+					pool_mode = GREEDY;
+					tgg->set_fair_mode = 0;
+				}
+				tgg->starvation = 0;
 			}
+		}
+		if(pool_mode == FAIR && tgg->my_tokens > fair_tokens){
+			pool += (tgg->my_tokens-fair_tokens);
+			tgg->my_tokens -= (tgg->my_tokens - fair_tokens);
+			if(tgg->my_tokens > 100)printk("%u:::::::%u\n",tgg->my_tokens , fair_tokens);
 		}
 		pool_turn = (pool_turn + 1)%npolicies;
 	}
 	
 	/* Set new frequency based on avaialble tokens */
-	freq_next = min_f + (*my_tokens) * (max_f - min_f) / 100;
+	freq_next = min_f + (tgg->my_tokens) * (max_f - min_f) / 100;
 	__cpufreq_driver_target(policy, freq_next, CPUFREQ_RELATION_C);
 }
 
@@ -132,6 +159,7 @@ static ssize_t store_central_pool(struct gov_attr_set *attr_set, const char *buf
 
 	mutex_lock(&gov_dbs_tokenpool_mutex);
 	pool += input;
+	tokens_in_system += input;
 	mutex_unlock(&gov_dbs_tokenpool_mutex);
 
 	return count;
@@ -144,7 +172,7 @@ static ssize_t show_central_pool(struct gov_attr_set *attr_set, char *buf)
 	{
 		printk("policy=%d:%d\n",i,tg_data[i].my_tokens );
 	}
-	return sprintf(buf, "tokens in pool=%u, turn going for policy %u out of total %upolicies\n", pool, pool_turn, npolicies);
+	return sprintf(buf, "pool=%u, turn for policy %u total %u policies\n", pool, pool_turn, npolicies);
 }
 
 
@@ -173,7 +201,8 @@ static void tg_free(struct policy_dbs_info *policy_dbs)
 static int tg_init(struct dbs_data *dbs_data)
 {
 	dbs_data->tuners = &pool;
-	pool = 10; //Two can be at max freq
+	pool = 100; //Two can be at max freq
+	tokens_in_system = pool;
 	barrier = 0;
 	return 0;
 }
@@ -219,10 +248,14 @@ static void tg_start(struct cpufreq_policy *policy)
 
 		build_P9_topology(policy);
 		pool_turn = 0;
+		pool_mode = GREEDY;
+		fair_tokens = tokens_in_system/P9.nr_policies;
+		printk("Fair part=%u\n",fair_tokens);
 		barrier=1;
 	}
 	while(barrier==0);
-
+	tg_data[cpu_to_policy_map[policy->cpu]].set_fair_mode = 0;
+	tg_data[cpu_to_policy_map[policy->cpu]].my_tokens = 0;
 	pr_info("I'm cpu=%d policies=%u\n",policy->cpu, npolicies);
 }
 
