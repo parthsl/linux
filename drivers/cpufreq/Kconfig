@@ -166,6 +166,15 @@ config CPU_FREQ_GOV_ONDEMAND
 
 	  For details, take a look at linux/Documentation/cpu-freq.
 
+config CPU_FREQ_GOV_KONDEMAND
+	tristate "'kondemand' cpufreq policy governor"
+	select CPU_FREQ_GOV_COMMON
+	help
+	  'kondemand' - Tcopy of ondemand.
+	  For details, take a look at linux/Documentation/cpu-freq.
+
+	  If in doubt, say N.
+
 config CPU_FREQ_GOV_TOKENGOV
 	tristate "'tokengov' cpufreq policy governor"
 	select CPU_FREQ_GOV_COMMON
