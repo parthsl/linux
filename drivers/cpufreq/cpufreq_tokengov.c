@@ -23,6 +23,8 @@
 #define TO_MS	1000000
 /* MIPS_PERIOD in ms */
 #define MIPS_PERIOD	100
+#define MIPS_DROP_MARGIN	110
+#define DROP_THRESHOLD	5
 
 /* Boston system version, 9 or 16 */
 const int bostonv = 9;
@@ -58,6 +60,7 @@ struct tgdbs {
 	unsigned int starvation;
 	int set_fair_mode;
 	u64	policy_mips;
+	u64	policy_last_mips;
 	u64	last_policy_mips;
 	u64	last_instructions[CPUS_PER_QUAD];
 	u64	instructions[CPUS_PER_QUAD];
@@ -70,6 +73,7 @@ struct tgdbs {
 	u64	mips_when_boosted;
 	int	mips_updated;
 	int taking_token;
+	int	drop_threshold;
 	unsigned long start,end;
 
 	/* Ramp up freq giving factor */
@@ -239,6 +243,7 @@ static void tg_update(struct cpufreq_policy *policy)
 
 	required_tokens = load;
 
+	/* Don't perform any action for MIPS_PERIOD if we want tokens as we dont have any MIPS info */
 	if (!tgg->mips_updated && required_tokens >= tgg->my_tokens) return ;
 	tgg->mips_updated = 0;
 
@@ -270,9 +275,23 @@ static void tg_update(struct cpufreq_policy *policy)
 		required_tokens = tgg->my_tokens;
 	}
 
+	if ( tgg->policy_mips*MIPS_DROP_MARGIN < 100*tgg->policy_last_mips ) {
+		if(--tgg->drop_threshold) {
+			required_tokens = tgg->my_tokens/2;
+			if ( policy->cpu == 0)
+				trace_printk("dropped: %llu %llu\n",tgg->policy_mips, tgg->policy_last_mips);
+		}
+		
+	} else {
+		tgg->drop_threshold = DROP_THRESHOLD;
+		if ( debug &&  policy->cpu == 0)
+			trace_printk("not dropped: %llu %llu\n",tgg->policy_mips, tgg->policy_last_mips);
+	}
+	tgg->policy_last_mips = tgg->policy_mips;
+
 	/*
 	if(debug && policy->cpu==0)
-		trace_printk("last_ramp=%u required_token=%u\n",tgg->last_ramp_up, required_tokens);
+		trace_printk("last_ramp=%u required_tokens=%u\n",tgg->last_ramp_up, required_tokens);
 	*/
 
 	if(debug && pool_turn==policy_id)
@@ -510,6 +529,7 @@ static void tg_start(struct cpufreq_policy *policy)
 	tg_data[cpu_to_policy_map[policy->cpu]].my_tokens = 0;
 	tg_data[cpu_to_policy_map[policy->cpu]].last_ramp_up = 0;
 	tg_data[cpu_to_policy_map[policy->cpu]].mips_updated = 0;
+	tg_data[cpu_to_policy_map[policy->cpu]].drop_threshold = DROP_THRESHOLD;
 	pr_info("I'm cpu=%d policies=%d\n",policy->cpu, cpu_to_policy_map[policy->cpu]);
 	/* Read perf based inctructions counter from hardware */
 	
