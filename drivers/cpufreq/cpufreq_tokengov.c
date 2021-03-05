@@ -18,6 +18,12 @@
 #include <linux/sched/cpufreq.h>
 #include "cpufreq_tokengov.h"
 
+#define BUCKET_SIZE 10
+#define PAST_MIPS_WEIGHT 6
+#define CURRENT_MIPS_WEIGHT 4
+
+#define CPUS_PER_QUAD 16
+
 /* Scenario-4 specific tunables */
 static unsigned int pool;
 static unsigned int pool_turn;
@@ -43,10 +49,13 @@ struct tgdbs {
 	unsigned int my_tokens;
 	unsigned int starvation;
 	int set_fair_mode;
-	long long last_cycles;
-	long long cycles;
-	long long last_instructions;
-	long long instructions;
+	long long policy_mips;
+	long long last_policy_mips;
+	long long last_instructions[CPUS_PER_QUAD];
+	long long instructions[CPUS_PER_QUAD];
+	long long mips[CPUS_PER_QUAD];
+	long long last_mips[CPUS_PER_QUAD];
+	long long mips_when_boosted;
 };
 
 struct tgdbs * tg_data;
@@ -84,6 +93,35 @@ unsigned int max_of(struct avg_load_per_quad avgload, int flag)
 
 	return max_load;
 }
+
+void calc_mips(struct tgdbs *tgg, int cpu, int first_quad_cpu)
+{
+	long long int ips;
+	int thread_index = cpu - first_quad_cpu;
+	if(thread_index>3)
+		pr_info("bcz %d %d\n",cpu,first_quad_cpu);
+	tgg->instructions[thread_index] = read_perf_event(cpu);
+
+	ips = tgg->instructions[thread_index] - tgg->last_instructions[thread_index];
+	tgg->last_mips[thread_index] = tgg->mips[thread_index];
+	tgg->mips[thread_index] = (tgg->mips[thread_index]*PAST_MIPS_WEIGHT + ips*CURRENT_MIPS_WEIGHT)/10;
+	tgg->last_instructions[thread_index] = tgg->instructions[thread_index];
+
+	/*	if(cpu == 16)
+		pr_info("%lld %lld\n",tgg->last_mips[thread_index], tgg->mips[thread_index]);
+		*/
+}
+
+void calc_policy_mips(struct tgdbs *tgg, int first_quad_cpu){
+	int cpu;
+
+	for(cpu=first_quad_cpu; cpu<(first_quad_cpu+4); cpu++)
+		calc_mips(tgg, cpu, first_quad_cpu);
+
+	/* Set maximum MIPS among all cpu as policy's CPU */
+	for(cpu=first_quad_cpu; cpu<(first_quad_cpu+4); cpu++)
+		tgg->policy_mips = tgg->policy_mips < tgg->mips[cpu] ? tgg->mips[cpu]:tgg->policy_mips;
+}
 /*
  * Every sampling_rate, we check, if current idle time is less than 20%
  * (default), then we try to increase frequency. Else, we adjust the frequency
@@ -98,7 +136,9 @@ static void tg_update(struct cpufreq_policy *policy)
 	unsigned int need_tokens;
 	struct tgdbs *tgg = &tg_data[policy_id];
 	int first_thread_in_quad = (policy->cpu/16)*16;
+	int mips_increased = 0;
 
+	calc_policy_mips(tgg, policy->cpu);
 	avg_load_per_quad[first_thread_in_quad].load[(policy->cpu-first_thread_in_quad)/4] = load;
 
 	// Token passing is for only first thread in quad
@@ -107,20 +147,24 @@ static void tg_update(struct cpufreq_policy *policy)
 	load = max_of(avg_load_per_quad[first_thread_in_quad],0);
 
 	/* Calculate the next frequency proportional to load */
-	tgg->instructions = read_perf_event(policy->cpu);
-	if(policy->cpu == 16){
-		pr_info("%lld\n",tgg->instructions - tgg->last_instructions);
-	}
-	tgg->last_instructions = tgg->instructions;
-
+	
 	min_f = policy->cpuinfo.min_freq;
 	max_f = policy->cpuinfo.max_freq;
 
 	required_tokens = load;
 
+	if(tgg->policy_mips*13/10 > tgg->mips_when_boosted)mips_increased = 1;
+
+	/* In case of increase in load, check if MIPS also increased
+	 * If MIPS is not increasing then possibly the wirkload is 
+	 * frequency insensitive and hence dont accept/donate tokens
+	 */
+	if(!mips_increased && required_tokens > tgg->my_tokens)
+		required_tokens = tgg->my_tokens;
+
 	//if token_pool reached to me, then only  i will doante/accept tokens
 	if(pool_turn == policy_id){
-		if(required_tokens < tgg->my_tokens){//donate
+		if(required_tokens <= tgg->my_tokens){//donate
 			pool += (tgg->my_tokens - required_tokens);
 			tgg->my_tokens -= (tgg->my_tokens - required_tokens);
 			if(tgg->my_tokens > 100)printk("%u:::::::%u\n",tgg->my_tokens , required_tokens);
@@ -145,12 +189,13 @@ static void tg_update(struct cpufreq_policy *policy)
 					if(tgg->my_tokens > 100)printk("%u:::::::%u\n",tgg->my_tokens , need_tokens);
 					pool -= need_tokens;
 				}
-				else{
+				else{//pool has fewer token than required. so get all that available
 					tgg->my_tokens += pool;
 					if(tgg->my_tokens > 100)printk("%u:::::::%u\n",tgg->my_tokens , pool);
 					pool = 0;
 				}
-				if(tgg->set_fair_mode==1){
+
+				if(tgg->set_fair_mode==1){//reset to greedy mode once we go some tokens and reset starvation counter
 					pool_mode = GREEDY;
 					tgg->set_fair_mode = 0;
 				}
@@ -168,6 +213,7 @@ static void tg_update(struct cpufreq_policy *policy)
 	/* Set new frequency based on avaialble tokens */
 	freq_next = min_f + (tgg->my_tokens) * (max_f - min_f) / 100;
 	__cpufreq_driver_target(policy, freq_next, CPUFREQ_RELATION_C);
+	tgg->mips_when_boosted = tgg->policy_mips;
 }
 
 static unsigned int tg_dbs_update(struct cpufreq_policy *policy)
@@ -283,6 +329,7 @@ static void build_P9_topology(struct cpufreq_policy *policy){
 static void tg_start(struct cpufreq_policy *policy)
 {
 	struct cpufreq_policy* iterator;
+	int tmp;
 	P9.nr_policies = 0;
 
 	if(policy->cpu==0)
@@ -307,10 +354,14 @@ static void tg_start(struct cpufreq_policy *policy)
 	tg_data[cpu_to_policy_map[policy->cpu]].set_fair_mode = 0;
 	tg_data[cpu_to_policy_map[policy->cpu]].my_tokens = 0;
 	pr_info("I'm cpu=%d policies=%u\n",policy->cpu, npolicies);
-	/* Read perf based inctructions counter from hardware */
-	init_perf_event(policy->cpu);
-	enable_perf_event(policy->cpu);
 
+	/* Read perf based inctructions counter from hardware */
+	for_each_cpu(tmp, policy->cpus)
+	{
+		init_perf_event(tmp);
+		enable_perf_event(tmp);
+		pr_info("perf inited on cpu=%d\n",tmp);
+	}
 }
 
 static struct dbs_governor tg_dbs_gov = {
