@@ -143,8 +143,6 @@ static void od_update(struct cpufreq_policy *policy)
 	dbs_info->freq_lo = 0;
 
 	start = mftb();
-	trace_printk("cpu=%d od start time=%lu\n",policy->cpu, start);
-	trace_printk("cpu=%d od laststartdiff=%lu\n",policy->cpu, start-dbs_info->start); 
 	dbs_info->start = start;
 
 	/* Check for frequency increase */
@@ -172,7 +170,6 @@ static void od_update(struct cpufreq_policy *policy)
 		__cpufreq_driver_target(policy, freq_next, CPUFREQ_RELATION_C);
 	}
 	end = mftb() - start;
-	trace_printk("cpu=%d od end time=%lu\n",policy->cpu, end);
 	dbs_info->end = mftb();
 }
 
@@ -195,9 +192,7 @@ static unsigned int od_dbs_update(struct cpufreq_policy *policy)
 		return dbs_info->freq_lo_delay_us;
 	}
 
-	trace_printk("cpu=%d tgdbs start time=%lu\n",policy->cpu,mftb());
 	od_update(policy);
-	trace_printk("cpu=%d tgdbs end=%lu\n",policy->cpu, mftb());
 
 	if (dbs_info->freq_lo) {
 		/* Setup SUB_SAMPLE */
