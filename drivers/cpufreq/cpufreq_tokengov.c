@@ -155,8 +155,8 @@ void calc_mips(struct tgdbs *tgg, int cpu, int first_quad_cpu, int cpusperquad)
 	
 	ips = ips/time_passed;
 	tgg->cpu_mips[thread_index] = (tgg->cpu_mips[thread_index]*PAST_MIPS_WEIGHT + ips*CURRENT_MIPS_WEIGHT)/10;
-	if (debug && cpu == 0)	
-	trace_printk("mips = %llu ips=%llu time=%llu\n", tgg->cpu_mips[thread_index], ips, time_passed);
+	if (debug )	
+	trace_printk("cpu=%d mips = %llu ips=%llu time=%llu\n", cpu, tgg->cpu_mips[thread_index], ips, time_passed);
 	/*
 	for(iter = 0; iter<BUCKET_SIZE;  iter++)
 		tgg->cpu_mips[thread_index] += tgg->mips[thread_index][iter]/BUCKET_SIZE;
@@ -253,7 +253,7 @@ static void tg_update(struct cpufreq_policy *policy)
 	 * If MIPS is not increasing then possibly the wirkload is 
 	 * frequency insensitive and hence dont accept/donate tokens
 	 */
-	instruction_diff = (17000*tgg->last_ramp_up)*2/3; //instruction_diff is really MIPS diff
+	instruction_diff = (17000*tgg->last_ramp_up)*2/4; //instruction_diff is really MIPS diff
 	expected_mips = tgg->mips_when_boosted + instruction_diff;
 	expected_mips -= (instruction_diff*5/100); //keep 5% error margin
 
