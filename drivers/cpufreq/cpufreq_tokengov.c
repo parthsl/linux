@@ -191,9 +191,15 @@ static void tg_update(struct cpufreq_policy *policy)
 	else
 		tgg->taking_token = 0;
 
+	/*
 	if(debug && policy->cpu==0)
 		trace_printk("last_ramp=%u required_token=%u\n",tgg->last_ramp_up, required_tokens);
+	*/
 
+	if(debug && pool_turn==policy_id)
+		trace_printk("quad %d mips=%lld %u %u\n",policy->cpu, tgg->policy_mips, load, tgg->my_tokens);
+	else if(debug)
+		trace_printk("quad %d mips=%lld %u %u\n",policy->cpu, tgg->policy_mips, load, tgg->my_tokens);
 	//if token_pool reached to me, then only  i will doante/accept tokens
 	if(pool_turn == policy_id){
 		if(required_tokens <= tgg->my_tokens){//donate
@@ -330,7 +336,7 @@ static void tg_free(struct policy_dbs_info *policy_dbs)
 static int tg_init(struct dbs_data *dbs_data)
 {
 	dbs_data->tuners = &pool;
-	pool = 200; //Two can be at max freq
+	pool = 120; //Two can be at max freq
 	tokens_in_system = pool;
 	barrier = 0;
 	return 0;
