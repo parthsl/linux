@@ -6812,9 +6812,9 @@ out_irq:
 }
 EXPORT_SYMBOL_GPL(yield_to);
 
-int __sched get_idle_hint(struct task_struct *p)
+unsigned long __sched get_idle_hint(struct task_struct *p)
 {
-	int ret = 0;
+	unsigned long ret = 0;
 	if (p->sched_class->get_idle_hint)
 		ret = p->sched_class->get_idle_hint(p);
 	return ret;

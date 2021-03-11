@@ -7236,7 +7236,7 @@ static bool yield_to_task_fair(struct rq *rq, struct task_struct *p)
 	return true;
 }
 
-static int get_idle_hint_fair(struct task_struct *p)
+static unsigned long get_idle_hint_fair(struct task_struct *p)
 {
 	unsigned int prev_cpu = task_cpu(p);
 
