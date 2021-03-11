@@ -1,15 +1,14 @@
 Bottom: 447e1de87f5ade5f781fc532c404aa650b1e289f
-Top:    2c1e1933d75b809e55f7421342f7b1b911d8fcc5
+Top:    5fa334fe9fe93d4d08ee719c54ad03e75205b193
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2021-03-01 12:46:11 +0530
 
-sched: Use H_IDLEHINT hcall to find if a vcpu can be scheduled instantly
+sched: Use H_IDLE_HINT hcall to find if a vcpu can be scheduled instantly
 
 A vcpu can *not* be scheduled instantly only if it is preempted and
 hypervisor can not guarantee that its correspoding prev_cpu is also idle.
 
 Signed-off-by: Parth Shah <parth@linux.ibm.com>
-
 
 ---
 
