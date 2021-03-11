@@ -1,17 +1,16 @@
 Bottom: 54016ed97001939c1662de9846545346ba8ceb2d
-Top:    e4bcb7d91e53bc526673e6a122e8bd31e7d7029e
+Top:    447e1de87f5ade5f781fc532c404aa650b1e289f
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2021-03-01 12:46:10 +0530
 
 kvm: Add new hcall to provide hint if a vcpu can be scheduled instantly.
 
-H_IDLEHINT is a new hcall introduced to provide a hint to the guest of whether a
+H_IDLE_HINT is a new hcall introduced to provide a hint to the guest of whether a
 vcpu can be scheduled instantly or not. This is currently done by looking at the
 prev_cpu of the task corresponding to a vcpu (which will be optimized in
 future).
 
 Signed-off-by: Parth Shah <parth@linux.ibm.com>
-
 
 ---
 
