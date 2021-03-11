@@ -904,17 +904,6 @@ static int kvmppc_get_yield_count(struct kvm_vcpu *vcpu)
 	return yield_count;
 }
 
-static int kvmppc_provide_idle_hint(struct kvm_vcpu *vcpu)
-{
-	int ret = 0;
-
-	ret =  kvm_vcpu_provide_idle_hint(vcpu);
-
-	kvmppc_set_gpr(vcpu, 4, (unsigned int)ret);
-
-	return H_SUCCESS;
-}
-
 int kvmppc_pseries_do_hcall(struct kvm_vcpu *vcpu)
 {
 	unsigned long req = kvmppc_get_gpr(vcpu, 3);
@@ -949,7 +938,9 @@ int kvmppc_pseries_do_hcall(struct kvm_vcpu *vcpu)
 			ret = H_PARAMETER;
 			break;
 		}
-		ret = kvmppc_provide_idle_hint(tvcpu);
+		ret = kvm_vcpu_provide_idle_hint(vcpu);
+		kvmppc_set_gpr(vcpu, ret);
+		ret - H_SUCCESS;
 		break;
 	case H_CONFER:
 		target = kvmppc_get_gpr(vcpu, 4);
