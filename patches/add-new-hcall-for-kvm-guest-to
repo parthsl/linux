@@ -1,4 +1,4 @@
-Bottom: 3f45f123e06f2613e80a7bcc3577fc9dad61dbaa
+Bottom: bdb7846fe20fa9f0c8b4cf1da8875c6bbefbbaba
 Top:    dc3d52978242b426e4e90785c6b1d853f942fe59
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2021-03-01 12:46:11 +0530
@@ -14,5 +14,4 @@ Signed-off-by: Parth Shah <parth@linux.ibm.com>
 ---
 
 arch/powerpc/include/asm/paravirt.h | 23 +++++++++++++++++++++--
- arch/powerpc/kvm/book3s_hv.c        |  4 ++--
- 2 files changed, 23 insertions(+), 4 deletions(-)
+ 1 file changed, 21 insertions(+), 2 deletions(-)
