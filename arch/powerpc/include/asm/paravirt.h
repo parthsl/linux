@@ -49,7 +49,8 @@ static inline u64 pcpu_available_instantly(int vcpu, int *is_idle)
 
 	rc = plpar_hcall(H_IDLEHINT, retbuf, vcpu);
 
-	*is_idle = (int)retbuf[0];
+	if (rc == H_SUCCESS)
+		*is_idle = (int)retbuf[0];
 
 	return rc;
 }
