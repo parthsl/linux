@@ -1,0 +1,14 @@
+Bottom: bdb7846fe20fa9f0c8b4cf1da8875c6bbefbbaba
+Top:    7b988c7e30e1157d3fc0b722631b4cabaa21bb16
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2021-03-11 17:08:01 +0530
+
+Refresh of kvm-add-new-hcall-to-provide
+
+---
+
+kernel/sched/core.c  | 4 ++--
+ kernel/sched/fair.c  | 2 +-
+ kernel/sched/sched.h | 2 +-
+ virt/kvm/kvm_main.c  | 9 +++------
+ 4 files changed, 7 insertions(+), 10 deletions(-)
