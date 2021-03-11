@@ -2920,6 +2920,7 @@ unsigned long kvm_vcpu_provide_idle_hint(struct kvm_vcpu *target)
 	if (!task)
 		return 0;
 
+	trace_printk("t8: checking for idle hint\n");
 	return get_idle_hint(task);
 }
 EXPORT_SYMBOL_GPL(kvm_vcpu_provide_idle_hint);

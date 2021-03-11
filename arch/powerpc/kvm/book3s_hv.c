@@ -934,6 +934,7 @@ int kvmppc_pseries_do_hcall(struct kvm_vcpu *vcpu)
 	case H_IDLE_HINT:
 		target = kvmppc_get_gpr(vcpu, 4);
 		tvcpu = kvmppc_find_vcpu(vcpu->kvm, target);
+		trace_printk("t7: vcpu%d is target to %lu\n", vcpu->vcpu_id, target);
 		if (!tvcpu) {
 			ret = H_PARAMETER;
 			break;
