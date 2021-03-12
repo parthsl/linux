@@ -938,7 +938,7 @@ int kvmppc_pseries_do_hcall(struct kvm_vcpu *vcpu)
 			ret = H_PARAMETER;
 			break;
 		}
-		ret = kvm_vcpu_provide_idle_hint(vcpu);
+		ret = kvm_vcpu_provide_idle_hint(tvcpu);
 		kvmppc_set_gpr(vcpu, 4, ret);
 		ret = H_SUCCESS;
 		break;
