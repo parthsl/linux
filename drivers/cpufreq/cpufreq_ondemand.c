@@ -138,8 +138,12 @@ static void od_update(struct cpufreq_policy *policy)
 	struct dbs_data *dbs_data = policy_dbs->dbs_data;
 	struct od_dbs_tuners *od_tuners = dbs_data->tuners;
 	unsigned int load = dbs_update(policy);
+	unsigned long start, end;
 
 	dbs_info->freq_lo = 0;
+
+	start = mftb();
+	dbs_info->start = start;
 
 	/* Check for frequency increase */
 	if (load > dbs_data->up_threshold) {
@@ -165,6 +169,8 @@ static void od_update(struct cpufreq_policy *policy)
 
 		__cpufreq_driver_target(policy, freq_next, CPUFREQ_RELATION_C);
 	}
+	end = mftb() - start;
+	dbs_info->end = mftb();
 }
 
 static unsigned int od_dbs_update(struct cpufreq_policy *policy)

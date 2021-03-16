@@ -14,6 +14,7 @@ struct od_policy_dbs_info {
 	unsigned int freq_lo_delay_us;
 	unsigned int freq_hi_delay_us;
 	unsigned int sample_type:1;
+	unsigned long start,end;
 };
 
 static inline struct od_policy_dbs_info *to_dbs_info(struct policy_dbs_info *policy_dbs)
