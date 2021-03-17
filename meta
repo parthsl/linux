@@ -1,8 +1,9 @@
 Version: 1
-Previous: 0030cb64367dae9016eed61504dbcbfabaeb263c
-Head: b43a57d5d4c7c4c9763724b559bd8a05371a103c
+Previous: a86d0b77222eb50659c0e0e9a4d298bb630c478c
+Head: eee8cae6fa296598a13c04df3807b3f67588f28d
 Applied:
   add-fake: 13748cea1e01150c05b86fc47b9aac7aa9de43bc
   set_cpus: b43a57d5d4c7c4c9763724b559bd8a05371a103c
+  refresh-temp: eee8cae6fa296598a13c04df3807b3f67588f28d
 Unapplied:
 Hidden:
