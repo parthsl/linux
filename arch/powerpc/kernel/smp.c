@@ -1485,10 +1485,12 @@ static void update_coregroup_mask(int cpu, cpumask_var_t *mask)
 
 static void update_fake_mc_mask(int cpu)
 {
-	struct cpumask *coregroup = cpu_coregroup_mask(cpu);
 	int i;
 
-	for_each_cpu(i, coregroup) {
+	for_each_cpu(i, shared_cache_mask)
+		set_cpus_related(i, cpu, fake_mc_mask);
+
+	for_each_cpu(i, cpu_coregroup_mask(cpu)) {
 		if (cpu%2 == i%2)
 			set_cpus_related(i, cpu, fake_mc_mask);
 	}
