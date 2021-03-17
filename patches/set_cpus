@@ -1,5 +1,5 @@
 Bottom: 72e61c6913c4a2e9f2fa8488a0c988d98a5cd0c8
-Top:    c2077c4a8b0d427406e67f81de7f863af261fe6f
+Top:    3d0d702806ee6c703e1c89a313bb03081b1053ca
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2021-03-17 13:33:17 +0530
 
@@ -8,5 +8,5 @@ set cpus in fake mc
 
 ---
 
-arch/powerpc/kernel/smp.c | 30 ++++++++++++++++++++++++++----
- 1 file changed, 26 insertions(+), 4 deletions(-)
+arch/powerpc/kernel/smp.c | 32 ++++++++++++++++++++++++++++----
+ 1 file changed, 28 insertions(+), 4 deletions(-)
