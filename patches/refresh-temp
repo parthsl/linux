@@ -1,0 +1,11 @@
+Bottom: c2077c4a8b0d427406e67f81de7f863af261fe6f
+Top:    3d0d702806ee6c703e1c89a313bb03081b1053ca
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2021-03-17 16:52:15 +0530
+
+Refresh of set_cpus
+
+---
+
+arch/powerpc/kernel/smp.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
