@@ -14,6 +14,9 @@ Add new fake sd in powerpc topology which creates followinf SD heirarchy:
 The FAKEMC sd just contains either all ODD numbered or even numbered CPUs
 within the MC domain.
 
+Signed-off-by: Parth Shah <parth@linux.ibm.com>
+
+
 ---
 
 arch/powerpc/include/asm/smp.h |  1 +
