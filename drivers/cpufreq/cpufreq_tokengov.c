@@ -300,81 +300,82 @@ static void tg_update(struct cpufreq_policy *policy)
 	//else if(debug)
 	//	trace_printk("quad %d mips=%llu %u %u\n",policy->cpu, tgg->policy_mips, load, tgg->my_tokens);
 
-	//if token_pool reached to me, then only  i will doante/accept tokens
-	if(pool_turn == policy_id) {
+	/* Interaction Phase */
+transaction:
+	if (tgg->is_dropped) {
+		required_tokens = tgg->my_tokens*0;
+		tgg->is_dropped = 0;
+	}
 
-		if (tgg->is_dropped) {
-			required_tokens = tgg->my_tokens*0;
-			tgg->is_dropped = 0;
-		}
-
-		if(required_tokens <= tgg->my_tokens){//donate
-			pool += (tgg->my_tokens - required_tokens);
-			tgg->my_tokens -= (tgg->my_tokens - required_tokens);
-			tgg->taking_token = 0;
-			if(tgg->my_tokens > 100)trace_printk("%u:::::::%u\n",tgg->my_tokens , required_tokens);
-			tgg->last_ramp_up = 0;
-		}
-		else{
-			if(pool==0) {//if not getting tokens for 32 loops then starve
-				tgg->starvation++;
-				if(tgg->starvation >= starvation_threshold) {
-					pool_mode = FAIR;
-					tgg->set_fair_mode = 1;
-				}
-			}
-			else {
-				//need_tokens = (required_tokens - tgg->my_tokens);
-				need_tokens = tgg->last_ramp_up ? tgg->last_ramp_up*2 : 1;
-				need_tokens = need_tokens > ramp_up_limit ? ramp_up_limit : need_tokens;
-
-				if((required_tokens - tgg->my_tokens) < need_tokens)
-					need_tokens = (required_tokens - tgg->my_tokens);
-
-				tgg->last_ramp_up = need_tokens;
-		
-				if(pool > need_tokens){//pool has sufficient tokens
-					tgg->my_tokens += need_tokens;
-					if(tgg->my_tokens > 100)trace_printk("%u:::::::%u\n",tgg->my_tokens , need_tokens);
-					pool -= need_tokens;
-					tgg->mips_when_boosted = tgg->policy_mips;
-				}
-				else{//pool has fewer token than required. so get all that available
-					tgg->my_tokens += pool;
-					tgg->last_ramp_up += pool;
-					if(tgg->my_tokens > 100)trace_printk("%u:::::::%u\n",tgg->my_tokens , pool);
-					pool = 0;
-					tgg->mips_when_boosted = tgg->policy_mips;
-				}
-				tgg->taking_token = 1;
-
-				if(tgg->set_fair_mode==1){//reset to greedy mode once we go some tokens and reset starvation counter
-					pool_mode = GREEDY;
-					tgg->set_fair_mode = 0;
-				}
-				tgg->starvation = 0;
+	if(required_tokens <= tgg->my_tokens){//donate
+		pool += (tgg->my_tokens - required_tokens);
+		tgg->my_tokens -= (tgg->my_tokens - required_tokens);
+		tgg->taking_token = 0;
+		if(tgg->my_tokens > 100)trace_printk("%u:::::::%u\n",tgg->my_tokens , required_tokens);
+		tgg->last_ramp_up = 0;
+	}
+	else{
+		if(pool==0) {//if not getting tokens for 32 loops then starve
+			tgg->starvation++;
+			if(tgg->starvation >= starvation_threshold) {
+				pool_mode = FAIR;
+				tgg->set_fair_mode = 1;
 			}
 		}
-		if(pool_mode == FAIR && tgg->my_tokens > fair_tokens){
-			pool += (tgg->my_tokens-fair_tokens);
-			tgg->my_tokens -= (tgg->my_tokens - fair_tokens);
-			if(tgg->my_tokens > 100)trace_printk("%u:::::::%u\n",tgg->my_tokens , fair_tokens);
-		}
-
-		//trace_printk("cpu %d pool_turn %d\n",policy->cpu, pool_turn);
-
-		if (bostonv == 16)
-			pool_turn = (pool_turn+4)%npolicies;//+4 bcz jumping by 3 policies to next quad; policy is per core(or 4 SMTs)
 		else {
-			if (policy->cpu >= 72)
-				pool_turn = cpu_to_policy_map[0];
-			else if (policy->cpu == 64)
-				pool_turn = cpu_to_policy_map[72];
-			else
-				pool_turn = cpu_to_policy_map[policy->cpu+16];
+			//need_tokens = (required_tokens - tgg->my_tokens);
+			need_tokens = tgg->last_ramp_up ? tgg->last_ramp_up*2 : 1;
+			need_tokens = need_tokens > ramp_up_limit ? ramp_up_limit : need_tokens;
+
+			if((required_tokens - tgg->my_tokens) < need_tokens)
+				need_tokens = (required_tokens - tgg->my_tokens);
+
+			tgg->last_ramp_up = need_tokens;
+
+			if(pool > need_tokens){//pool has sufficient tokens
+				tgg->my_tokens += need_tokens;
+				if(tgg->my_tokens > 100)trace_printk("%u:::::::%u\n",tgg->my_tokens , need_tokens);
+				pool -= need_tokens;
+				tgg->mips_when_boosted = tgg->policy_mips;
+			}
+			else{//pool has fewer token than required. so get all that available
+				tgg->my_tokens += pool;
+				tgg->last_ramp_up += pool;
+				if(tgg->my_tokens > 100)trace_printk("%u:::::::%u\n",tgg->my_tokens , pool);
+				pool = 0;
+				tgg->mips_when_boosted = tgg->policy_mips;
+			}
+			tgg->taking_token = 1;
+
+			if(tgg->set_fair_mode==1){//reset to greedy mode once we go some tokens and reset starvation counter
+				pool_mode = GREEDY;
+				tgg->set_fair_mode = 0;
+			}
+			tgg->starvation = 0;
 		}
 	}
+	if(pool_mode == FAIR && tgg->my_tokens > fair_tokens){
+		pool += (tgg->my_tokens-fair_tokens);
+		tgg->my_tokens -= (tgg->my_tokens - fair_tokens);
+		if(tgg->my_tokens > 100)trace_printk("%u:::::::%u\n",tgg->my_tokens , fair_tokens);
+	}
+
+	//trace_printk("cpu %d pool_turn %d\n",policy->cpu, pool_turn);
 	
+	/* Communication Phase: Pass token pool to the next frequency-domain in the ring */
+communication:
+	if (bostonv == 16)
+		pool_turn = (pool_turn+4)%npolicies;//+4 bcz jumping by 3 policies to next quad; policy is per core(or 4 SMTs)
+	else {
+		if (policy->cpu >= 72)
+			pool_turn = cpu_to_policy_map[0];
+		else if (policy->cpu == 64)
+			pool_turn = cpu_to_policy_map[72];
+		else
+			pool_turn = cpu_to_policy_map[policy->cpu+16];
+	}
+
+set_frequency:
 	/* Set new frequency based on avaialble tokens */
 	freq_next = min_f + (tgg->my_tokens) * (max_f - min_f) / 100;
 	__cpufreq_driver_target(policy, freq_next, CPUFREQ_RELATION_C);
