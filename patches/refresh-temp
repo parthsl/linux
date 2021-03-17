@@ -1,0 +1,11 @@
+Bottom: 68d3703a9ce19ae2b9d2059e4b48bdde30855dc3
+Top:    72e61c6913c4a2e9f2fa8488a0c988d98a5cd0c8
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2021-03-17 16:06:23 +0530
+
+Refresh of add-fake
+
+---
+
+arch/powerpc/kernel/smp.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
