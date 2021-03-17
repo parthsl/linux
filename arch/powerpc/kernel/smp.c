@@ -1487,7 +1487,7 @@ static void update_fake_mc_mask(int cpu)
 {
 	int i;
 
-	for_each_cpu(i, shared_cache_mask)
+	for_each_cpu(i, shared_cache_mask(cpu))
 		set_cpus_related(i, cpu, fake_mc_mask);
 
 	for_each_cpu(i, cpu_coregroup_mask(cpu)) {
