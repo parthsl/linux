@@ -1428,6 +1428,8 @@ static void remove_cpu_from_masks(int cpu)
 	if (has_coregroup_support()) {
 		for_each_cpu(i, cpu_coregroup_mask(cpu))
 			set_cpus_unrelated(cpu, i, cpu_coregroup_mask);
+		for_each_cpu(i, fake_mc_mask(cpu))
+			set_cpus_unrelated(cpu, i, fake_mc_mask);
 	}
 }
 #endif
