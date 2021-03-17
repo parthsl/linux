@@ -81,11 +81,13 @@ bool thread_group_shares_l2;
 DEFINE_PER_CPU(cpumask_var_t, cpu_sibling_map);
 DEFINE_PER_CPU(cpumask_var_t, cpu_smallcore_map);
 DEFINE_PER_CPU(cpumask_var_t, cpu_l2_cache_map);
+DEFINE_PER_CPU(cpumask_var_t, fake_mc_map);
 DEFINE_PER_CPU(cpumask_var_t, cpu_core_map);
 DEFINE_PER_CPU(cpumask_var_t, cpu_coregroup_map);
 
 EXPORT_PER_CPU_SYMBOL(cpu_sibling_map);
 EXPORT_PER_CPU_SYMBOL(cpu_l2_cache_map);
+EXPORT_PER_CPU_SYMBOL(fake_mc_map);
 EXPORT_PER_CPU_SYMBOL(cpu_core_map);
 EXPORT_SYMBOL_GPL(has_big_cores);
 
@@ -958,6 +960,11 @@ static const struct cpumask *shared_cache_mask(int cpu)
 	return per_cpu(cpu_l2_cache_map, cpu);
 }
 
+static const struct cpumask *fake_mc_mask(int cpu)
+{
+	return per_cpu(fake_mc_map, cpu);
+}
+
 #ifdef CONFIG_SCHED_SMT
 static const struct cpumask *smallcore_smt_mask(int cpu)
 {
@@ -985,6 +992,7 @@ static struct sched_domain_topology_level powerpc_topology[] = {
 	{ cpu_smt_mask, powerpc_smt_flags, SD_INIT_NAME(SMT) },
 #endif
 	{ shared_cache_mask, powerpc_shared_cache_flags, SD_INIT_NAME(CACHE) },
+	{ fake_mc_mask, SD_INIT_NAME(FAKEMC) },
 	{ cpu_mc_mask, SD_INIT_NAME(MC) },
 	{ cpu_cpu_mask, SD_INIT_NAME(DIE) },
 	{ NULL, },
@@ -1039,6 +1047,8 @@ void __init smp_prepare_cpus(unsigned int max_cpus)
 		zalloc_cpumask_var_node(&per_cpu(cpu_sibling_map, cpu),
 					GFP_KERNEL, cpu_to_node(cpu));
 		zalloc_cpumask_var_node(&per_cpu(cpu_l2_cache_map, cpu),
+					GFP_KERNEL, cpu_to_node(cpu));
+		zalloc_cpumask_var_node(&per_cpu(fake_mc_map, cpu),
 					GFP_KERNEL, cpu_to_node(cpu));
 		zalloc_cpumask_var_node(&per_cpu(cpu_core_map, cpu),
 					GFP_KERNEL, cpu_to_node(cpu));
