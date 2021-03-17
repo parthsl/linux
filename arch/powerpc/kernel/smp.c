@@ -96,6 +96,7 @@ enum {
 	smt_idx,
 #endif
 	cache_idx,
+	fake_mc_idx,
 	mc_idx,
 	die_idx,
 };
@@ -960,7 +961,7 @@ static const struct cpumask *shared_cache_mask(int cpu)
 	return per_cpu(cpu_l2_cache_map, cpu);
 }
 
-static const struct cpumask *fake_mc_mask(int cpu)
+static struct cpumask *fake_mc_mask(int cpu)
 {
 	return per_cpu(fake_mc_map, cpu);
 }
@@ -987,12 +988,17 @@ static const struct cpumask *cpu_mc_mask(int cpu)
 	return cpu_coregroup_mask(cpu);
 }
 
+static const struct cpumask *cpu_fake_mc_mask(int cpu)
+{
+	return fake_mc_mask(cpu);
+}
+
 static struct sched_domain_topology_level powerpc_topology[] = {
 #ifdef CONFIG_SCHED_SMT
 	{ cpu_smt_mask, powerpc_smt_flags, SD_INIT_NAME(SMT) },
 #endif
 	{ shared_cache_mask, powerpc_shared_cache_flags, SD_INIT_NAME(CACHE) },
-	{ fake_mc_mask, SD_INIT_NAME(FAKEMC) },
+	{ cpu_fake_mc_mask, SD_INIT_NAME(FAKEMC) },
 	{ cpu_mc_mask, SD_INIT_NAME(MC) },
 	{ cpu_cpu_mask, SD_INIT_NAME(DIE) },
 	{ NULL, },
@@ -1477,12 +1483,12 @@ static void update_coregroup_mask(int cpu, cpumask_var_t *mask)
 	}
 }
 
-static void update_fake_mc_mask(int cpu, cpumask_var_t *mask)
+static void update_fake_mc_mask(int cpu)
 {
 	struct cpumask *coregroup = cpu_coregroup_mask(cpu);
 	int i;
 
-	for_each_cpu(i, *coregroup) {
+	for_each_cpu(i, coregroup) {
 		if (cpu%2 == i%2)
 			set_cpus_related(i, cpu, fake_mc_mask);
 	}
@@ -1513,7 +1519,7 @@ static void add_cpu_to_masks(int cpu)
 	if (has_coregroup_support()){
 		update_coregroup_mask(cpu, &mask);
 		/* Since coregroup mask is setup, use it to fill fake MC */
-		update_fake_mc_mask(cpu, &mask);
+		update_fake_mc_mask(cpu);
 	}
 
 	free_cpumask_var(mask);
