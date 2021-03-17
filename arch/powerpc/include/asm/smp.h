@@ -113,6 +113,7 @@ static inline void set_hard_smp_processor_id(int cpu, int phys)
 
 DECLARE_PER_CPU(cpumask_var_t, cpu_sibling_map);
 DECLARE_PER_CPU(cpumask_var_t, cpu_l2_cache_map);
+DECLARE_PER_CPU(cpumask_var_t, fake_mc_map);
 DECLARE_PER_CPU(cpumask_var_t, cpu_core_map);
 DECLARE_PER_CPU(cpumask_var_t, cpu_smallcore_map);
 
