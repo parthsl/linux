@@ -1078,8 +1078,10 @@ void __init smp_prepare_cpus(unsigned int max_cpus)
 	cpumask_set_cpu(boot_cpuid, cpu_sibling_mask(boot_cpuid));
 	cpumask_set_cpu(boot_cpuid, cpu_l2_cache_mask(boot_cpuid));
 
-	if (has_coregroup_support())
+	if (has_coregroup_support()){
 		cpumask_set_cpu(boot_cpuid, cpu_coregroup_mask(boot_cpuid));
+		cpumask_set_cpu(boot_cpuid, fake_mc_mask(boot_cpuid));
+	}
 
 	init_big_cores();
 	if (has_big_cores) {
@@ -1475,6 +1477,17 @@ static void update_coregroup_mask(int cpu, cpumask_var_t *mask)
 	}
 }
 
+static void update_fake_mc_mask(int cpu, cpumask_var_t *mask)
+{
+	struct cpumask *coregroup = cpu_coregroup_mask(cpu);
+	int i;
+
+	for_each_cpu(i, *coregroup) {
+		if (cpu%2 == i%2)
+			set_cpus_related(i, cpu, fake_mc_mask);
+	}
+}
+
 static void add_cpu_to_masks(int cpu)
 {
 	int first_thread = cpu_first_thread_sibling(cpu);
@@ -1497,8 +1510,11 @@ static void add_cpu_to_masks(int cpu)
 	alloc_cpumask_var_node(&mask, GFP_ATOMIC, cpu_to_node(cpu));
 	update_mask_by_l2(cpu, &mask);
 
-	if (has_coregroup_support())
+	if (has_coregroup_support()){
 		update_coregroup_mask(cpu, &mask);
+		/* Since coregroup mask is setup, use it to fill fake MC */
+		update_fake_mc_mask(cpu, &mask);
+	}
 
 	free_cpumask_var(mask);
 }
