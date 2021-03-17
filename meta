@@ -1,7 +1,8 @@
 Version: 1
-Previous: 64b1ca7b0c105a2e14626a2cb0e2d514bf8aa705
-Head: 50009b2a8c837828142279a8b9b48e65fd55a1d0
+Previous: 8fddee7f5e4df02287d07924908b24f0ae982d4d
+Head: cf30b2eabca74d938edf88dfdaec80f4b935441a
 Applied:
   add-fake: 50009b2a8c837828142279a8b9b48e65fd55a1d0
+  set_cpus: cf30b2eabca74d938edf88dfdaec80f4b935441a
 Unapplied:
 Hidden:
