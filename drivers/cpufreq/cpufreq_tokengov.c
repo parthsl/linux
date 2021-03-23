@@ -25,6 +25,7 @@
 #define MIPS_PERIOD	100
 #define MIPS_DROP_MARGIN	110
 #define DROP_THRESHOLD	1
+#define CPUS_PER_POLICY	4
 
 /* Boston system version, 9 or 16 */
 const int bostonv = 9;
@@ -46,6 +47,7 @@ static int scaleup = 300;
 static int debug;
 
 static DEFINE_MUTEX(gov_dbs_tokenpool_mutex);
+static DEFINE_MUTEX(policy_mips_lock);
 
 const unsigned int ramp_up_limit = 32;
 
@@ -117,7 +119,7 @@ unsigned int max_of(struct avg_load_per_quad avgload, int flag)
 	return max_load;
 }
 
-void calc_mips(struct tgdbs *tgg, int cpu, int first_quad_cpu, int cpusperquad)
+void calc_mips(struct tgdbs *tgg, int cpu, int first_quad_cpu, int cpus_per_policy)
 {
 	u64 ips;
 	u64 time_passed;
@@ -125,7 +127,7 @@ void calc_mips(struct tgdbs *tgg, int cpu, int first_quad_cpu, int cpusperquad)
 	int iter = 0;
 	u64 perf_instr = 0;
 
-	if(thread_index>=cpusperquad)
+	if(thread_index>=cpus_per_policy)
 		pr_info("bcz %d %d\n",cpu,first_quad_cpu);
 
 	tgg->timestamp[thread_index] = mftb();
@@ -166,16 +168,20 @@ void calc_mips(struct tgdbs *tgg, int cpu, int first_quad_cpu, int cpusperquad)
 	tgg->last_timestamp[thread_index] = tgg->timestamp[thread_index];
 	tgg->mips_updated = 1;
 }
-void calc_policy_mips(struct tgdbs *tgg, int first_quad_cpu, int cpusperquad)
+
+void calc_policy_mips(struct tgdbs *tgg, int first_quad_cpu, int first_cpu_in_policy, int cpus_per_quad)
 {
 	int cpu;
+	mutex_lock(policy_mips_lock);
 
-	for (cpu=first_quad_cpu; cpu<(first_quad_cpu+cpusperquad); cpu++)
-		calc_mips(tgg, cpu, first_quad_cpu, cpusperquad);
+	for (cpu=first_cpu_in_policy; cpu<(first_cpu_in_policy+CPUS_PER_POLICY); cpu++)
+		calc_mips(tgg, cpu, first_quad_cpu, CPUS_PER_POLICY);
 
 	tgg->policy_mips = tgg->cpu_mips[0];
-	for (cpu=first_quad_cpu; cpu<(first_quad_cpu+cpusperquad); cpu++)
+	for (cpu=first_quad_cpu; cpu<(first_quad_cpu+cpus_per_quad); cpu++)
 		tgg->policy_mips = tgg->policy_mips < tgg->cpu_mips[cpu-first_quad_cpu] ? tgg->cpu_mips[cpu-first_quad_cpu]:tgg->policy_mips;
+
+	mutex_unlock(policy_mips_lock);
 }
 
 static void tg_update(struct cpufreq_policy *policy)
@@ -215,6 +221,13 @@ static void tg_update(struct cpufreq_policy *policy)
 	//trace_printk("cpu=%d first_thread in quad=%d\n",policy->cpu, first_thread_in_quad);
 	avg_load_per_quad[first_thread_in_quad].load[(policy->cpu-first_thread_in_quad)/4] = load;
 
+	// should be called by first quad cpu only
+	// which goes and calculates for each cpu in that quad
+	if (bostonv == 9 && policy->cpu==64)
+		calc_policy_mips(tgg, first_thread_in_quad, policy->cpu, 8);
+	else
+		calc_policy_mips(tgg, first_thread_in_quad, policy->cpu, 16);
+	
 	// Token passing is for only first thread in quad
 	if(policy->cpu != first_thread_in_quad) {
 		__cpufreq_driver_target(policy, min_f, CPUFREQ_RELATION_C);
@@ -224,15 +237,6 @@ static void tg_update(struct cpufreq_policy *policy)
 	start2 = mftb()-start;
 	//trace_printk("cpu=%d start for pool time=%lu\n",policy->cpu, start2);
 	//trace_printk("cpu=%d lastenddiff=%lu\n",policy->cpu, start-tgg->end);
-	
-	// should be called by first quad cpu only
-	// which goes and calculates for each cpu in that quad
-
-
-	if (bostonv == 9 && policy->cpu==64)
-		calc_policy_mips(tgg, first_thread_in_quad, 4);
-	else
-		calc_policy_mips(tgg, first_thread_in_quad, 4);
 	
 	//if ( policy->cpu == 0 )//&& tgg->last_policy_mips > 10*tgg->policy_mips )
 	//	trace_printk("last MIPS=%llu current MIPS=%llu\n",tgg->last_policy_mips, tgg->policy_mips);
