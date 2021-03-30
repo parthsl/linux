@@ -5,10 +5,12 @@ Date:   2021-03-01 12:46:11 +0530
 
 sched: Use H_IDLE_HINT hcall to find if a vcpu can be scheduled instantly
 
-A vcpu can *not* be scheduled instantly only if it is preempted and
-hypervisor can not guarantee that its correspoding prev_cpu is also idle.
+An already yilded vCPU is not taken into consideration by guestOS for
+waking up a task. Hence, allow GuestOS to make hcall to take hint from the
+hypervisor if the given vCPU can be scheduled instantly or not.
 
 Signed-off-by: Parth Shah <parth@linux.ibm.com>
+
 
 ---
 
