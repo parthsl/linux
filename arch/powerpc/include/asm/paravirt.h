@@ -42,6 +42,7 @@ static inline void yield_to_any(void)
 	plpar_hcall_norets(H_CONFER, -1, 0);
 }
 
+/* Find if the previous physical CPU of this vcpu is available_idle or not */
 static inline void pcpu_available_instantly(int vcpu, unsigned long *is_idle)
 {
 	unsigned long retbuf[PLPAR_HCALL_BUFSIZE];
@@ -103,7 +104,9 @@ static inline bool vcpu_is_preempted(int cpu)
 #endif
 
 	if (yield_count_of(cpu) & 1) {
+#ifdef CONFIG_PPC_SPLPAR
 		pcpu_available_instantly(cpu, &is_idle);
+#endif
 
 		if (!is_idle)
 			return true;
