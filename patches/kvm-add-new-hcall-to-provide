@@ -5,12 +5,16 @@ Date:   2021-03-01 12:46:10 +0530
 
 kvm: Add new hcall to provide hint if a vcpu can be scheduled instantly.
 
-H_IDLE_HINT is a new hcall introduced to provide a hint to the guest of whether a
-vcpu can be scheduled instantly or not. This is currently done by looking at the
-prev_cpu of the task corresponding to a vcpu (which will be optimized in
-future).
+H_IDLE_HINT is a new hcall introduced to provide a hint to the guestOS
+indicating if a given vCPU can be scheduled instantly or not.
+
+The task scheduler generally prefers previous cpu of a task if it is
+available_idle. So if a prev_cpu of the corresponding vCPU task_struct is
+found to be available_idle or sched_idle then hint guestOS that the given
+vCPU can be scheduled instantly by the hypervisor.
 
 Signed-off-by: Parth Shah <parth@linux.ibm.com>
+
 
 ---
 
