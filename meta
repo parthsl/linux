@@ -1,8 +1,9 @@
 Version: 1
-Previous: 28b42454d7dd1707401fbb74820e07b7f1d3f931
-Head: 554640375b60526be5414307dc7cbc06b1bace94
+Previous: 8c207c6535170bee763818d892748aeb1a17028e
+Head: fe0379d88dc353df8ee0c032620543f5f93bedd0
 Applied:
   kvm-add-new-hcall-to-provide: 554640375b60526be5414307dc7cbc06b1bace94
+  refresh-temp: fe0379d88dc353df8ee0c032620543f5f93bedd0
 Unapplied:
   add-new-hcall-for-kvm-guest-to: b22eb3b0fd23e0ca4a68d93a90f1471922364052
   debug-bits: e6715040bc2723afcfaed1d6311deb6131e539b8
