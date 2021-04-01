@@ -3,11 +3,13 @@ Top:    d92e9d423639421d438ac8081520edd921db5927
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2021-03-01 12:46:11 +0530
 
-sched: Use H_IDLE_HINT hcall to find if a vcpu can be scheduled instantly
+sched: Use H_IDLE_HINT hcall to find if a vCPU can be wakeup target
 
-An already yilded vCPU is not taken into consideration by guestOS for
-waking up a task. Hence, allow GuestOS to make hcall to take hint from the
-hypervisor if the given vCPU can be scheduled instantly or not.
+During checking for an available_idle_cpu, if the vCPU is yielded then
+check if it will be scheduled instantly by hypervisor or not. From guestOS,
+use H_IDLE_HINT hcall to ask for this hint from the hypverisor, and
+consider the yielded vCPU as target for wakeups iff it is hinted to be
+scheduled instantly.
 
 Signed-off-by: Parth Shah <parth@linux.ibm.com>
 
