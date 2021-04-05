@@ -3,7 +3,7 @@ Top:    d92e9d423639421d438ac8081520edd921db5927
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2021-03-01 12:46:11 +0530
 
-sched: Use H_IDLE_HINT hcall to find if a vCPU can be wakeup target
+KVM: Use H_IDLE_HINT hcall to find if a vCPU can be wakeup target
 
 During checking for an available_idle_cpu, if the vCPU is yielded then
 check if it will be scheduled instantly by hypervisor or not. From guestOS,
