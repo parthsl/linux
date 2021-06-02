@@ -26,6 +26,16 @@
  */
 static unsigned int tokenPool;
 static unsigned int pool_turn;
+/* Tunable to set iterations after which token starvation is detected */
+const unsigned int starvation_threshold = 32;
+/*
+ * Global variable used by every policy to determine if the tokenpool is in
+ * GREEDY or FAIR mode. In the default GREEDY mode, each policy can take any
+ * number tokens based on the requirements, but in FAIR mode there is upper
+ * bound decided by the ratio of "total_tokens" to the "total policies".
+ */
+enum pool_mode {GREEDY, FAIR} pool_mode;
+static unsigned int fair_tokens;
 
 static DEFINE_MUTEX(gov_dbs_tokenpool_mutex);
 static unsigned int barrier;
@@ -45,6 +55,10 @@ const unsigned int ramp_up_limit = 32;
 struct tgdbs {
 	/* Tokens acquired by the policy */
 	unsigned int my_tokens;
+
+	/* Keep counts of times we did not received any token */
+	unsigned int starvation;
+	int set_fair_mode;
 
 	/* Ramp up freq giving factor */
 	unsigned int last_ramp_up;
@@ -141,6 +155,16 @@ static void tg_update(struct cpufreq_policy *policy)
 
 			tgg->last_ramp_up = need_tokens;
 
+			if (tokenPool == 0) {
+				tgg->starvation++;
+				if (tgg->starvation >= starvation_threshold) {
+					pool_mode = FAIR;
+					tgg->set_fair_mode = 1;
+				}
+
+				goto abide_fairness;
+			}
+
 			if(tokenPool > need_tokens){//tokenPool has sufficient tokens
 				tgg->my_tokens += need_tokens;
 				tokenPool -= need_tokens;
@@ -150,6 +174,26 @@ static void tg_update(struct cpufreq_policy *policy)
 				tgg->last_ramp_up += tokenPool;
 				tokenPool = 0;
 			}
+
+			/*
+			 * We have acquired some tokens, so reset pool mode to
+			 * GREEDY and also reset the tgg->starvation counter.
+			 */
+			if (tgg->set_fair_mode == 1 &&
+			   (tgg->my_tokens >= fair_tokens ||
+			    tgg->my_tokens >= required_tokens))
+			{
+				pool_mode = GREEDY;
+				tgg->set_fair_mode = 0;
+			}
+			tgg->starvation = 0;
+	}
+
+abide_fairness:
+	/* relinquish any extra tokens when FAIR mode is on */
+	if (pool_mode == FAIR && tgg->my_tokens > fair_tokens) {
+		tokenPool += (tgg->my_tokens - fair_tokens);
+		tgg->my_tokens -= (tgg->my_tokens - fair_tokens);
 	}
 
 	/* 2. Communication Phase: Set pool_turn to next FD in the ring */
@@ -246,6 +290,8 @@ static void tg_start(struct cpufreq_policy *policy)
 			avg_load_per_quad[cpu].load = (unsigned int*) kmalloc(sizeof(unsigned int) * policies_per_fd, GFP_KERNEL);
 
 		pool_turn = 0;
+		fair_tokens = tokenPool/(topology.nr_policies/4);
+		pool_mode = GREEDY;
 
 		barrier=1;
 	}
