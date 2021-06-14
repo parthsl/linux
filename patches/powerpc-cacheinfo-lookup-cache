@@ -1,6 +1,6 @@
 Bottom: 063ea2fcb4b11f3d6bda2aaee85e0af6bc67d705
 Top:    9bac17efc9c0e30c39bced540ddb8fa255dbd776
-Author: Gautham R. Shenoy <>
+Author: Gautham R. Shenoy <ego@linux.vnet.ibm.com>
 Date:   2021-06-14 17:06:27 +0530
 
 powerpc/cacheinfo: Lookup cache by dt node and thread-group id
