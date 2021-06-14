@@ -1,0 +1,21 @@
+Bottom: ca2f48e90077bb141ad08d9de659f75bf02948d7
+Top:    ee4d8672b084f708a9f48f735fa63df000059fcd
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2021-05-28 12:09:41 +0530
+
+powerpc/smp: Use existing L2 cache_map cpumask to find L3 cache siblings
+
+On POWER10 systems, the "ibm,thread-groups" property "2" indicates the cpus
+in thread-group share both L2 and L3 caches. Hence, use cache_property = 2
+itself to find both the L2 and L3 cache siblings.
+Hence, rename existing macros to detect if the cache property is for L2 or
+L3 and use the L2 cache map itself to find the presence of L3 siblings.
+
+Signed-off-by: Parth Shah <parth@linux.ibm.com>
+
+
+---
+
+arch/powerpc/include/asm/smp.h |  2 ++
+ arch/powerpc/kernel/smp.c      | 20 +++++++++++++++-----
+ 2 files changed, 17 insertions(+), 5 deletions(-)

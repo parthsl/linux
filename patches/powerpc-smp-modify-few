@@ -1,0 +1,19 @@
+Bottom: b2190bd9bec2339d008e2727b78ae6064016d5d2
+Top:    ca2f48e90077bb141ad08d9de659f75bf02948d7
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2021-05-31 16:10:02 +0530
+
+powerpc/smp: Modify few DEFINE_PER_CPU to non-static
+
+GCC complains "static declaration of ‘thread_group_l2_cache_map’ follows
+non-static declaration"
+Remove "static" keyword for the definition of "thread_group_l1_cache_map"
+and "thread_group_l2_cache_map" to get rid of the compile error.
+
+Signed-off-by: Parth Shah <parth@linux.ibm.com>
+
+
+---
+
+arch/powerpc/kernel/smp.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)

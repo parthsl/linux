@@ -1,0 +1,39 @@
+Bottom: 063ea2fcb4b11f3d6bda2aaee85e0af6bc67d705
+Top:    7a48a011597e70ac15a91ac3e4c3e4e9c111963d
+Author: Gautham R. Shenoy <ego@linux.vnet.ibm.com>
+Date:   2021-01-19 13:06:19 +0530
+
+powerpc/cacheinfo: Lookup cache by dt node and thread-group id
+
+Currently the cacheinfo code on powerpc indexes the "cache" objects
+(modelling the L1/L2/L3 caches) where the key is device-tree node
+corresponding to that cache. On some of the POWER server platforms
+thread-groups within the core share different sets of caches (Eg: On
+SMT8 POWER9 systems, threads 0,2,4,6 of a core share L1 cache and
+threads 1,3,5,7 of the same core share another L1 cache). On such
+platforms, there is a single device-tree node corresponding to that
+cache and the cache-configuration within the threads of the core is
+indicated via "ibm,thread-groups" device-tree property.
+
+Since the current code is not aware of the "ibm,thread-groups"
+property, on the aforementoined systems, cacheinfo code still treats
+all the threads in the core to be sharing the cache because of the
+single device-tree node (In the earlier example, the cacheinfo code
+would says CPUs 0-7 share L1 cache).
+
+In this patch, we make the powerpc cacheinfo code aware of the
+"ibm,thread-groups" property. We indexe the "cache" objects by the
+key-pair (device-tree node, thread-group id). For any CPUX, for a
+given level of cache, the thread-group id is defined to be the first
+CPU in the "ibm,thread-groups" cache-group containing CPUX. For levels
+of cache which are not represented in "ibm,thread-groups" property,
+the thread-group id is -1.
+
+Signed-off-by: Gautham R. Shenoy <ego@linux.vnet.ibm.com>
+
+
+---
+
+arch/powerpc/include/asm/smp.h  |  3 ++
+ arch/powerpc/kernel/cacheinfo.c | 80 +++++++++++++++++++++++++++++------------
+ 2 files changed, 61 insertions(+), 22 deletions(-)
