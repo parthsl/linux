@@ -1,9 +1,8 @@
 Version: 1
-Previous: 44b7505265eaaf6542ed6c919902df5138c0fc42
-Head: c84a2e6e9bf45a4bdad349e32a50cba7f0d917a1
+Previous: 9b08cf2fcf6b75218c5951dcf22a98755df2310d
+Head: b735a90d29ca7e9eaeee93bc00a0e4852b55cbfd
 Applied:
-  powerpc-cacheinfo-lookup-cache: 87a07461a6f96691b1af264b8c0f5c8600c29d9c
-  powerpc-smp-modify-few: c84a2e6e9bf45a4bdad349e32a50cba7f0d917a1
+  powerpc-cacheinfo-lookup-cache: b735a90d29ca7e9eaeee93bc00a0e4852b55cbfd
 Unapplied:
   powerpc-cacheinfo-remove-the: cd6671158f1b76d6a2b235713bf43dcc38a3b908
   powerpc-smp-use-existing-l2: 0066ae8b731669c0bbc6a8100cdbd64f58864503
