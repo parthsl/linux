@@ -6,6 +6,10 @@
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation.
+ *
+ * XXX: CPUS_PER_POLICY/CPUS_PER_QUAD generalization
+ * XXX: Tunables are currently defined as Macros
+ * XXX: Remove arch stuff and put it into separate file(s).
  */
 
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
@@ -44,7 +48,7 @@ const unsigned int starvation_threshold = 32;
  * workload having IPC of 0.5 or above is getting benefits of 1 P-state higher
  * frequency.
  */
-static unsigned int IPC_threshold = 17000/2;
+static unsigned int IPC_threshold = 100/2;
 /*
  * Global variable used by every policy to determine if the tokenpool is in
  * GREEDY or FAIR mode. In the default GREEDY mode, each policy can take any
@@ -53,6 +57,8 @@ static unsigned int IPC_threshold = 17000/2;
  */
 enum pool_mode {GREEDY, FAIR} pool_mode;
 static unsigned int fair_tokens;
+
+static int debug;
 
 static DEFINE_MUTEX(gov_dbs_tokenpool_mutex);
 static DEFINE_MUTEX(policy_mips_lock);
@@ -242,6 +248,10 @@ static void tg_update(struct cpufreq_policy *policy)
 	mips_delta = (IPC_threshold * tgg->last_ramp_up);
 	expected_mips = tgg->mips_when_boosted + mips_delta;
 	expected_mips -= (mips_delta * 5) / 100; //keep 5% error margin
+	if (policy->cpu == 0)
+		trace_printk("mips=%llu, mips_when_boosted=%llu last_mips=%llu exected_mips=%llu last_ramp_up=%d\n",
+				tgg->policy_mips, tgg->mips_when_boosted,
+				tgg->last_policy_mips, expected_mips, tgg->last_ramp_up);
 
 	/*
 	 * Unless we grant a token, we cannot know if the workload is getting
@@ -252,8 +262,10 @@ static void tg_update(struct cpufreq_policy *policy)
 	 * proportionally to the frequency increase or not. If not, then the
 	 * granted token should be relinquished here.
 	 */
-	if (tgg->taking_token && tgg->policy_mips <= expected_mips)
+	if (tgg->taking_token && tgg->policy_mips <= expected_mips) {
 		required_tokens = tgg->my_tokens - 1;
+		if (policy->cpu == 0)trace_printk("mips is less than before %llu\n", tgg->policy_mips);
+	}
 	tgg->taking_token = 0;
 
 	/*
@@ -263,8 +275,10 @@ static void tg_update(struct cpufreq_policy *policy)
 	 * consequtive iterations then it should drop tokens.
 	 */
 	if (tgg->policy_mips * MIPS_DROP_MARGIN < 100 * tgg->last_policy_mips) {
-		if (!--tgg->drop_threshold)
+		if (!--tgg->drop_threshold) {
 			required_tokens = 0;
+			if (policy->cpu == 0) trace_printk("token dropped mips=%llu last_policy_mips=%llu\n", tgg->policy_mips, tgg->last_policy_mips);
+		}
 	} else {
 		tgg->drop_threshold = DROP_THRESHOLD;
 	}
@@ -272,8 +286,12 @@ static void tg_update(struct cpufreq_policy *policy)
 	tgg->last_policy_mips = tgg->policy_mips;
 
 	/* Interaction with tokenPool */
+	if(debug && pool_turn==policy_id)
+		trace_printk("my turn quad %d mips=%llu %u %u\n",policy->cpu, tgg->policy_mips, load, tgg->my_tokens);
+
 	/* Donate extra tokens */
 	if(required_tokens <= tgg->my_tokens){
+		if (policy->cpu == 0) trace_printk("donate extra required_tokens=%d mytokens=%d load=%d\n", required_tokens, tgg->my_tokens, load);
 		tokenPool += (tgg->my_tokens - required_tokens);
 		tgg->my_tokens -= (tgg->my_tokens - required_tokens);
 		tgg->last_ramp_up = 0;
@@ -361,6 +379,8 @@ static ssize_t store_central_pool(struct gov_attr_set *attr_set, const char *buf
 	if (ret != 1)
 		return -EINVAL;
 
+	if(input==0)debug = ~debug;
+
 	mutex_lock(&gov_dbs_tokenpool_mutex);
 	tokenPool += input;
 	mutex_unlock(&gov_dbs_tokenpool_mutex);
@@ -370,6 +390,10 @@ static ssize_t store_central_pool(struct gov_attr_set *attr_set, const char *buf
 
 static ssize_t show_central_pool(struct gov_attr_set *attr_set, char *buf)
 {
+	int i;
+	for(i=0;i<topology.nr_policies;i++)
+		trace_printk("policy id=%d:%d %llu\n",i,tg_data[i].my_tokens, tg_data[i].policy_mips);
+
 	return sprintf(buf, "tokenPool=%u, turn for policy %u total %u policies\n", tokenPool, pool_turn, topology.nr_policies);
 }
 
