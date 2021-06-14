@@ -18,6 +18,10 @@
 #include "cpufreq_governor.h"
 #include "cpufreq_tokensmart_arch.h"
 
+#define CPUS_PER_QUAD 16
+#define CPUS_PER_POLICY	4
+#define POLICY_PER_QUAD (CPUS_PER_QUAD/CPUS_PER_POLICY)
+
 /*
  * Initial value of tokenpool decides the power budget of the system.
  * pool_turn is used by each frequency-domain to find where the tokenPool has
