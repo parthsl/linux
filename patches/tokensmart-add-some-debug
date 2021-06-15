@@ -1,0 +1,12 @@
+Bottom: 64a06aeebb4292ca2d17870d9bd82c54de8bd4e0
+Top:    9381e2f1d03918aef2470f75c256557fb85ed770
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2021-06-14 16:17:27 +0530
+
+TokenSmart: Add some debug traces and todo items
+
+
+---
+
+drivers/cpufreq/cpufreq_tokensmart.c | 23 ++++++++++++++++++++++-
+ 1 file changed, 22 insertions(+), 1 deletion(-)

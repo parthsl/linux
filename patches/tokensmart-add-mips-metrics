@@ -1,0 +1,15 @@
+Bottom: 037022f927433b69cc7cfd2514604d8c172bba4e
+Top:    64a06aeebb4292ca2d17870d9bd82c54de8bd4e0
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2021-06-08 11:23:35 +0530
+
+TokenSmart: Add MIPS metrics for token requirement calculations
+
+Use perf framework to calculate INSTRUCTIONS completed every few period,
+use it to calculate INSTRUCTIONS PER SECONDS (IPS) for every CPU.
+
+
+---
+
+drivers/cpufreq/cpufreq_tokensmart.c | 150 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 150 insertions(+)

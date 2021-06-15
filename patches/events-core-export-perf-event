@@ -1,0 +1,15 @@
+Bottom: ac765ce5c26de38c5334e80a08b653909302f337
+Top:    d7bcdeaa6a64629b1ccf70f9bf9abe0c6fc614e6
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2021-03-16 12:21:50 +0530
+
+events/core: Export perf event to read local PMU
+
+Export perf event for measuring MIPS. This is required in order to load the
+TokenSmart cpufreq governor as an external module.
+
+
+---
+
+kernel/events/core.c | 1 +
+ 1 file changed, 1 insertion(+)

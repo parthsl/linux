@@ -1,0 +1,12 @@
+Bottom: d7bcdeaa6a64629b1ccf70f9bf9abe0c6fc614e6
+Top:    037022f927433b69cc7cfd2514604d8c172bba4e
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2021-06-02 17:33:41 +0530
+
+TokenSmart: Add FAIR policy approach when one of the policy gets starved
+
+
+---
+
+drivers/cpufreq/cpufreq_tokensmart.c | 46 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 46 insertions(+)
