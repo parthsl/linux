@@ -1,8 +1,8 @@
 Version: 1
-Previous: d89c43ba938b635cc54329540f9c1cf95635db74
-Head: 2dcb121452261ab8bd2ddfcc0fb4e0c91e080563
+Previous: 8275974d825d4d8a7dec3d152afe7404ecee9c5b
+Head: a1601182e0f2ec98ec485d06e2d042a9b2b6dc6e
 Applied:
-  add-new-cpufreq-governor-based: 2dcb121452261ab8bd2ddfcc0fb4e0c91e080563
+  add-new-cpufreq-governor-based: a1601182e0f2ec98ec485d06e2d042a9b2b6dc6e
 Unapplied:
   events-core-export-perf-event: 7756b59c95377f9c4df850788714a1cfb67313d8
   tokensmart-add-fair-policy: e86b828625846b53bb7e3ef9cd9c6007e398fe26
