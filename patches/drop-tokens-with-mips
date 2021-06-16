@@ -1,5 +1,5 @@
 Bottom: 0030a403cff426262e6202eca879257adb49d4f6
-Top:    0030a403cff426262e6202eca879257adb49d4f6
+Top:    37036a9c3634dbe19fd136257b2ea78fb7bb0e72
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2021-06-16 12:30:57 +0530
 
@@ -12,4 +12,5 @@ then relinquish the tokens as well.
 
 ---
 
-
+drivers/cpufreq/cpufreq_tokensmart.c | 127 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 127 insertions(+)
