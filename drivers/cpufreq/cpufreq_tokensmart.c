@@ -14,6 +14,7 @@
 #include <linux/slab.h>
 #include <linux/tick.h>
 #include <linux/sched/cpufreq.h>
+#include "cpufreq_tokensmart.h"
 
 #define CPUS_PER_QUAD 16
 #define CPUS_PER_POLICY	4
