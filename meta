@@ -1,6 +1,6 @@
 Version: 1
-Previous: f452dd6bec5876a66fc1bc969f994d93b4bcbdbd
-Head: 33ca884949231ca03d5a3689565fd1a32cf0e9a3
+Previous: 8e17b30bf0d8c32db4a9a8860a82e7124dc8b78d
+Head: 1e72c11331af8d965b39e1180fe40f9fd9dc8708
 Applied:
   add-new-cpufreq-governor-based: cafb4cf55ae775817bf18160404d3bce8988871e
   tokensmart-add-fair-policy: fd4506bdadaac4690f071fb57dd9cc5177bd35c9
@@ -8,7 +8,7 @@ Applied:
   temp: 27b88c59584df0ffc98ef0396bb56da220ca3a69
   drop-tokens-with-mips: af24fe502c5427cd9f19824abb22f4a1c78563e5
   temp1: 33ca884949231ca03d5a3689565fd1a32cf0e9a3
+  tokensmart-add-mips-metrics: 1e72c11331af8d965b39e1180fe40f9fd9dc8708
 Unapplied:
-  tokensmart-add-mips-metrics: 59da5a2dbff71e852460d00fa4758845fb9d8a3f
   tokensmart-add-some-debug: 44bb39f4a6f60b6ba8aac3c1e9324e8a90519872
 Hidden:
