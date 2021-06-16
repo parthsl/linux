@@ -284,12 +284,12 @@ static void tg_update(struct cpufreq_policy *policy)
 	 * consequtive iterations then it should drop tokens.
 	 */
 	if (tgg->policy_mips * MIPS_DROP_MARGIN < 100 * tgg->last_policy_mips) {
-		if (!--tgg->drop_threshold) {
+		if (!--tgg->drop_threshold)
 			required_tokens = 0;
-		}
 	} else {
 		tgg->drop_threshold = DROP_THRESHOLD;
 	}
+
 	tgg->last_policy_mips = tgg->policy_mips;
 
 	/* Interaction with tokenPool */
