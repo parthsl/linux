@@ -53,7 +53,7 @@ const unsigned int starvation_threshold = 32;
  * workload having IPC of 0.5 or above is getting benefits of 1 P-state higher
  * frequency.
  */
-static unsigned int IPC_threshold = 17000/2;
+static unsigned int IPC_threshold = 100/2;
 /*
  * Global variable used by every policy to determine if the tokenpool is in
  * GREEDY or FAIR mode. In the default GREEDY mode, each policy can take any
@@ -292,7 +292,7 @@ static void tg_update(struct cpufreq_policy *policy)
 	 */
 	if (tgg->taking_token && tgg->policy_mips <= expected_mips) {
 		required_tokens = tgg->my_tokens - 1;
-		if (policy->cpu == 0)trace_printk("mips is less than before\n");
+		if (policy->cpu == 0)trace_printk("mips is less than before %llu\n", tgg->policy_mips);
 	}
 	tgg->taking_token = 0;
 
@@ -305,7 +305,7 @@ static void tg_update(struct cpufreq_policy *policy)
 	if (tgg->policy_mips * MIPS_DROP_MARGIN < 100 * tgg->last_policy_mips) {
 		if (!--tgg->drop_threshold) {
 			required_tokens = 0;
-			if (policy->cpu == 0) trace_printk("token dropped\n");
+			if (policy->cpu == 0) trace_printk("token dropped mips=%llu last_policy_mips=%llu\n", tgg->policy_mips, tgg->last_policy_mips);
 		}
 	} else {
 		tgg->drop_threshold = DROP_THRESHOLD;
@@ -319,7 +319,7 @@ static void tg_update(struct cpufreq_policy *policy)
 
 	/* Donate extra tokens */
 	if(required_tokens <= tgg->my_tokens){
-		if (policy->cpu == 0) trace_printk("donate extra\n");
+		if (policy->cpu == 0) trace_printk("donate extra required_tokens=%d mytokens=%d load=%d\n", required_tokens, tgg->my_tokens, load);
 		tokenPool += (tgg->my_tokens - required_tokens);
 		tgg->my_tokens -= (tgg->my_tokens - required_tokens);
 		tgg->last_ramp_up = 0;
