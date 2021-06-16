@@ -1,5 +1,5 @@
 Bottom: 6e1ac072025d9a5c7e2a0dc9176c084c46a5d047
-Top:    ac765ce5c26de38c5334e80a08b653909302f337
+Top:    ff220ef6c7cef9d4940d12d1abb66100006aba4c
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2021-06-14 16:31:29 +0530
 
@@ -14,6 +14,6 @@ https://ieeexplore.ieee.org/document/9372818
 
 drivers/cpufreq/Kconfig              |  14 ++
  drivers/cpufreq/Makefile             |   1 +
- drivers/cpufreq/cpufreq_tokensmart.c | 352 +++++++++++++++++++++++++++++++++++
- 3 files changed, 367 insertions(+)
+ drivers/cpufreq/cpufreq_tokensmart.c | 351 +++++++++++++++++++++++++++++++++++
+ 3 files changed, 366 insertions(+)
  create mode 100644 drivers/cpufreq/cpufreq_tokensmart.c
