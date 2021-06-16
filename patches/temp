@@ -3,7 +3,10 @@ Top:    ee1b38b044494c41789bb741527d999fdb88b7ad
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2021-06-16 11:11:28 +0530
 
-extracting .h file
+TokenSmart: Add new header file to read PMU counter using perf
+
+Provide accessors for initiating and resetting perf infrastructue for
+reading PMU counters like total INSTRUCTIONS completed per CPU.
 
 
 ---
