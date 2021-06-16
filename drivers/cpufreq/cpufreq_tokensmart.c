@@ -9,7 +9,6 @@
  *
  * XXX: CPUS_PER_POLICY/CPUS_PER_QUAD generalization
  * XXX: IPC threshold to be selected based on workload. so provide a tunable.
- * XXX: Debug traces to be removed or pushed as backup patch
  * XXX: Tunables are currently defined as Macros
  * XXX: Remove arch stuff and put it into separate file(s).
  */
