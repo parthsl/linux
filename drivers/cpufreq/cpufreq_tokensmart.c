@@ -444,7 +444,7 @@ static ssize_t store_mips_threshold(struct gov_attr_set *attr_set, const char *b
 
 static ssize_t show_mips_threshold(struct gov_attr_set *attr_set, char *buf)
 {
-	return sprintf(buf, "MIPS Threshold = %d\n", mips_thresholod);
+	return sprintf(buf, "MIPS Threshold = %d\n", IPC_threshold);
 }
 
 gov_attr_rw(central_pool);
