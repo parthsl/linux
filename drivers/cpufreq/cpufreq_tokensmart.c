@@ -221,7 +221,6 @@ static ssize_t store_central_pool(struct gov_attr_set *attr_set, const char *buf
 
 static ssize_t show_central_pool(struct gov_attr_set *attr_set, char *buf)
 {
-	int i;
 	return sprintf(buf, "tokenPool=%u, turn for policy %u total %u policies\n", tokenPool, pool_turn, P9.nr_policies);
 }
 
