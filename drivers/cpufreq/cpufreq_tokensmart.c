@@ -279,6 +279,10 @@ static void tg_update(struct cpufreq_policy *policy)
 	mips_delta = (IPC_threshold * tgg->last_ramp_up);
 	expected_mips = tgg->mips_when_boosted + mips_delta;
 	expected_mips -= (mips_delta * 5) / 100; //keep 5% error margin
+	if (policy->cpu == 0)
+		trace_printk("mips=%llu, mips_when_boosted=%llu last_mips=%llu exected_mips=%llu last_ramp_up=%d\n",
+				tgg->policy_mips, tgg->mips_when_boosted,
+				tgg->last_policy_mips, expected_mips, tgg->last_ramp_up);
 
 	/*
 	 * Unless we grant a token, we cannot know if the workload is getting
