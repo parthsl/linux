@@ -14,8 +14,6 @@
 #include <linux/slab.h>
 #include <linux/tick.h>
 #include <linux/sched/cpufreq.h>
-#include <linux/percpu-defs.h>
-#include "cpufreq_governor.h"
 #include "cpufreq_tokensmart_arch.h"
 
 /*
