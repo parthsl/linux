@@ -53,7 +53,7 @@ const unsigned int starvation_threshold = 32;
  * workload having IPC of 0.5 or above is getting benefits of 1 P-state higher
  * frequency.
  */
-static unsigned int mips_threshold = 17000/2;
+static unsigned int IPC_threshold = 17000/2;
 /*
  * Global variable used by every policy to determine if the tokenpool is in
  * GREEDY or FAIR mode. In the default GREEDY mode, each policy can take any
@@ -277,7 +277,7 @@ static void tg_update(struct cpufreq_policy *policy)
 	 * Since last_ramp_up stores the amount of token accepted from the
 	 * tokenPool, we can use it here to predict the increase in MIPS.
 	 */
-	mips_delta = (mips_threshold * tgg->last_ramp_up);
+	mips_delta = (IPC_threshold * tgg->last_ramp_up);
 	expected_mips = tgg->mips_when_boosted + mips_delta;
 	expected_mips -= (mips_delta * 5) / 100; //keep 5% error margin
 
@@ -435,7 +435,7 @@ static ssize_t store_mips_threshold(struct gov_attr_set *attr_set, const char *b
 {
 	int ret;
 
-	ret = sscanf(buf, "%d", &mips_threshold);
+	ret = sscanf(buf, "%d", &IPC_threshold);
 	if (ret != 1)
 		return -EINVAL;
 
