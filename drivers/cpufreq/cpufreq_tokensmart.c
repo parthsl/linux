@@ -15,6 +15,14 @@
 #include <linux/tick.h>
 #include <linux/sched/cpufreq.h>
 #include "cpufreq_tokensmart_arch.h"
+#include "cpufreq_tokensmart.h"
+
+#define PAST_MIPS_WEIGHT 8
+#define CURRENT_MIPS_WEIGHT (10 - PAST_MIPS_WEIGHT)
+/* Frequency at which MIPS is calculated */
+#define MIPS_PERIOD 100
+/* Factor to convert time from nano seconds to milli-seconds */
+#define NS_TO_MS 1000000
 
 /*
  * Initial value of tokenpool decides the power budget of the system.
@@ -36,6 +44,7 @@ enum pool_mode {GREEDY, FAIR} pool_mode;
 static unsigned int fair_tokens;
 
 static DEFINE_MUTEX(gov_dbs_tokenpool_mutex);
+static DEFINE_MUTEX(policy_mips_lock);
 static unsigned int barrier;
 
 /*
@@ -60,6 +69,24 @@ struct tgdbs {
 
 	/* Ramp up freq giving factor */
 	unsigned int last_ramp_up;
+	/*
+	 * Few variables for calculating and stroing MIPS value.
+	 * @policy.*mips: Keeps track of max MIPS among all CPUs in a policy.
+	 * @.*instructions: instructions completed for each CPU.
+	 * @.*timestamp: time passed across two consequtive iterations
+	 */
+	u64 policy_mips;
+	u64 last_policy_mips;
+	u64 last_instructions[CPUS_PER_QUAD];
+	u64 instructions[CPUS_PER_QUAD];
+	u64 timestamp[CPUS_PER_QUAD];
+	u64 last_timestamp[CPUS_PER_QUAD];
+	u64 cpu_mips[CPUS_PER_QUAD];
+
+	/* Track if MIPS updated in last iteration */
+	int mips_updated;
+	u64 mips_when_boosted;
+	int taking_token;
 };
 
 /* Keep array of tg_dbs per policy */
@@ -92,6 +119,55 @@ unsigned int max_of(struct avg_load_per_quad avgload)
 	return max_load;
 }
 
+void calc_mips(struct tgdbs *tgg, int cpu, int first_quad_cpu)
+{
+	u64 ips;
+	u64 time_passed;
+	int tid = cpu - first_quad_cpu;
+	u64 perf_instr = 0;
+
+	/* Store current timestamp and calculate time passed from last time. */
+	tgg->timestamp[tid] = mftb();
+	time_passed = tgg->timestamp[tid] - tgg->last_timestamp[tid];
+	time_passed /= NS_TO_MS;
+
+	/* Calculate MIPS only after defined period */
+	if (time_passed < MIPS_PERIOD)
+		return;
+
+	/* Read perf instruction counters */
+	perf_instr = read_perf_event(cpu);
+	tgg->instructions[tid] = perf_instr;
+
+	/* Calculate total instruction completed from last time */
+	ips = perf_instr - tgg->last_instructions[tid];
+	ips = ips/time_passed;
+
+	/* Add current IPS value by decaying last known value */
+	tgg->cpu_mips[tid] = (tgg->cpu_mips[tid] * PAST_MIPS_WEIGHT +
+			      ips * CURRENT_MIPS_WEIGHT) / 10;
+
+	tgg->last_instructions[tid] = tgg->instructions[tid];
+	tgg->last_timestamp[tid] = tgg->timestamp[tid];
+	tgg->mips_updated = 1;
+}
+
+void calc_policy_mips(struct tgdbs *tgg, int first_quad_cpu, int first_cpu_in_policy)
+{
+	int cpu;
+	mutex_lock(&policy_mips_lock);
+
+	for (cpu = first_quad_cpu; cpu < (first_cpu_in_policy + CPUS_PER_POLICY); cpu++)
+		calc_mips(tgg, cpu, first_quad_cpu);
+
+	tgg->policy_mips = tgg->cpu_mips[0];
+	for(cpu = first_quad_cpu; cpu < (first_quad_cpu + CPUS_PER_POLICY); cpu++)
+		if (tgg->policy_mips < tgg->cpu_mips[cpu - first_quad_cpu])
+			tgg->policy_mips = tgg->cpu_mips[cpu - first_quad_cpu];
+
+	mutex_unlock(&policy_mips_lock);
+}
+
 /*
  * This function gets triggered periodically. It consists of four parts:
  * 1. Computation phase: Collect metrics like load or MIPS from all CPUs and
@@ -109,6 +185,7 @@ static void tg_update(struct cpufreq_policy *policy)
 	unsigned int need_tokens;
 	struct tgdbs *tgg  = &tg_data[policy_id];
 	int first_thread_in_quad = get_first_thread(policy);
+	u64 mips_delta, expected_mips;
 
 	min_f = policy->cpuinfo.min_freq;
 	max_f = policy->cpuinfo.max_freq;
@@ -120,6 +197,9 @@ static void tg_update(struct cpufreq_policy *policy)
 	}
 
 	avg_load_per_quad[first_thread_in_quad].load[(policy->cpu-first_thread_in_quad)/POLICY_PER_QUAD] = load;
+
+	/* Calculate MIPS value for this policy */
+	calc_policy_mips(tgg, first_thread_in_quad, policy->cpu);
 
 	// Token passing is for only first thread in quad
 	if(policy->cpu != first_thread_in_quad) {
@@ -134,13 +214,47 @@ static void tg_update(struct cpufreq_policy *policy)
 	/* Calculate the next frequency proportional to load */
 	required_tokens = load;
 
+	/* Don't take any more tokens if time passed is less than MIPS_PERIOD */
+	if (!tgg->mips_updated && required_tokens >= tgg->my_tokens)
+		return;
+	tgg->mips_updated = 0;
+
 	if (pool_turn != policy_id) return ;
 
+	/*
+	 * Compute the expected MIPS value. if mips value if below this, then it
+	 * is considered as no increase in MIPS and hence token should not be
+	 * granted in such cases.
+	 *
+	 * Since last_ramp_up stores the amount of token accepted from the
+	 * tokenPool, we can use it here to predict the increase in MIPS.
+	 */
+	mips_delta = (17000 * tgg->last_ramp_up) * 2 / 4;
+	expected_mips = tgg->mips_when_boosted + mips_delta;
+	expected_mips -= (mips_delta * 5) / 100; //keep 5% error margin
+
+	/*
+	 * Unless we grant a token, we cannot know if the workload is getting
+	 * higher MIPS with frequency increase or not. Hence, we first grant a
+	 * token and wait for increase in MIPS till next iteration.
+	 *
+	 * If we took token in last iteration, then find if MIPS is increased
+	 * proportionally to the frequency increase or not. If not, then the
+	 * granted token should be relinquished here.
+	 */
+	if (tgg->taking_token && tgg->policy_mips <= expected_mips)
+		required_tokens = tgg->my_tokens - 1;
+	tgg->taking_token = 0;
+
+	tgg->last_policy_mips = tgg->policy_mips;
+
+	/* Interaction with tokenPool */
 	/* Donate extra tokens */
 	if(required_tokens <= tgg->my_tokens){
 		tokenPool += (tgg->my_tokens - required_tokens);
 		tgg->my_tokens -= (tgg->my_tokens - required_tokens);
 		tgg->last_ramp_up = 0;
+		tgg->taking_token = 0;
 	}
 	/* Accept tokens from the tokenPool */
 	else{
@@ -185,6 +299,9 @@ static void tg_update(struct cpufreq_policy *policy)
 				tgg->set_fair_mode = 0;
 			}
 			tgg->starvation = 0;
+
+			tgg->taking_token = 1;
+			tgg->mips_when_boosted = tgg->policy_mips;
 	}
 
 abide_fairness:
@@ -253,6 +370,8 @@ static struct policy_dbs_info *tg_alloc(void)
 
 static void tg_free(struct policy_dbs_info *policy_dbs)
 {
+	if (policy_dbs->policy)
+		free_perf_event(policy_dbs->policy);
 	kfree(to_dbs_info(policy_dbs));
 }
 
@@ -273,6 +392,8 @@ static void tg_exit(struct dbs_data *dbs_data)
 
 static void tg_start(struct cpufreq_policy *policy)
 {
+	int cpu;
+
 	topology.nr_policies = 0;
 
 	if(policy->cpu==0)
@@ -293,6 +414,13 @@ static void tg_start(struct cpufreq_policy *policy)
 	tgdbs_policy(tg_data, policy).my_tokens = 0;
 	tgdbs_policy(tg_data, policy).last_ramp_up = 0;
 	pr_info("I'm cpu=%d policies=%d\n",policy->cpu, get_policy_id(policy));
+
+	/* Setup perf infrastructure to read Instructions completed */
+	for_each_cpu(cpu, policy->cpus)
+	{
+		init_perf_event(cpu);
+		enable_perf_event(cpu);
+	}
 }
 
 static struct dbs_governor tg_dbs_gov = {
