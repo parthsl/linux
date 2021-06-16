@@ -1,0 +1,11 @@
+Bottom: 8299ede939a06b89ed95d8018f9c8625e55c16fb
+Top:    166ac348e7066447f49f2f48e44e0c08199d7735
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2021-06-16 11:36:21 +0530
+
+Refresh of add-new-cpufreq-governor-based
+
+---
+
+drivers/cpufreq/cpufreq_tokensmart.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
