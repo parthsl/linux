@@ -251,7 +251,7 @@ static void tg_free(struct policy_dbs_info *policy_dbs)
 static int tg_init(struct dbs_data *dbs_data)
 {
 	dbs_data->tuners = &tokenPool;
-	tokenPool = 300; //Three frequency-domains can be at max freq
+	tokenPool = 500;
 	barrier = 0;
 	return 0;
 }
