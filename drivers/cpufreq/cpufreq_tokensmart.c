@@ -38,6 +38,14 @@ static unsigned int pool_turn;
 /* Tunable to set iterations after which token starvation is detected */
 const unsigned int starvation_threshold = 32;
 /*
+ * MIPS Threshold above which a CPU is considered to be benefiting from higher
+ * frequency.
+ * In POWER9 systems, P-step size is 17MHz. Hence default=8500 indicates that a
+ * workload having IPC of 0.5 or above is getting benefits of 1 P-state higher
+ * frequency.
+ */
+static unsigned int IPC_threshold = 17000/2;
+/*
  * Global variable used by every policy to determine if the tokenpool is in
  * GREEDY or FAIR mode. In the default GREEDY mode, each policy can take any
  * number tokens based on the requirements, but in FAIR mode there is upper
@@ -236,7 +244,7 @@ static void tg_update(struct cpufreq_policy *policy)
 	 * Since last_ramp_up stores the amount of token accepted from the
 	 * tokenPool, we can use it here to predict the increase in MIPS.
 	 */
-	mips_delta = (17000 * tgg->last_ramp_up) * 2 / 4;
+	mips_delta = (IPC_threshold * tgg->last_ramp_up);
 	expected_mips = tgg->mips_when_boosted + mips_delta;
 	expected_mips -= (mips_delta * 5) / 100; //keep 5% error margin
 
@@ -370,11 +378,29 @@ static ssize_t show_central_pool(struct gov_attr_set *attr_set, char *buf)
 	return sprintf(buf, "tokenPool=%u, turn for policy %u total %u policies\n", tokenPool, pool_turn, topology.nr_policies);
 }
 
+static ssize_t store_mips_threshold(struct gov_attr_set *attr_set, const char *buf,
+				    size_t count)
+{
+	int ret;
+
+	ret = sscanf(buf, "%d", &IPC_threshold);
+	if (ret != 1)
+		return -EINVAL;
+
+	return count;
+}
+
+static ssize_t show_mips_threshold(struct gov_attr_set *attr_set, char *buf)
+{
+	return sprintf(buf, "MIPS Threshold = %d\n", IPC_threshold);
+}
 
 gov_attr_rw(central_pool);
+gov_attr_rw(mips_threshold);
 
 static struct attribute *tg_attributes[] = {
 	&central_pool.attr,
+	&mips_threshold.attr,
 	NULL
 };
 
