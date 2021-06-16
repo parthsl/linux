@@ -1,9 +1,8 @@
 Version: 1
-Previous: e7a36d11e1d9feafd3b220450960caf8bfb49c10
-Head: b3c026b2162df25233ba89851485281c82996843
+Previous: 2b21fbb267940acd56185e47c21c7b22a3ac3cf1
+Head: df86f487f833817b620d8091d5db73053bebd5b9
 Applied:
-  temp: 48547d2d67486c84d6df0c6fd28057caf3cf8b6f
-  refresh-temp: b3c026b2162df25233ba89851485281c82996843
+  temp: df86f487f833817b620d8091d5db73053bebd5b9
 Unapplied:
   add-new-cpufreq-governor-based: a1601182e0f2ec98ec485d06e2d042a9b2b6dc6e
   events-core-export-perf-event: 7756b59c95377f9c4df850788714a1cfb67313d8
