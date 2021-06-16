@@ -1,5 +1,5 @@
 Bottom: 826857fa5bcac9d6a38cc7554ff104bd2a4dbaae
-Top:    826857fa5bcac9d6a38cc7554ff104bd2a4dbaae
+Top:    0fd8a154c4178279e5254879abfb83d083e045bb
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2021-06-16 15:43:43 +0530
 
@@ -23,4 +23,5 @@ extra 100MHz higher frequency.
 
 ---
 
-
+drivers/cpufreq/cpufreq_tokensmart.c | 28 +++++++++++++++++++++++++++-
+ 1 file changed, 27 insertions(+), 1 deletion(-)
