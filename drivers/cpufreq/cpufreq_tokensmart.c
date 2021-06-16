@@ -108,7 +108,6 @@ struct tgdbs {
 	int mips_updated;
 	u64 mips_when_boosted;
 	int drop_threshold;
-	int is_dropped;
 	int taking_token;
 };
 
@@ -286,18 +285,12 @@ static void tg_update(struct cpufreq_policy *policy)
 	 */
 	if (tgg->policy_mips * MIPS_DROP_MARGIN < 100 * tgg->last_policy_mips) {
 		if (!--tgg->drop_threshold) {
-			tgg->is_dropped = 1;
+			required_tokens = 0;
 		}
 	} else {
 		tgg->drop_threshold = DROP_THRESHOLD;
 	}
 	tgg->last_policy_mips = tgg->policy_mips;
-
-	/* If MIPS value is dropped, then drop all tokens */
-	if (tgg->is_dropped) {
-		required_tokens = 0;
-		tgg->is_dropped = 0;
-	}
 
 	/* Interaction with tokenPool */
 	/* Donate extra tokens */
