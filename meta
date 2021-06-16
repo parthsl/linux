@@ -1,11 +1,11 @@
 Version: 1
-Previous: aa0c87020ceccfa5cf7e9803a0ced2efd09c5a31
-Head: 49628e7919532b5a315111d3a3dd653b28ba9c3d
+Previous: c2844c1d38f084b7a30531cb008916e5a2cd61c2
+Head: 235221e9c968f07ac26505cf7729636fdd6cc3a4
 Applied:
   temp: df86f487f833817b620d8091d5db73053bebd5b9
   add-new-cpufreq-governor-based: 49628e7919532b5a315111d3a3dd653b28ba9c3d
+  events-core-export-perf-event: 235221e9c968f07ac26505cf7729636fdd6cc3a4
 Unapplied:
-  events-core-export-perf-event: 7756b59c95377f9c4df850788714a1cfb67313d8
   tokensmart-add-fair-policy: e86b828625846b53bb7e3ef9cd9c6007e398fe26
   tokensmart-add-mips-metrics: c5f91fff4542fb0ca044b8ed20be55a15ea48765
   tokensmart-add-some-debug: abdea7f9c43867a873fc2b31b2d2c8fb9ccde9fd
