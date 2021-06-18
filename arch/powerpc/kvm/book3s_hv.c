@@ -911,6 +911,16 @@ static int kvm_arch_vcpu_yield_to(struct kvm_vcpu *target)
 	return kvm_vcpu_yield_to(target);
 }
 
+void kvmppc_idle_hint_set(struct kvm_vcpu *vcpu, int idle_hint)
+{
+	struct lppaca *lppaca;
+
+	spin_lock(&vcpu->arch.vpa_update_lock);
+	lppaca = (struct lppaca *)vcpu->arch.vpa.pinned_addr;
+	lppaca->idle_hint = 1;
+	spin_unlock(&vcpu->arch.vpa_update_lock);
+}
+
 static int kvmppc_get_yield_count(struct kvm_vcpu *vcpu)
 {
 	int yield_count = 0;
