@@ -1,0 +1,12 @@
+Bottom: 68267d37b6c2957c22da1cbd8eeaa56e9efcf87a
+Top:    acc5d4a52d7866acfc99b92afe769c208d5f9476
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2021-06-21 16:34:32 +0530
+
+Refresh of set-clear-idle-hint-in-do_idle
+
+---
+
+arch/powerpc/include/asm/idle_hint.h | 6 ++++++
+ 1 file changed, 6 insertions(+)
+ create mode 100644 arch/powerpc/include/asm/idle_hint.h
