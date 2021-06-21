@@ -7,6 +7,7 @@
  *        tasks which are handled in sched/fair.c )
  */
 #include "sched.h"
+#include <asm/idle_hint.h>
 
 #include <trace/events/power.h>
 
@@ -253,6 +254,18 @@ exit_idle:
 		local_irq_enable();
 }
 
+static void flag_idle_hint(int cpu, int flag)
+{
+	struct kvm_vcpu *pos;
+
+	spin_lock(&per_cpu(idle_hint_subscribers_lock, cpu);)
+	list_for_each_entry(pos, &per_cpu(idle_hint_subscribers, cpu),
+			    idle_hint_subscribers) {
+		kvmppc_idle_hint_set(pos, flag);
+	}
+	spin_unlock(&per_cpu(idle_hint_subscribers_lock, cpu);)
+}
+
 /*
  * Generic idle loop implementation
  *
@@ -290,6 +303,7 @@ static void do_idle(void)
 			arch_cpu_idle_dead();
 		}
 
+		flag_idle_hint(cpu, 1);
 		arch_cpu_idle_enter();
 		rcu_nocb_flush_deferred_wakeup();
 
@@ -306,6 +320,7 @@ static void do_idle(void)
 			cpuidle_idle_call();
 		}
 		arch_cpu_idle_exit();
+		flag_idle_hint(cpu, 0);
 	}
 
 	/*
