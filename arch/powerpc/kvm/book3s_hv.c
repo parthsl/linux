@@ -2814,6 +2814,38 @@ static int on_primary_thread(void)
 }
 
 /*
+ * Each physical CPUs keeps track of vCPUs which have performed VM_EXIT or
+ * are CEDEd. This vCPUs are subscribed to each physical CPUs which keeps the
+ * vpa region updated with the idleness hint.
+ */
+DEFINE_PER_CPU(struct list_head, idle_hint_subscribers);
+DEFINE_PER_CPU(spinlock_t, idle_hint_subscribers_lock);
+
+static void init_idle_hint(void)
+{
+	int cpu;
+
+	for_each_possible_cpu(cpu) {
+		INIT_LIST_HEAD(&per_cpu(idle_hint_subscribers, cpu));
+		spin_lock_init(&per_cpu(idle_hint_subscribers_lock, cpu));
+	}
+}
+
+static void kvmppc_subscribe_idle_hint(struct kvm_vcpu *vcpu)
+{
+	spin_lock_irqsave(&per_cpu(idle_hint_subscribers_lock, vcpu->cpu));
+	list_add_tail(&vcpu->idle_hint_subscribers, &per_cpu(idle_hint_subscribers, vcpu->cpu));
+	spin_unlock_irqrestore(&per_cpu(idle_hint_subscribers_lock, vcpu->cpu));
+}
+
+static void kvmppc_unsubscribe_idle_hint(struct kvm_vcpu *vcpu)
+{
+	spin_lock_irqsave(&per_cpu(idle_hint_subscribers_lock, vcpu->cpu));
+	list_del(&vcpu->idle_hint_subscribers);
+	spin_unlock_irqrestore(&per_cpu(idle_hint_subscribers_lock, vcpu->cpu));
+}
+
+/*
  * A list of virtual cores for each physical CPU.
  * These are vcores that could run but their runner VCPU tasks are
  * (or may be) preempted.
@@ -4429,6 +4461,7 @@ static int kvmppc_vcpu_run_hv(struct kvm_vcpu *vcpu)
 	vcpu->arch.state = KVMPPC_VCPU_BUSY_IN_HOST;
 
 	do {
+		kvmppc_unsubscribe_idle_hint(vcpu);
 		/*
 		 * The TLB prefetch bug fixup is only in the kvmppc_run_vcpu
 		 * path, which also handles hash and dependent threads mode.
@@ -4439,6 +4472,8 @@ static int kvmppc_vcpu_run_hv(struct kvm_vcpu *vcpu)
 						  vcpu->arch.vcore->lpcr);
 		else
 			r = kvmppc_run_vcpu(vcpu);
+
+		kvmppc_subscribe_idle_hint(vcpu);
 
 		if (run->exit_reason == KVM_EXIT_PAPR_HCALL &&
 		    !(vcpu->arch.shregs.msr & MSR_PR)) {
@@ -5824,6 +5859,7 @@ static int kvmppc_book3s_init_hv(void)
 	init_default_hcalls();
 
 	init_vcore_lists();
+	init_idle_hint();
 
 	r = kvmppc_mmu_hv_init();
 	if (r)

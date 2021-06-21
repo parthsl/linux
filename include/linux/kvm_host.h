@@ -297,6 +297,8 @@ struct kvm_vcpu {
 	int pre_pcpu;
 	struct list_head blocked_vcpu_list;
 
+	struct list_head idle_hint_subscribers;
+
 	struct mutex mutex;
 	struct kvm_run *run;
 
