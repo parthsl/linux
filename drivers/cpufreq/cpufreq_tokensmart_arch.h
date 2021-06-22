@@ -1,22 +1,20 @@
 #include "cpufreq_governor.h"
 
 /* Common implementation */
-#define CPUS_PER_QUAD 16
-#define CPUS_PER_POLICY 4
-#define POLICY_PER_QUAD (CPUS_PER_QUAD/CPUS_PER_POLICY)
+#define CPUS_PER_FD 16
 
 /*
  * A structure to keep track of CPU topology
- * @smt_mode = Number of CPUs per core.
  * @nr_cpus = Total number of CPUs in the system.
  * @nr_policies = Total number of policies in the system. Traditionally, there
+ * @cpus_per_policy = Number of CPUs per policy.
  * is one policy per core, but TokenSmart requires to have one policy per
  * frequency-domain (which can have more than one core also).
  */
 struct tg_topology {
-	unsigned int smt_mode;
 	unsigned int nr_cpus;
 	unsigned int nr_policies;
+	unsigned int cpus_per_policy;
 };
 
 /*
@@ -25,9 +23,10 @@ struct tg_topology {
  */
 static int* cpu_to_policy_map;
 static struct tg_topology topology;
+static unsigned int policies_per_fd = 1;
 
 #define for_each_policy(pos) \
-	for(pos=1; pos<POLICY_PER_QUAD; pos++)
+	for(pos=1; pos<policies_per_fd; pos++)
 
 #define get_policy_id(policy) \
 	cpu_to_policy_map[policy->cpu]
@@ -52,7 +51,7 @@ static int get_first_thread_in_quad(struct cpufreq_policy* policy)
 {
 	int cpu = policy->cpu;
 	if (cpu > 71) {
-		return ((cpu - 72)/CPUS_PER_QUAD)*CPUS_PER_QUAD + 72;
+		return ((cpu - 72)/CPUS_PER_FD)*CPUS_PER_FD + 72;
 	}
 
 	return (cpu/16)*16;
@@ -77,19 +76,22 @@ static int next_policy_id(struct cpufreq_policy* policy)
 static void build_P9_topology(struct cpufreq_policy *policy){
 	unsigned int iter;
 	struct cpufreq_policy *iterator;
-	topology.smt_mode = 0;
+	topology.cpus_per_policy = 0;
 
 	// Find total policies in the systems
 	list_for_each_entry(iterator, &policy->policy_list, policy_list){
 		topology.nr_policies++;
 	}
 
-	//setup smt_mode
+	//setup cpus_per_policy
 	for_each_cpu(iter, policy->cpus)
-		topology.smt_mode++;
+		topology.cpus_per_policy++;
+
+	// Define policies_per_fd
+	policies_per_fd = CPUS_PER_FD / topology.cpus_per_policy;
 
 	//setup nr_cpus
-	topology.nr_cpus = topology.nr_policies * topology.smt_mode;
+	topology.nr_cpus = topology.nr_policies * topology.cpus_per_policy;
 
 	cpu_to_policy_map = kzalloc(sizeof(int)*topology.nr_cpus,GFP_KERNEL);
 
@@ -120,7 +122,7 @@ int exceptional_policy(struct cpufreq_policy* policy) { return 0;}
 static int get_first_thread(struct cpufreq_policy* policy)
 {
 	int cpu = policy->cpu;
-	return (cpu-CPUS_PER_POLICY)*CPUS_PER_POLICY;
+	return (cpu - topology.cpus_per_policy) * topology.cpus_per_policy;
 }
 #endif
 
@@ -129,7 +131,6 @@ static int get_first_thread(struct cpufreq_policy* policy)
 static int next_policy_id(struct cpufreq_policy* policy)
 {
 	int cpu = policy->cpu;
-	return cpu_to_policy_map[(cpu+CPUS_PER_POLICY)%topology.nr_policies];
+	return cpu_to_policy_map[(cpu + topology.cpus_per_policy) % topology.nr_policies];
 }
 #endif
-

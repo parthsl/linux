@@ -64,7 +64,7 @@ static inline struct tg_policy_dbs_info *to_dbs_info(struct policy_dbs_info *pol
 }
 
 struct avg_load_per_quad {
-	unsigned int load[POLICY_PER_QUAD];
+	unsigned int* load;
 };
 
 struct avg_load_per_quad* avg_load_per_quad;
@@ -107,7 +107,7 @@ static void tg_update(struct cpufreq_policy *policy)
 		return;
 	}
 
-	avg_load_per_quad[first_thread_in_quad].load[(policy->cpu-first_thread_in_quad)/POLICY_PER_QUAD] = load;
+	avg_load_per_quad[first_thread_in_quad].load[(policy->cpu-first_thread_in_quad)/policies_per_fd] = load;
 
 	// Token passing is for only first thread in quad
 	if(policy->cpu != first_thread_in_quad) {
@@ -240,6 +240,9 @@ static void tg_start(struct cpufreq_policy *policy)
 		tg_data = kzalloc(sizeof(struct tgdbs)*topology.nr_policies, GFP_KERNEL);
 
 		avg_load_per_quad = kzalloc(sizeof(struct avg_load_per_quad)*topology.nr_cpus, GFP_KERNEL);
+		for(i = 0; i<topology.nr_cpus; i++)
+			avg_load_per_quad.load = (unsigned int*) kmalloc(sizeof(unsigned int) * policies_per_fd, GFP_KERNEL);
+
 		pool_turn = 0;
 
 		barrier=1;
