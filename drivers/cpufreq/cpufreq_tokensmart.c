@@ -119,7 +119,7 @@ unsigned int max_of(struct avg_load_per_quad avgload)
 	return max_load;
 }
 
-void calc_mips(struct tgdbs *tgg, int cpu, int first_quad_cpu, int cpus_per_policy)
+void calc_mips(struct tgdbs *tgg, int cpu, int first_quad_cpu)
 {
 	u64 ips;
 	u64 time_passed;
@@ -158,7 +158,7 @@ void calc_policy_mips(struct tgdbs *tgg, int first_quad_cpu, int first_cpu_in_po
 	mutex_lock(&policy_mips_lock);
 
 	for (cpu = first_quad_cpu; cpu < (first_cpu_in_policy + CPUS_PER_POLICY); cpu++)
-		calc_mips(tgg, cpu, first_quad_cpu, CPUS_PER_POLICY);
+		calc_mips(tgg, cpu, first_quad_cpu);
 
 	tgg->policy_mips = tgg->cpu_mips[0];
 	for(cpu = first_quad_cpu; cpu < (first_quad_cpu + CPUS_PER_POLICY); cpu++)
