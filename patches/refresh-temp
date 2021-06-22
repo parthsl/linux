@@ -1,0 +1,12 @@
+Bottom: 0990b588a1f0634beeb7e9c6eb008e940f0cbbfc
+Top:    d13f69b7a658bfdc94b3050c30ef2575cf4f0289
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2021-06-22 12:13:23 +0530
+
+Refresh of tokensmart-add-new-header-file
+
+---
+
+drivers/cpufreq/cpufreq_tokensmart.h | 50 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 50 insertions(+)
+ create mode 100644 drivers/cpufreq/cpufreq_tokensmart.h
