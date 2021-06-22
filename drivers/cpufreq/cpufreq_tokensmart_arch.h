@@ -24,6 +24,7 @@ struct tg_topology {
  * Hence this array can provide direct mapping from cpu-id to policy-id
  */
 static int* cpu_to_policy_map;
+static struct tg_topology topology;
 
 #define for_each_policy(pos) \
 	for(pos=1; pos<POLICY_PER_QUAD; pos++)
@@ -52,10 +53,9 @@ static int next_arch_policy_id(struct cpufreq_policy* policy)
 /* For Power9 arch */
 #ifndef CPUFREQ_TOKENSMART_P9
 #define CPUFREQ_TOKENSMART_P9
-static struct tg_topology topology;
 
-#define exceptional_policy exceptional_policy
-int exceptional_policy(struct cpufreq_policy* policy)
+#define exceptional_policy exceptional_p9_policy
+int exceptional_p9_policy(struct cpufreq_policy* policy)
 {
 	if (policy->cpu >= 88) return 1;
 
@@ -112,7 +112,7 @@ static void build_P9_topology(struct cpufreq_policy *policy){
 }
 
 #define destroy_arch_topology destroy_P9_topology
-static void destroy_P9_topology()
+static void destroy_P9_topology(void)
 {
 	kfree(cpu_to_policy_map);
 }
