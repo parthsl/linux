@@ -93,16 +93,16 @@ static void tg_update(struct cpufreq_policy *policy)
 	unsigned int load = dbs_update(policy);
 	unsigned int required_tokens = 0;
 	unsigned int freq_next, min_f, max_f;
-	unsigned int policy_id = cpu_to_policy_map[policy->cpu];
+	unsigned int policy_id = get_policy_id(policy);
 	unsigned int need_tokens;
 	struct tgdbs *tgg  = &tg_data[policy_id];
-	int first_thread_in_quad = get_first_thread_in_quad(policy->cpu);
+	int first_thread_in_quad = get_first_thread(policy);
 
 	min_f = policy->cpuinfo.min_freq;
 	max_f = policy->cpuinfo.max_freq;
 
 	/* No need to run tokensmart on other socket */
-	if(exceptional_policy(policy->cpu)) {
+	if(exceptional_policy(policy)) {
 		__cpufreq_driver_target(policy, max_f, CPUFREQ_RELATION_C);
 		return;
 	}
@@ -153,7 +153,7 @@ static void tg_update(struct cpufreq_policy *policy)
 	}
 
 	/* 2. Communication Phase: Set pool_turn to next FD in the ring */
-	pool_turn = next_policy_id(policy->cpu);
+	pool_turn = next_arch_policy_id(policy);
 
 	/* 3. Interaction Phase: Set new frequency based on avaialble tokens */
 	freq_next = min_f + (tgg->my_tokens) * (max_f - min_f) / 100;
@@ -188,7 +188,7 @@ static ssize_t store_central_pool(struct gov_attr_set *attr_set, const char *buf
 
 static ssize_t show_central_pool(struct gov_attr_set *attr_set, char *buf)
 {
-	return sprintf(buf, "tokenPool=%u, turn for policy %u total %u policies\n", tokenPool, pool_turn, P9.nr_policies);
+	return sprintf(buf, "tokenPool=%u, turn for policy %u total %u policies\n", tokenPool, pool_turn, topology.nr_policies);
 }
 
 
@@ -224,7 +224,7 @@ static int tg_init(struct dbs_data *dbs_data)
 
 static void tg_exit(struct dbs_data *dbs_data)
 {
-	kfree(cpu_to_policy_map);
+	destroy_arch_topology();
 	kfree(avg_load_per_quad);
 	kfree(tg_data);
 }
@@ -232,27 +232,28 @@ static void tg_exit(struct dbs_data *dbs_data)
 static void tg_start(struct cpufreq_policy *policy)
 {
 	struct cpufreq_policy* iterator;
-	P9.nr_policies = 0;
+	topology.nr_policies = 0;
 
 	if(policy->cpu==0)
 	{
 		list_for_each_entry(iterator, &policy->policy_list, policy_list){
-			P9.nr_policies++;
+			topology.nr_policies++;
 		}
 
-		tg_data = kzalloc(sizeof(struct tgdbs)*P9.nr_policies, GFP_KERNEL);
+		tg_data = kzalloc(sizeof(struct tgdbs)*topology.nr_policies, GFP_KERNEL);
 
-		build_P9_topology(policy);
+		build_arch_topology(policy);
 
-		avg_load_per_quad = kzalloc(sizeof(struct avg_load_per_quad)*P9.nr_cpus, GFP_KERNEL);
+		avg_load_per_quad = kzalloc(sizeof(struct avg_load_per_quad)*topology.nr_cpus, GFP_KERNEL);
 		pool_turn = 0;
 
 		barrier=1;
 	}
 	while(barrier==0);
-	tg_data[cpu_to_policy_map[policy->cpu]].my_tokens = 0;
-	tg_data[cpu_to_policy_map[policy->cpu]].last_ramp_up = 0;
-	pr_info("I'm cpu=%d policies=%d\n",policy->cpu, cpu_to_policy_map[policy->cpu]);
+
+	tgdbs_policy(tg_data, policy).my_tokens = 0;
+	tgdbs_policy(tg_data, policy).last_ramp_up = 0
+	pr_info("I'm cpu=%d policies=%d\n",policy->cpu, get_policy_id(policy));
 }
 
 static struct dbs_governor tg_dbs_gov = {

@@ -1,3 +1,5 @@
+#include "cpufreq_governor.h"
+
 /* Common implementation */
 #define CPUS_PER_QUAD 16
 #define CPUS_PER_POLICY 4
@@ -26,44 +28,44 @@ static int* cpu_to_policy_map;
 #define for_each_policy(pos) \
 	for(pos=1; pos<POLICY_PER_QUAD; pos++)
 
-int exceptional_policy(int cpu) { return 0;}
+#define get_policy_id(policy) \
+	cpu_to_policy_map[policy->cpu]
+
+#define tgdbs_policy(tg_data, policy) \
+	tg_data[get_policy_id(policy)]
+
+int exceptional_policy(struct cpufreq_policy* policy) { return 0;}
 
 /* Usually, policy in cpufreq indicates frequency domain */
-static int get_first_thread_in_quad(int cpu)
+static int get_first_thread(struct cpufreq_policy* policy)
 {
+	int cpu = policy->cpu;
 	return (cpu-CPUS_PER_POLICY)*CPUS_PER_POLICY;
 }
 
-static int next_policy_id(int cpu)
+static int next_arch_policy_id(struct cpufreq_policy* policy)
 {
-	return cpu_to_policy_map[(cpu+CPUS_PER_POLICY)%P9.nr_policies];
+	int cpu = policy->cpu;
+	return cpu_to_policy_map[(cpu+CPUS_PER_POLICY)%topology.nr_policies];
 }
-
-/*
-// Generic architecture
-#ifndef CPUFREQ_TOKENSMART_GENERIC
-#define CPUFREQ_TOKENSMART_GENERIC
-
-static struct tg_topology P9; // Need to change the name to generic
-#endif
-*/
 
 /* For Power9 arch */
 #ifndef CPUFREQ_TOKENSMART_P9
 #define CPUFREQ_TOKENSMART_P9
-static struct tg_topology P9;
+static struct tg_topology topology;
 
 #define exceptional_policy exceptional_policy
-int exceptional_policy(int cpu)
+int exceptional_policy(struct cpufreq_policy* policy)
 {
-	if (cpu >= 88) return 1;
+	if (policy->cpu >= 88) return 1;
 
 	return 0;
 }
 
-#define get_first_thread_in_quad get_first_thread_in_quad
-static int get_first_thread_in_quad(int cpu)
+#define get_first_thread get_first_thread_in_quad
+static int get_first_thread_in_quad(struct cpufreq_policy* policy)
 {
+	int cpu = policy->cpu;
 	if (cpu > 71) {
 		return ((cpu - 72)/CPUS_PER_QUAD)*CPUS_PER_QUAD + 72;
 	}
@@ -71,9 +73,11 @@ static int get_first_thread_in_quad(int cpu)
 	return (cpu/16)*16;
 }
 
-static int next_policy_id(int cpu)
+#define next_arch_policy_id next_p9_policy_id
+static int next_p9_policy_id(struct cpufreq_policy* policy)
 {
 	int next;
+	int cpu = policy->cpu;
 	if (cpu >= 72)
 		next = cpu_to_policy_map[0];
 	else if (cpu == 64)
@@ -84,19 +88,20 @@ static int next_policy_id(int cpu)
 	return next;
 }
 
+#define build_arch_topology build_P9_topology
 static void build_P9_topology(struct cpufreq_policy *policy){
 	unsigned int iter;
 	struct cpufreq_policy *iterator;
-	P9.smt_mode = 0;
+	topology.smt_mode = 0;
 
 	//setup smt_mode
 	for_each_cpu(iter, policy->cpus)
-		P9.smt_mode++;
+		topology.smt_mode++;
 
 	//setup nr_cpus
-	P9.nr_cpus = P9.nr_policies * P9.smt_mode;
+	topology.nr_cpus = topology.nr_policies * topology.smt_mode;
 
-	cpu_to_policy_map = kzalloc(sizeof(int)*P9.nr_cpus,GFP_KERNEL);
+	cpu_to_policy_map = kzalloc(sizeof(int)*topology.nr_cpus,GFP_KERNEL);
 
 	iter = 0;
 	list_for_each_entry(iterator, &policy->policy_list, policy_list){
@@ -106,5 +111,9 @@ static void build_P9_topology(struct cpufreq_policy *policy){
 	}
 }
 
-
+#define destroy_arch_topology destroy_P9_topology
+static void destroy_P9_topology()
+{
+	kfree(cpu_to_policy_map);
+}
 #endif
