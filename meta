@@ -1,9 +1,8 @@
 Version: 1
-Previous: 536e687c75b8614407f9b31e8c963535bfed18f4
-Head: 94be246dd63d0860105e347f5e8f94d1c673e4c6
+Previous: 50ed6d2816bb8943db80e7dd6b90acad4e1f2fcc
+Head: 9fb9be675cb495f8edcca3d6b34a609e477711fe
 Applied:
-  arch: f8adf3d43bfc09e57ff54e3fbf2eea8f26da807f
-  refresh-temp: 94be246dd63d0860105e347f5e8f94d1c673e4c6
+  arch: 9fb9be675cb495f8edcca3d6b34a609e477711fe
 Unapplied:
   tokensmart-add-a-new-cpufreq: cafb4cf55ae775817bf18160404d3bce8988871e
   tokensmart-add-fair-policy: fd4506bdadaac4690f071fb57dd9cc5177bd35c9
