@@ -252,7 +252,7 @@ static void tg_start(struct cpufreq_policy *policy)
 	while(barrier==0);
 
 	tgdbs_policy(tg_data, policy).my_tokens = 0;
-	tgdbs_policy(tg_data, policy).last_ramp_up = 0
+	tgdbs_policy(tg_data, policy).last_ramp_up = 0;
 	pr_info("I'm cpu=%d policies=%d\n",policy->cpu, get_policy_id(policy));
 }
 
