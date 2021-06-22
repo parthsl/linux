@@ -151,7 +151,7 @@ void calc_mips(struct tgdbs *tgg, int cpu, int tid)
 	tgg->mips_updated = 1;
 }
 
-void calc_policy_mips(struct tgdbs *tgg, int first_quad_cpu, int first_cpu_in_policy)
+void calc_policy_mips(struct tgdbs *tgg, int first_quad_cpu)
 {
 	int cpu;
 	int tid = cpu - first_quad_cpu;
@@ -198,7 +198,7 @@ static void tg_update(struct cpufreq_policy *policy)
 	avg_load_per_quad[first_thread_in_quad].load[(policy->cpu-first_thread_in_quad)/POLICY_PER_QUAD] = load;
 
 	/* Calculate MIPS value for this policy */
-	calc_policy_mips(tgg, first_thread_in_quad, policy->cpu);
+	calc_policy_mips(tgg, first_thread_in_quad);
 
 	// Token passing is for only first thread in quad
 	if(policy->cpu != first_thread_in_quad) {
