@@ -1,0 +1,11 @@
+Bottom: f13647c39a8edccd16922e1e72c46358b2a8eacd
+Top:    2b43a19b81b66d5059f8808fec69083690b21bdf
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2021-06-22 17:13:18 +0530
+
+Refresh of tokensmart-add-mips-metrics
+
+---
+
+drivers/cpufreq/cpufreq_tokensmart.c | 131 ++++++++++++++++++++++++++++++++++-
+ 1 file changed, 128 insertions(+), 3 deletions(-)
