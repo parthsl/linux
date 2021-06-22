@@ -153,7 +153,7 @@ static void tg_update(struct cpufreq_policy *policy)
 	}
 
 	/* 2. Communication Phase: Set pool_turn to next FD in the ring */
-	pool_turn = next_arch_policy_id(policy);
+	pool_turn = next_policy_id(policy);
 
 	/* 3. Interaction Phase: Set new frequency based on avaialble tokens */
 	freq_next = min_f + (tgg->my_tokens) * (max_f - min_f) / 100;
