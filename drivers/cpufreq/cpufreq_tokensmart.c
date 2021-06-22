@@ -77,11 +77,11 @@ struct tgdbs {
 	 */
 	u64 policy_mips;
 	u64 last_policy_mips;
-	u64 last_instructions[CPUS_PER_QUAD];
-	u64 instructions[CPUS_PER_QUAD];
-	u64 timestamp[CPUS_PER_QUAD];
-	u64 last_timestamp[CPUS_PER_QUAD];
-	u64 cpu_mips[CPUS_PER_QUAD];
+	u64 last_instructions[CPUS_PER_FD];
+	u64 instructions[CPUS_PER_FD];
+	u64 timestamp[CPUS_PER_FD];
+	u64 last_timestamp[CPUS_PER_FD];
+	u64 cpu_mips[CPUS_PER_FD];
 
 	/* Track if MIPS updated in last iteration */
 	int mips_updated;
@@ -157,11 +157,11 @@ void calc_policy_mips(struct tgdbs *tgg, int first_quad_cpu)
 	int tid = cpu - first_quad_cpu;
 
 	mutex_lock(&policy_mips_lock);
-	for (cpu = first_quad_cpu; cpu < (first_quad_cpu + CPUS_PER_QUAD); cpu++)
+	for (cpu = first_quad_cpu; cpu < (first_quad_cpu + CPUS_PER_FD); cpu++)
 		calc_mips(tgg, cpu, tid);
 
 	tgg->policy_mips = tgg->cpu_mips[0];
-	for(cpu = first_quad_cpu; cpu < (first_quad_cpu + CPUS_PER_QUAD); cpu++)
+	for(cpu = first_quad_cpu; cpu < (first_quad_cpu + CPUS_PER_FD); cpu++)
 		if (tgg->policy_mips < tgg->cpu_mips[tid])
 			tgg->policy_mips = tgg->cpu_mips[tid];
 	mutex_unlock(&policy_mips_lock);
@@ -408,6 +408,7 @@ static void tg_start(struct cpufreq_policy *policy)
 		for(i = 0; i<topology.nr_cpus; i++)
 			avg_load_per_quad[i].load = malloc_per_fd(unsigned int);
 
+			tg_dbs[i].
 		pool_turn = 0;
 		fair_tokens = tokenPool/(topology.nr_policies/4);
 		pool_mode = GREEDY;
