@@ -119,11 +119,10 @@ unsigned int max_of(struct avg_load_per_quad avgload)
 	return max_load;
 }
 
-void calc_mips(struct tgdbs *tgg, int cpu, int first_quad_cpu)
+void calc_mips(struct tgdbs *tgg, int cpu, int tid)
 {
 	u64 ips;
 	u64 time_passed;
-	int tid = cpu - first_quad_cpu;
 	u64 perf_instr = 0;
 
 	/* Store current timestamp and calculate time passed from last time. */
@@ -155,16 +154,16 @@ void calc_mips(struct tgdbs *tgg, int cpu, int first_quad_cpu)
 void calc_policy_mips(struct tgdbs *tgg, int first_quad_cpu, int first_cpu_in_policy)
 {
 	int cpu;
-	mutex_lock(&policy_mips_lock);
+	int tid = cpu - first_quad_cpu;
 
-	for (cpu = first_quad_cpu; cpu < (first_cpu_in_policy + CPUS_PER_POLICY); cpu++)
-		calc_mips(tgg, cpu, first_quad_cpu);
+	mutex_lock(&policy_mips_lock);
+	for (cpu = first_quad_cpu; cpu < (first_quad_cpu + CPUS_PER_QUAD); cpu++)
+		calc_mips(tgg, cpu, tid);
 
 	tgg->policy_mips = tgg->cpu_mips[0];
-	for(cpu = first_quad_cpu; cpu < (first_quad_cpu + CPUS_PER_POLICY); cpu++)
-		if (tgg->policy_mips < tgg->cpu_mips[cpu - first_quad_cpu])
-			tgg->policy_mips = tgg->cpu_mips[cpu - first_quad_cpu];
-
+	for(cpu = first_quad_cpu; cpu < (first_quad_cpu + CPUS_PER_QUAD); cpu++)
+		if (tgg->policy_mips < tgg->cpu_mips[tid])
+			tgg->policy_mips = tgg->cpu_mips[tid];
 	mutex_unlock(&policy_mips_lock);
 }
 
@@ -407,6 +406,13 @@ static void tg_start(struct cpufreq_policy *policy)
 		fair_tokens = tokenPool/(topology.nr_policies/4);
 		pool_mode = GREEDY;
 
+		/* Setup perf infrastructure to read Instructions completed */
+		for_each_possible_cpu(cpu)
+		{
+			init_perf_event(cpu);
+			enable_perf_event(cpu);
+		}
+
 		barrier=1;
 	}
 	while(barrier==0);
@@ -414,13 +420,6 @@ static void tg_start(struct cpufreq_policy *policy)
 	tgdbs_policy(tg_data, policy).my_tokens = 0;
 	tgdbs_policy(tg_data, policy).last_ramp_up = 0;
 	pr_info("I'm cpu=%d policies=%d\n",policy->cpu, get_policy_id(policy));
-
-	/* Setup perf infrastructure to read Instructions completed */
-	for_each_cpu(cpu, policy->cpus)
-	{
-		init_perf_event(cpu);
-		enable_perf_event(cpu);
-	}
 }
 
 static struct dbs_governor tg_dbs_gov = {
