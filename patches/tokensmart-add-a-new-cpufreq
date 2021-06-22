@@ -1,5 +1,5 @@
 Bottom: 074d42800029f0b6f353851ad3d2cc98c3b5b441
-Top:    074d42800029f0b6f353851ad3d2cc98c3b5b441
+Top:    bb157e2544d89cb8bfb162e9cbf6d5f050dceb50
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2021-06-14 16:31:29 +0530
 
@@ -12,4 +12,5 @@ https://ieeexplore.ieee.org/document/9372818
 
 ---
 
-
+drivers/cpufreq/cpufreq_tokensmart.c | 4 ++++
+ 1 file changed, 4 insertions(+)
