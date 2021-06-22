@@ -1,5 +1,5 @@
 Bottom: 54016ed97001939c1662de9846545346ba8ceb2d
-Top:    6f51344229df08a750400ab9ba6ad2b5036c9976
+Top:    729321af79332c816cc2055314740cee961dfeb9
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2021-06-22 10:15:56 +0530
 
@@ -11,7 +11,7 @@ remove arch stuff to different file
 drivers/cpufreq/Kconfig                   |  14 ++
  drivers/cpufreq/Makefile                  |   1 +
  drivers/cpufreq/cpufreq_tokensmart.c      | 296 ++++++++++++++++++++++++++++++
- drivers/cpufreq/cpufreq_tokensmart_arch.h | 106 +++++++++++
- 4 files changed, 417 insertions(+)
+ drivers/cpufreq/cpufreq_tokensmart_arch.h | 108 +++++++++++
+ 4 files changed, 419 insertions(+)
  create mode 100644 drivers/cpufreq/cpufreq_tokensmart.c
  create mode 100644 drivers/cpufreq/cpufreq_tokensmart_arch.h
