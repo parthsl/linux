@@ -231,6 +231,8 @@ static void tg_exit(struct dbs_data *dbs_data)
 
 static void tg_start(struct cpufreq_policy *policy)
 {
+	int i;
+
 	topology.nr_policies = 0;
 
 	if(policy->cpu==0)
