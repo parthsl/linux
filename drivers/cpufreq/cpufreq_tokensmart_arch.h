@@ -39,12 +39,14 @@ static int next_policy_id(int cpu)
 	return cpu_to_policy_map[(cpu+CPUS_PER_POLICY)%P9.nr_policies];
 }
 
-/* Generic architecture */
+/*
+// Generic architecture
 #ifndef CPUFREQ_TOKENSMART_GENERIC
 #define CPUFREQ_TOKENSMART_GENERIC
 
 static struct tg_topology P9; // Need to change the name to generic
 #endif
+*/
 
 /* For Power9 arch */
 #ifndef CPUFREQ_TOKENSMART_P9
