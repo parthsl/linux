@@ -94,6 +94,11 @@ static void build_P9_topology(struct cpufreq_policy *policy){
 	struct cpufreq_policy *iterator;
 	topology.smt_mode = 0;
 
+	// Find total policies in the systems
+	list_for_each_entry(iterator, &policy->policy_list, policy_list){
+		topology.nr_policies++;
+	}
+
 	//setup smt_mode
 	for_each_cpu(iter, policy->cpus)
 		topology.smt_mode++;

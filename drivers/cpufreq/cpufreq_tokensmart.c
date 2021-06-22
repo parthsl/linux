@@ -236,13 +236,9 @@ static void tg_start(struct cpufreq_policy *policy)
 
 	if(policy->cpu==0)
 	{
-		list_for_each_entry(iterator, &policy->policy_list, policy_list){
-			topology.nr_policies++;
-		}
+		build_arch_topology(policy);
 
 		tg_data = kzalloc(sizeof(struct tgdbs)*topology.nr_policies, GFP_KERNEL);
-
-		build_arch_topology(policy);
 
 		avg_load_per_quad = kzalloc(sizeof(struct avg_load_per_quad)*topology.nr_cpus, GFP_KERNEL);
 		pool_turn = 0;
