@@ -1,11 +1,11 @@
 Version: 1
-Previous: 35145594568ecdaa4647cbe2e66c212f36e44e3f
-Head: de24d7c31e8fff92a8c959dd8c5aac32cdb22721
+Previous: d8f12456d19e7dcc880d3db7949b2b3f5af3c270
+Head: 10751614abe39f9550844304e437acb6c0c4a595
 Applied:
   tokensmart-add-a-new-cpufreq: 0f3e628910f3ceaa859abf1015615a7f6f2a50b9
   tokensmart-add-fair-policy: de24d7c31e8fff92a8c959dd8c5aac32cdb22721
+  events-core-export-perf-event: 10751614abe39f9550844304e437acb6c0c4a595
 Unapplied:
-  events-core-export-perf-event: efd7252bdd592211c27052f298f33a1f6b6e3c0a
   tokensmart-add-new-header-file: 92f30510ce5b1c2446956b8d3b1372c97c7fce3d
   tokensmart-add-mips-metrics: 93c77b8f29058c2906dd15bd921892d68534fd35
   tokensmart-relinquish-tokens: 6ea3a806737c568ead3a4b2952f6c2a543201496
