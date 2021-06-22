@@ -35,30 +35,6 @@ static struct tg_topology topology;
 #define tgdbs_policy(tg_data, policy) \
 	tg_data[get_policy_id(policy)]
 
-#ifndef exceptional_policy
-#define exceptional_policy exceptional_policy
-int exceptional_policy(struct cpufreq_policy* policy) { return 0;}
-#endif
-
-#ifndef get_first_thread
-#define get_first_thread get_first_thread
-/* Usually, policy in cpufreq indicates frequency domain */
-static int get_first_thread(struct cpufreq_policy* policy)
-{
-	int cpu = policy->cpu;
-	return (cpu-CPUS_PER_POLICY)*CPUS_PER_POLICY;
-}
-#endif
-
-#ifndef next_policy_id
-#define next_policy_id next_policy_id
-static int next_policy_id(struct cpufreq_policy* policy)
-{
-	int cpu = policy->cpu;
-	return cpu_to_policy_map[(cpu+CPUS_PER_POLICY)%topology.nr_policies];
-}
-#endif
-
 /* For Power9 arch */
 #ifndef CPUFREQ_TOKENSMART_P9
 #define CPUFREQ_TOKENSMART_P9
@@ -130,4 +106,30 @@ static void destroy_P9_topology(void)
 {
 	kfree(cpu_to_policy_map);
 }
+#endif /* Power9 related stuff */
+
+
+#ifndef exceptional_policy
+#define exceptional_policy exceptional_policy
+int exceptional_policy(struct cpufreq_policy* policy) { return 0;}
 #endif
+
+#ifndef get_first_thread
+#define get_first_thread get_first_thread
+/* Usually, policy in cpufreq indicates frequency domain */
+static int get_first_thread(struct cpufreq_policy* policy)
+{
+	int cpu = policy->cpu;
+	return (cpu-CPUS_PER_POLICY)*CPUS_PER_POLICY;
+}
+#endif
+
+#ifndef next_policy_id
+#define next_policy_id next_policy_id
+static int next_policy_id(struct cpufreq_policy* policy)
+{
+	int cpu = policy->cpu;
+	return cpu_to_policy_map[(cpu+CPUS_PER_POLICY)%topology.nr_policies];
+}
+#endif
+
