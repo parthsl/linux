@@ -229,6 +229,9 @@ static void tg_exit(struct dbs_data *dbs_data)
 	kfree(tg_data);
 }
 
+#define malloc_per_fd(type) \
+	(type*) kmalloc(sizeof(type) * policies_per_fd, GFP_KERNEL);
+
 static void tg_start(struct cpufreq_policy *policy)
 {
 	topology.nr_policies = 0;
@@ -241,7 +244,7 @@ static void tg_start(struct cpufreq_policy *policy)
 
 		avg_load_per_quad = kzalloc(sizeof(struct avg_load_per_quad)*topology.nr_cpus, GFP_KERNEL);
 		for(i = 0; i<topology.nr_cpus; i++)
-			avg_load_per_quad.load = (unsigned int*) kmalloc(sizeof(unsigned int) * policies_per_fd, GFP_KERNEL);
+			avg_load_per_quad[i].load = malloc_per_fd(unsigned int);
 
 		pool_turn = 0;
 
