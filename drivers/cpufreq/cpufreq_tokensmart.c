@@ -8,7 +8,6 @@
  * published by the Free Software Foundation.
  *
  * XXX: CPUS_PER_POLICY/CPUS_PER_QUAD generalization
- * XXX: IPC threshold to be selected based on workload. so provide a tunable.
  * XXX: Tunables are currently defined as Macros
  * XXX: Remove arch stuff and put it into separate file(s).
  */
