@@ -1,6 +1,6 @@
 /* Common implementation */
 #define CPUS_PER_QUAD 16
-#define CPUS_PER_POLICY|4
+#define CPUS_PER_POLICY 4
 #define POLICY_PER_QUAD (CPUS_PER_QUAD/CPUS_PER_POLICY)
 
 /*
@@ -57,6 +57,8 @@ static struct tg_topology P9;
 int exceptional_policy(int cpu)
 {
 	if (cpu >= 88) return 1;
+
+	return 0;
 }
 
 #define get_first_thread_in_quad get_first_thread_in_quad
@@ -72,12 +74,12 @@ static int get_first_thread_in_quad(int cpu)
 static int next_policy_id(int cpu)
 {
 	int next;
-	if (policy->cpu >= 72)
+	if (cpu >= 72)
 		next = cpu_to_policy_map[0];
-	else if (policy->cpu == 64)
+	else if (cpu == 64)
 		next = cpu_to_policy_map[72];
 	else
-		next = cpu_to_policy_map[policy->cpu+16];
+		next = cpu_to_policy_map[cpu+16];
 
 	return next;
 }
