@@ -1,0 +1,12 @@
+Bottom: 45643e2267787542f85bda0fda421b39cf5e950e
+Top:    49d3f84deaed92d63d400a9e9202ee65ae86bb71
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2021-06-22 11:54:53 +0530
+
+Refresh of arch
+
+---
+
+drivers/cpufreq/cpufreq_tokensmart.c      | 6 +-----
+ drivers/cpufreq/cpufreq_tokensmart_arch.h | 5 +++++
+ 2 files changed, 6 insertions(+), 5 deletions(-)
