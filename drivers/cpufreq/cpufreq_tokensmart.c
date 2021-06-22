@@ -285,7 +285,7 @@ static void tg_start(struct cpufreq_policy *policy)
 
 		avg_load_per_quad = kzalloc(sizeof(struct avg_load_per_quad)*topology.nr_cpus, GFP_KERNEL);
 		pool_turn = 0;
-		fair_tokens = tokenPool/(P9.nr_policies/4);
+		fair_tokens = tokenPool/(topology.nr_policies/4);
 		pool_mode = GREEDY;
 
 		barrier=1;
