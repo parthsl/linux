@@ -1,5 +1,5 @@
-Bottom: 77a202a3d47b0a8f0b29d9d5f0d9bc64dc8362a5
-Top:    2a8d08e1cae6dc51e68301c7f3983d1208cdf63b
+Bottom: f13647c39a8edccd16922e1e72c46358b2a8eacd
+Top:    f13647c39a8edccd16922e1e72c46358b2a8eacd
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2021-06-16 12:45:04 +0530
 
@@ -10,5 +10,4 @@ use it to calculate INSTRUCTIONS PER SECONDS (IPS) for every CPU.
 
 ---
 
-drivers/cpufreq/cpufreq_tokensmart.c | 128 +++++++++++++++++++++++++++++++++++
- 1 file changed, 128 insertions(+)
+
