@@ -9,32 +9,6 @@ int exceptional_policy(struct cpufreq_policy* policy)
 	return 0;
 }
 
-#define get_first_thread get_first_thread_in_quad
-static int get_first_thread_in_quad(struct cpufreq_policy* policy)
-{
-	int cpu = policy->cpu;
-	if (cpu > 71) {
-		return ((cpu - 72)/CPUS_PER_FD)*CPUS_PER_FD + 72;
-	}
-
-	return (cpu/16)*16;
-}
-
-#define next_policy_id next_policy_id
-static int next_policy_id(struct cpufreq_policy* policy)
-{
-	int next;
-	int cpu = policy->cpu;
-	if (cpu >= 72)
-		next = cpu_to_policy_map[0];
-	else if (cpu == 64)
-		next = cpu_to_policy_map[72];
-	else
-		next = cpu_to_policy_map[cpu+16];
-
-	return next;
-}
-
 #define build_arch_topology build_P9_topology
 static void build_P9_topology(struct cpufreq_policy *policy){
 	unsigned int iter;
@@ -77,7 +51,11 @@ static void destroy_P9_topology(void)
 static int get_first_thread(struct cpufreq_policy* policy)
 {
 	int cpu = policy->cpu;
-	return (cpu - topology.cpus_per_policy) * topology.cpus_per_policy;
+	if (cpu > 71) {
+		return ((cpu - 72)/CPUS_PER_FD)*CPUS_PER_FD + 72;
+	}
+
+	return (cpu - CPUS_PER_FD) * CPUS_PER_FD;
 }
 
 #define next_policy_id next_policy_id
