@@ -1,8 +1,9 @@
 Version: 1
-Previous: e61510dec3b9fd4cc6aa331befd6a20326e0a277
-Head: f60dd675141aaf8eae39cbaedfc62de343ab1d0e
+Previous: 069d6345866d405361b3c436597827388a553d0d
+Head: 8ddf4a8e7b150402e122d05b7def006bf99df3b8
 Applied:
   tokensmart-add-a-new-cpufreq: f60dd675141aaf8eae39cbaedfc62de343ab1d0e
+  refresh-temp: 8ddf4a8e7b150402e122d05b7def006bf99df3b8
 Unapplied:
   tokensmart-add-fair-policy: a912020e50f280dfcd3d57ec294c9a09e873fedd
   events-core-export-perf-event: 941243a342d277caf76b1df0b16fcdbc1eed1aa0
