@@ -1,8 +1,5 @@
 #include "cpufreq_governor.h"
 
-/* Common implementation */
-#define CPUS_PER_FD 16
-
 /*
  * A structure to keep track of CPU topology
  * @nr_cpus = Total number of CPUs in the system.
@@ -34,46 +31,34 @@ static unsigned int policies_per_fd = 1;
 #define tgdbs_policy(tg_data, policy) \
 	tg_data[get_policy_id(policy)]
 
-/* For Power9 arch */
-#ifndef CPUFREQ_TOKENSMART_P9
-#define CPUFREQ_TOKENSMART_P9
 
-#define exceptional_policy exceptional_policy
-int exceptional_policy(struct cpufreq_policy* policy)
-{
-	if (policy->cpu >= 88) return 1;
+#include <asm/cpufreq_tokensmart.h>
 
-	return 0;
-}
+#ifndef CPUS_PER_FD
+#define CPUS_PER_FD 1
+#endif
 
-#define get_first_thread get_first_thread_in_quad
-static int get_first_thread_in_quad(struct cpufreq_policy* policy)
+#ifndef exceptional_policy
+int exceptional_policy(struct cpufreq_policy* policy) {	return 0;}
+
+#ifndef get_first_thread
+static int get_first_thread(struct cpufreq_policy* policy)
 {
 	int cpu = policy->cpu;
-	if (cpu > 71) {
-		return ((cpu - 72)/CPUS_PER_FD)*CPUS_PER_FD + 72;
-	}
 
-	return (cpu/16)*16;
+	return (cpu/CPUS_PER_FD)*CPUS_PER_FD;
 }
 
-#define next_policy_id next_policy_id
+#ifndef next_policy_id
 static int next_policy_id(struct cpufreq_policy* policy)
 {
-	int next;
 	int cpu = policy->cpu;
-	if (cpu >= 72)
-		next = cpu_to_policy_map[0];
-	else if (cpu == 64)
-		next = cpu_to_policy_map[72];
-	else
-		next = cpu_to_policy_map[cpu+16];
 
-	return next;
+	return cpu_to_policy_map[(cpu + CPUS_PER_FD) % topology.nr_cpus];
 }
 
-#define build_arch_topology build_P9_topology
-static void build_P9_topology(struct cpufreq_policy *policy){
+#ifndef build_arch_topology
+static void build_arch_topology(struct cpufreq_policy *policy){
 	unsigned int iter;
 	struct cpufreq_policy *iterator;
 	topology.cpus_per_policy = 0;
@@ -98,7 +83,6 @@ static void build_P9_topology(struct cpufreq_policy *policy){
 	iter = 0;
 	list_for_each_entry(iterator, &policy->policy_list, policy_list){
 		cpu_to_policy_map[iterator->cpu] = iter;
-		pr_info("policy-cpu=%d id=%d\n",iterator->cpu,iter);
 		iter++;
 	}
 }
@@ -127,7 +111,6 @@ static int get_first_thread(struct cpufreq_policy* policy)
 #endif
 
 #ifndef next_policy_id
-#define next_policy_id next_policy_id
 static int next_policy_id(struct cpufreq_policy* policy)
 {
 	int cpu = policy->cpu;
