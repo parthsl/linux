@@ -242,7 +242,7 @@ static void tg_start(struct cpufreq_policy *policy)
 		tg_data = kzalloc(sizeof(struct tgdbs)*topology.nr_policies, GFP_KERNEL);
 
 		avg_load_per_quad = kzalloc(sizeof(struct avg_load_per_quad)*topology.nr_cpus, GFP_KERNEL);
-		for(cpu = 0; i<topology.nr_cpus; cpu++)
+		for(cpu = 0; cpu < topology.nr_cpus; cpu++)
 			avg_load_per_quad[cpu].load = (unsigned int*) kmalloc(sizeof(unsigned int) * policies_per_fd, GFP_KERNEL);
 
 		pool_turn = 0;
