@@ -46,6 +46,9 @@ static void destroy_P9_topology(void)
 	kfree(cpu_to_policy_map);
 }
 
+/*
+ * ToDo: read dt-property to find Quad topology
+ */
 #define get_first_thread get_first_thread
 /* Usually, policy in cpufreq indicates frequency domain */
 static int get_first_thread(struct cpufreq_policy* policy)
@@ -62,5 +65,10 @@ static int get_first_thread(struct cpufreq_policy* policy)
 static int next_policy_id(struct cpufreq_policy* policy)
 {
 	int cpu = policy->cpu;
-	return cpu_to_policy_map[(cpu + CPUS_PER_FD) % (topology.nr_policies/topology.cpus_per_policy)];
+	if (cpu >= 72)
+		return cpu_to_policy_map[0];
+	else if (cpu == 64)
+		return cpu_to_policy_map[72];
+
+	return cpu_to_policy_map[cpu + CPUS_PER_FD];
 }
