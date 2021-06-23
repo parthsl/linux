@@ -39,25 +39,32 @@ static unsigned int policies_per_fd = 1;
 #endif
 
 #ifndef exceptional_policy
+#define exceptional_policy exceptional_policy
 int exceptional_policy(struct cpufreq_policy* policy) {	return 0;}
+#endif
 
 #ifndef get_first_thread
+#define get_first_thread get_first_thread
 static int get_first_thread(struct cpufreq_policy* policy)
 {
 	int cpu = policy->cpu;
 
 	return (cpu/CPUS_PER_FD)*CPUS_PER_FD;
 }
+#endif
 
 #ifndef next_policy_id
+#define next_policy_id next_policy_id
 static int next_policy_id(struct cpufreq_policy* policy)
 {
 	int cpu = policy->cpu;
 
 	return cpu_to_policy_map[(cpu + CPUS_PER_FD) % topology.nr_cpus];
 }
+#endif
 
 #ifndef build_arch_topology
+#define build_arch_topology build_arch_topology
 static void build_arch_topology(struct cpufreq_policy *policy){
 	unsigned int iter;
 	struct cpufreq_policy *iterator;
@@ -86,18 +93,14 @@ static void build_arch_topology(struct cpufreq_policy *policy){
 		iter++;
 	}
 }
+#endif
 
-#define destroy_arch_topology destroy_P9_topology
-static void destroy_P9_topology(void)
+#ifndef destroy_arch_topology
+#define destroy_arch_topology destroy_arch_topology
+static void destroy_arch_topology(void)
 {
 	kfree(cpu_to_policy_map);
 }
-#endif /* Power9 related stuff */
-
-
-#ifndef exceptional_policy
-#define exceptional_policy exceptional_policy
-int exceptional_policy(struct cpufreq_policy* policy) { return 0;}
 #endif
 
 #ifndef get_first_thread
@@ -111,6 +114,7 @@ static int get_first_thread(struct cpufreq_policy* policy)
 #endif
 
 #ifndef next_policy_id
+#define next_policy_id next_policy_id
 static int next_policy_id(struct cpufreq_policy* policy)
 {
 	int cpu = policy->cpu;

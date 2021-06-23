@@ -1,5 +1,3 @@
-#include "cpufreq_governor.h"
-
 #define CPUS_PER_FD 16
 
 /* Power9 specific */
@@ -73,8 +71,6 @@ static void destroy_P9_topology(void)
 {
 	kfree(cpu_to_policy_map);
 }
-#endif /* Power9 related stuff */
-
 
 #define get_first_thread get_first_thread
 /* Usually, policy in cpufreq indicates frequency domain */
@@ -83,7 +79,6 @@ static int get_first_thread(struct cpufreq_policy* policy)
 	int cpu = policy->cpu;
 	return (cpu - topology.cpus_per_policy) * topology.cpus_per_policy;
 }
-#endif
 
 #define next_policy_id next_policy_id
 static int next_policy_id(struct cpufreq_policy* policy)
