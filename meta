@@ -1,9 +1,10 @@
 Version: 1
-Previous: 5d6a88ff17b7e297099dc6f45bb2bf38a1fbc452
-Head: d68a30f36794862194da592c232b1ef766106cac
+Previous: 8111decb44fa35660da23e3117cff0c87aaaaecd
+Head: 45f2f4c790bf44899717606c80fb8a89b9194e3c
 Applied:
   guest-work: d40a61c93582b0c7208698d207ce2549579b9ffe
   host-work: d68a30f36794862194da592c232b1ef766106cac
+  refresh-temp: 45f2f4c790bf44899717606c80fb8a89b9194e3c
 Unapplied:
   set-clear-idle-hint-in-do_idle: 7a114fea9e867d57295ac571e750a02fff42f740
 Hidden:
