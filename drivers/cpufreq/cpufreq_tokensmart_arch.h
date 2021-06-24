@@ -23,7 +23,7 @@ static struct tg_topology topology;
 static unsigned int policies_per_fd = 1;
 
 #define for_each_policy(pos) \
-	for(pos=1; pos<policies_per_fd; pos++)
+	for(pos = 1; pos < policies_per_fd; pos++)
 
 #define get_policy_id(policy) \
 	cpu_to_policy_map[policy->cpu]
@@ -41,8 +41,6 @@ static unsigned int policies_per_fd = 1;
 #define exceptional_policy exceptional_policy
 int exceptional_policy(struct cpufreq_policy* policy)
 {
-	if (policy->cpu >= 88) return 1;
-
 	return 0;
 }
 #endif
@@ -51,12 +49,7 @@ int exceptional_policy(struct cpufreq_policy* policy)
 #define get_first_thread get_first_thread_in_quad
 static int get_first_thread_in_quad(struct cpufreq_policy* policy)
 {
-	int cpu = policy->cpu;
-	if (cpu > 71) {
-		return ((cpu - 72)/CPUS_PER_FD)*CPUS_PER_FD + 72;
-	}
-
-	return (cpu/16)*16;
+	return (policy->cpu / CPUS_PER_FD) * CPUS_PER_FD;
 }
 #endif
 
@@ -64,22 +57,15 @@ static int get_first_thread_in_quad(struct cpufreq_policy* policy)
 #define next_policy_id next_policy_id
 static int next_policy_id(struct cpufreq_policy* policy)
 {
-	int next;
 	int cpu = policy->cpu;
-	if (cpu >= 72)
-		next = cpu_to_policy_map[0];
-	else if (cpu == 64)
-		next = cpu_to_policy_map[72];
-	else
-		next = cpu_to_policy_map[cpu+16];
-
-	return next;
+	return cpu_to_policy_map[cpu + CPUS_PER_FD];
 }
 #endif
 
 #ifndef build_arch_topology
-#define build_arch_topology build_P9_topology
-static void build_P9_topology(struct cpufreq_policy *policy){
+#define build_arch_topology build_arch_topology
+static void build_arch_topology(struct cpufreq_policy *policy)
+{
 	unsigned int iter;
 	struct cpufreq_policy *iterator;
 	topology.cpus_per_policy = 0;
@@ -115,29 +101,5 @@ static void build_P9_topology(struct cpufreq_policy *policy){
 static void destroy_P9_topology(void)
 {
 	kfree(cpu_to_policy_map);
-}
-#endif
-
-#ifndef exceptional_policy
-#define exceptional_policy exceptional_policy
-int exceptional_policy(struct cpufreq_policy* policy) { return 0;}
-#endif
-
-#ifndef get_first_thread
-#define get_first_thread get_first_thread
-/* Usually, policy in cpufreq indicates frequency domain */
-static int get_first_thread(struct cpufreq_policy* policy)
-{
-	int cpu = policy->cpu;
-	return (cpu - topology.cpus_per_policy) * topology.cpus_per_policy;
-}
-#endif
-
-#ifndef next_policy_id
-#define next_policy_id next_policy_id
-static int next_policy_id(struct cpufreq_policy* policy)
-{
-	int cpu = policy->cpu;
-	return cpu_to_policy_map[(cpu + topology.cpus_per_policy) % topology.nr_policies];
 }
 #endif
