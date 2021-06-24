@@ -1,8 +1,5 @@
 #include "cpufreq_governor.h"
 
-/* Common implementation */
-#define CPUS_PER_FD 16
-
 /*
  * A structure to keep track of CPU topology
  * @nr_cpus = Total number of CPUs in the system.
@@ -34,10 +31,13 @@ static unsigned int policies_per_fd = 1;
 #define tgdbs_policy(tg_data, policy) \
 	tg_data[get_policy_id(policy)]
 
-/* For Power9 arch */
-#ifndef CPUFREQ_TOKENSMART_P9
-#define CPUFREQ_TOKENSMART_P9
+#include <asm/cpufreq_tokensmart.h>
 
+#ifndef CPUS_PER_FD
+#define CPUS_PER_FD 1
+#endif
+
+#ifndef exceptional_policy
 #define exceptional_policy exceptional_policy
 int exceptional_policy(struct cpufreq_policy* policy)
 {
@@ -45,7 +45,9 @@ int exceptional_policy(struct cpufreq_policy* policy)
 
 	return 0;
 }
+#endif
 
+#ifndef get_first_thread
 #define get_first_thread get_first_thread_in_quad
 static int get_first_thread_in_quad(struct cpufreq_policy* policy)
 {
@@ -56,7 +58,9 @@ static int get_first_thread_in_quad(struct cpufreq_policy* policy)
 
 	return (cpu/16)*16;
 }
+#endif
 
+#ifndef next_policy_id
 #define next_policy_id next_policy_id
 static int next_policy_id(struct cpufreq_policy* policy)
 {
@@ -71,7 +75,9 @@ static int next_policy_id(struct cpufreq_policy* policy)
 
 	return next;
 }
+#endif
 
+#ifndef build_arch_topology
 #define build_arch_topology build_P9_topology
 static void build_P9_topology(struct cpufreq_policy *policy){
 	unsigned int iter;
@@ -102,14 +108,15 @@ static void build_P9_topology(struct cpufreq_policy *policy){
 		iter++;
 	}
 }
+#endif
 
+#ifndef destroy_arch_topology
 #define destroy_arch_topology destroy_P9_topology
 static void destroy_P9_topology(void)
 {
 	kfree(cpu_to_policy_map);
 }
-#endif /* Power9 related stuff */
-
+#endif
 
 #ifndef exceptional_policy
 #define exceptional_policy exceptional_policy
