@@ -1,0 +1,12 @@
+Bottom: f40bf10405470a332d44b5afc942be79a4a11bad
+Top:    5756fd8fc8aa7f620300e82dc2aee3a304d0ea6b
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2021-06-23 15:52:47 +0530
+
+Refresh of tokensmart-add-a-new-cpufreq
+
+---
+
+arch/powerpc/include/asm/cpufreq_tokensmart.h |  5 -----
+ drivers/cpufreq/cpufreq_tokensmart_arch.h     | 20 ++++++++++++--------
+ 2 files changed, 12 insertions(+), 13 deletions(-)
