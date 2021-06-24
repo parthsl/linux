@@ -1,5 +1,5 @@
 Bottom: cebebade58f4cdaf715f6def8b9ca31d137c041c
-Top:    a207d2491fc30ada185a32e694ea85622b882e21
+Top:    1ebcc9fa341def7667c446d12ee5c4367ecf20bd
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2021-06-21 16:31:05 +0530
 
@@ -10,6 +10,6 @@ set/clear idle hint in do_idle loop
 
 arch/powerpc/include/asm/idle_hint.h |  6 ++++++
  arch/powerpc/kvm/book3s.h            |  2 ++
- kernel/sched/idle.c                  | 14 ++++++++++++++
- 3 files changed, 22 insertions(+)
+ kernel/sched/idle.c                  | 15 +++++++++++++++
+ 3 files changed, 23 insertions(+)
  create mode 100644 arch/powerpc/include/asm/idle_hint.h
