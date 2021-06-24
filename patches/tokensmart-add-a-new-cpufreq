@@ -1,5 +1,5 @@
 Bottom: 54016ed97001939c1662de9846545346ba8ceb2d
-Top:    f40bf10405470a332d44b5afc942be79a4a11bad
+Top:    3788dadd1387ee11b7c6d524fdb0e3e661ed30dc
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2021-06-22 12:12:22 +0530
 
@@ -11,12 +11,10 @@ https://ieeexplore.ieee.org/document/9372818
 
 ---
 
-arch/powerpc/include/asm/cpufreq_tokensmart.h |  93 ++++++++
- drivers/cpufreq/Kconfig                       |  14 ++
- drivers/cpufreq/Makefile                      |   1 +
- drivers/cpufreq/cpufreq_tokensmart.c          | 297 ++++++++++++++++++++++++++
- drivers/cpufreq/cpufreq_tokensmart_arch.h     | 119 +++++++++++
- 5 files changed, 524 insertions(+)
- create mode 100644 arch/powerpc/include/asm/cpufreq_tokensmart.h
+drivers/cpufreq/Kconfig                   |  14 ++
+ drivers/cpufreq/Makefile                  |   1 +
+ drivers/cpufreq/cpufreq_tokensmart.c      | 297 ++++++++++++++++++++++++++++++
+ drivers/cpufreq/cpufreq_tokensmart_arch.h | 136 ++++++++++++++
+ 4 files changed, 448 insertions(+)
  create mode 100644 drivers/cpufreq/cpufreq_tokensmart.c
  create mode 100644 drivers/cpufreq/cpufreq_tokensmart_arch.h
