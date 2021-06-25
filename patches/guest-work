@@ -1,5 +1,5 @@
 Bottom: afad39d81a6081e37d0c71add90d20d1ce916b2d
-Top:    32cd16eb2d224dee987437a4a2cd9a1528e64e36
+Top:    65cc35779065226193eac10a25b5567432cf9b3b
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2021-06-18 11:11:33 +0530
 
@@ -8,8 +8,8 @@ guest work
 
 ---
 
-arch/powerpc/include/asm/lppaca.h   |  1 +
+arch/powerpc/include/asm/lppaca.h   |  3 ++-
  arch/powerpc/include/asm/paravirt.h |  8 +++++++-
  arch/powerpc/kvm/book3s.h           |  2 ++
  arch/powerpc/kvm/book3s_hv.c        | 10 ++++++++++
- 4 files changed, 20 insertions(+), 1 deletion(-)
+ 4 files changed, 21 insertions(+), 2 deletions(-)
