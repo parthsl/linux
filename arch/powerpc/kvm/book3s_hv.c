@@ -915,10 +915,8 @@ void kvmppc_idle_hint_set(struct kvm_vcpu *vcpu, int idle_hint)
 {
 	struct lppaca *lppaca;
 
-	spin_lock(&vcpu->arch.vpa_update_lock);
 	lppaca = (struct lppaca *)vcpu->arch.vpa.pinned_addr;
 	lppaca->idle_hint = 1;
-	spin_unlock(&vcpu->arch.vpa_update_lock);
 }
 
 static int kvmppc_get_yield_count(struct kvm_vcpu *vcpu)
@@ -2834,16 +2832,12 @@ static void init_idle_hint(void)
 
 static void kvmppc_subscribe_idle_hint(struct kvm_vcpu *vcpu)
 {
-	spin_lock(&per_cpu(idle_hint_subscribers_lock, vcpu->cpu));
 	list_add_tail(&vcpu->idle_hint_subscribers, &per_cpu(idle_hint_subscribers, vcpu->cpu));
-	spin_unlock(&per_cpu(idle_hint_subscribers_lock, vcpu->cpu));
 }
 
 static void kvmppc_unsubscribe_idle_hint(struct kvm_vcpu *vcpu)
 {
-	spin_lock(&per_cpu(idle_hint_subscribers_lock, vcpu->cpu));
 	list_del(&vcpu->idle_hint_subscribers);
-	spin_unlock(&per_cpu(idle_hint_subscribers_lock, vcpu->cpu));
 }
 
 /*
