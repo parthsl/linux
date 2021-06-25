@@ -2826,6 +2826,7 @@ static void init_idle_hint(void)
 	int cpu;
 
 	for_each_possible_cpu(cpu) {
+		trace_printk("t0: init cpu=%d\n", cpu);
 		INIT_LIST_HEAD(&per_cpu(idle_hint_subscribers, cpu));
 		spin_lock_init(&per_cpu(idle_hint_subscribers_lock, cpu));
 	}
@@ -4461,7 +4462,9 @@ static int kvmppc_vcpu_run_hv(struct kvm_vcpu *vcpu)
 	vcpu->arch.state = KVMPPC_VCPU_BUSY_IN_HOST;
 
 	do {
+		trace_printk("t1: unsubscribe started vcpu=%d\n", vcpu->cpu);
 		kvmppc_unsubscribe_idle_hint(vcpu);
+		trace_printk("t2: unscribed vcpu=%d\n", vcpu->cpu);
 		/*
 		 * The TLB prefetch bug fixup is only in the kvmppc_run_vcpu
 		 * path, which also handles hash and dependent threads mode.
@@ -4473,7 +4476,9 @@ static int kvmppc_vcpu_run_hv(struct kvm_vcpu *vcpu)
 		else
 			r = kvmppc_run_vcpu(vcpu);
 
+		trace_printk("t3: vcpu=%d\n", vcpu->cpu);
 		kvmppc_subscribe_idle_hint(vcpu);
+		trace_printk("t4: vcpu=%d\n", vcpu->cpu);
 
 		if (run->exit_reason == KVM_EXIT_PAPR_HCALL &&
 		    !(vcpu->arch.shregs.msr & MSR_PR)) {
@@ -5859,6 +5864,7 @@ static int kvmppc_book3s_init_hv(void)
 	init_default_hcalls();
 
 	init_vcore_lists();
+	trace_printk("init_idle_hint cpu\n");
 	init_idle_hint();
 
 	r = kvmppc_mmu_hv_init();
