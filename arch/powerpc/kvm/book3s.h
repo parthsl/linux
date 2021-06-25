@@ -27,11 +27,6 @@ extern int kvmppc_core_emulate_mfspr_pr(struct kvm_vcpu *vcpu,
 extern int kvmppc_book3s_init_pr(void);
 extern void kvmppc_book3s_exit_pr(void);
 
-extern void kvmppc_idle_hint_set(struct kvm_vcpu *vcpu, int idle_hint);
-
-DECLARE_PER_CPU(struct list_head, idle_hint_subscribers);
-DECLARE_PER_CPU(spinlock_t, idle_hint_subscribers_lock);
-
 #ifdef CONFIG_PPC_TRANSACTIONAL_MEM
 extern void kvmppc_emulate_tabort(struct kvm_vcpu *vcpu, int ra_val);
 #else
