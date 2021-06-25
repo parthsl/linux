@@ -1,0 +1,11 @@
+Bottom: da7188e1499c2b0dbc15cc0a3ecd0e1c760d4fc6
+Top:    a77444606c208402d33b014f46cbfd24f34ec953
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2021-06-25 12:11:39 +0530
+
+Refresh of remove-spinlocks-temp
+
+---
+
+arch/powerpc/kvm/book3s_hv.c | 6 ------
+ 1 file changed, 6 deletions(-)
