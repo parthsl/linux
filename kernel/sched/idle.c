@@ -260,7 +260,7 @@ static void flag_idle_hint(int cpu, int flag)
 
 	spin_lock(&per_cpu(idle_hint_subscribers_lock, cpu);)
 	list_for_each_entry(pos, &per_cpu(idle_hint_subscribers, cpu),
-			    idle_hint_subscriber) {
+			    idle_hint_subscribers) {
 		kvmppc_idle_hint_set(pos, flag);
 	}
 	spin_unlock(&per_cpu(idle_hint_subscribers_lock, cpu);)
