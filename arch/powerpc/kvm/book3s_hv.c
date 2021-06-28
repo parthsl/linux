@@ -913,8 +913,7 @@ static int kvm_arch_vcpu_yield_to(struct kvm_vcpu *target)
 
 void kvmppc_idle_hint_set(struct kvm_vcpu *vcpu, int idle_hint)
 {
-	struct lppaca *lppaca;
-	trace_printk("t102: setting hint =%d vcpu address=%x\n", idle_hint, vcpu);
+	trace_printk("t102: setting hint =%d vcpu address=%xp\n", idle_hint, &vcpu);
 }
 
 static int kvmppc_get_yield_count(struct kvm_vcpu *vcpu)
