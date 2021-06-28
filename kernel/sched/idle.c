@@ -258,11 +258,7 @@ static void flag_idle_hint(int cpu, int flag)
 {
 	struct kvm_vcpu *pos;
 
-	list_for_each_entry(pos, &per_cpu(idle_hint_subscribers, cpu),
-			    idle_hint_subscribers) {
-		trace_printk("t21: kvmppc, subsriber list, flag=%d for pos->cpu=%d\n", flag, pos->cpu);
-		kvmppc_idle_hint_set(pos, flag);
-	}
+	trace_print("t104: this should iterate all subscribers for cpu=%d flag=%d\n", cpu, flag);
 }
 
 /*
