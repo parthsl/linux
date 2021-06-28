@@ -23,8 +23,8 @@ static inline bool is_shared_processor(void)
 
 static inline u32 idle_hint_of(int cpu)
 {
-	__be32 idle_hint = READ_ONCE(lppaca_of(cpu).idle_hint);
-	return be32_to_cpu(idle_hint);
+	trace_printk("t101: idle hint for cpu=%d\n", cpu);
+	return 0;
 }
 
 /* If bit 0 is set, the cpu has been preempted */
