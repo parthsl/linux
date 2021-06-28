@@ -258,7 +258,7 @@ static void flag_idle_hint(int cpu, int flag)
 {
 	struct kvm_vcpu *pos;
 
-	trace_print("t104: this should iterate all subscribers for cpu=%d flag=%d\n", cpu, flag);
+	trace_printk("t104: this should iterate all subscribers for cpu=%d flag=%d\n", cpu, flag);
 }
 
 /*
