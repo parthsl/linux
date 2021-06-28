@@ -1,5 +1,5 @@
 Bottom: f1db43ef70921bab6ba54d33acb1d3197e504e8e
-Top:    55a679786e5a6787b5760f7c7adb01ba953e801b
+Top:    b0be0a24c48e47500080927edf752e54c31ea8f2
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2021-06-28 11:04:51 +0530
 
@@ -9,6 +9,6 @@ irough
 ---
 
 arch/powerpc/include/asm/paravirt.h |  4 ++--
- arch/powerpc/kvm/book3s_hv.c        | 10 +++++-----
+ arch/powerpc/kvm/book3s_hv.c        | 11 +++++------
  kernel/sched/idle.c                 |  6 +-----
- 3 files changed, 8 insertions(+), 12 deletions(-)
+ 3 files changed, 8 insertions(+), 13 deletions(-)
