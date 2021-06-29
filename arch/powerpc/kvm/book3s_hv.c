@@ -2825,6 +2825,8 @@ static void init_idle_hint(void)
 		INIT_LIST_HEAD(&per_cpu(idle_hint_subscribers, cpu));
 		spin_lock_init(&per_cpu(idle_hint_subscribers_lock, cpu));
 	}
+	idle_hint_is_active = 1;
+	trace_printk("t300: Idle hint got active here\n");
 }
 
 static void kvmppc_subscribe_idle_hint(struct kvm_vcpu *vcpu)

@@ -256,9 +256,9 @@ exit_idle:
 
 static void flag_idle_hint(int cpu, int flag)
 {
-	struct kvm_vcpu *pos;
+	if(idle_hint_is_active)
+		trace_printk("t301: Idle hint got active here\n");
 
-	trace_printk("t104: this should iterate all subscribers for cpu=%d flag=%d\n", cpu, flag);
 }
 
 /*
@@ -298,7 +298,6 @@ static void do_idle(void)
 			arch_cpu_idle_dead();
 		}
 
-		trace_printk("t11: setting flag 1 for cpu=%d\n", cpu);
 		flag_idle_hint(cpu, 1);
 		arch_cpu_idle_enter();
 		rcu_nocb_flush_deferred_wakeup();
@@ -316,7 +315,6 @@ static void do_idle(void)
 			cpuidle_idle_call();
 		}
 		arch_cpu_idle_exit();
-		trace_printk("t12: setting flag 0 for cpu=%d\n", cpu);
 		flag_idle_hint(cpu, 0);
 	}
 
