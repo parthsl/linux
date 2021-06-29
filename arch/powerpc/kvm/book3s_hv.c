@@ -913,8 +913,7 @@ static int kvm_arch_vcpu_yield_to(struct kvm_vcpu *target)
 
 void kvmppc_idle_hint_set(struct kvm_vcpu *vcpu, int idle_hint)
 {
-	struct lppaca *lppaca;
-	trace_printk("t102: setting hint =%d vcpu address=%x\n", idle_hint, vcpu);
+	trace_printk("t102: setting hint =%d vcpu address=%p\n", idle_hint, &vcpu);
 }
 
 static int kvmppc_get_yield_count(struct kvm_vcpu *vcpu)
@@ -2826,12 +2825,29 @@ static void init_idle_hint(void)
 		INIT_LIST_HEAD(&per_cpu(idle_hint_subscribers, cpu));
 		spin_lock_init(&per_cpu(idle_hint_subscribers_lock, cpu));
 	}
+	idle_hint_is_active = 1;
+	trace_printk("setting idle_hint\n");
 }
 
 static void kvmppc_subscribe_idle_hint(struct kvm_vcpu *vcpu)
 {
-	trace_printk("t104: adding hint vcpu->cpu=%d\n", vcpu->cpu);
-	//list_add_tail(&vcpu->idle_hint_subscribers, &per_cpu(idle_hint_subscribers, vcpu->cpu));
+	struct kvm_vcpu *tmp;
+	int len = 0;
+	int prev_cpu = prev_cpu_of_kvm(vcpu);
+
+	if (prev_cpu >=0 && prev_cpu<10)
+		trace_printk("t104-i: adding hint vcpu->cpu=%d\n", prev_cpu_of_kvm(vcpu));
+	else
+		return;
+
+	list_for_each_entry(tmp, &per_cpu(idle_hint_subscribers, prev_cpu), idle_hint_subscribers) {
+		if (len++ > 2 || tmp==vcpu) {
+			trace_printk("t104: escaping\n");
+			return;
+		}
+	}
+	trace_printk("t104: adding hint vcpu->cpu=%d\n", prev_cpu);
+	list_add_tail(&vcpu->idle_hint_subscribers, &per_cpu(idle_hint_subscribers, prev_cpu));
 }
 
 static void kvmppc_unsubscribe_idle_hint(struct kvm_vcpu *vcpu)
@@ -4456,9 +4472,7 @@ static int kvmppc_vcpu_run_hv(struct kvm_vcpu *vcpu)
 	vcpu->arch.state = KVMPPC_VCPU_BUSY_IN_HOST;
 
 	do {
-		trace_printk("t1: unsubscribe started vcpu=%d\n", vcpu->cpu);
 		kvmppc_unsubscribe_idle_hint(vcpu);
-		trace_printk("t2: unscribed vcpu=%d\n", vcpu->cpu);
 		/*
 		 * The TLB prefetch bug fixup is only in the kvmppc_run_vcpu
 		 * path, which also handles hash and dependent threads mode.
@@ -4470,9 +4484,7 @@ static int kvmppc_vcpu_run_hv(struct kvm_vcpu *vcpu)
 		else
 			r = kvmppc_run_vcpu(vcpu);
 
-		trace_printk("t3: vcpu=%d\n", vcpu->cpu);
 		kvmppc_subscribe_idle_hint(vcpu);
-		trace_printk("t4: vcpu=%d\n", vcpu->cpu);
 
 		if (run->exit_reason == KVM_EXIT_PAPR_HCALL &&
 		    !(vcpu->arch.shregs.msr & MSR_PR)) {
@@ -5858,7 +5870,7 @@ static int kvmppc_book3s_init_hv(void)
 	init_default_hcalls();
 
 	init_vcore_lists();
-	trace_printk("init_idle_hint cpu\n");
+	trace_printk("t302: init_idle_hint cpu\n");
 	init_idle_hint();
 
 	r = kvmppc_mmu_hv_init();
