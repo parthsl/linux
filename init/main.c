@@ -112,6 +112,8 @@
 
 static int kernel_init(void *);
 
+int idle_hint_is_active = 0;
+
 extern void init_IRQ(void);
 extern void radix_tree_init(void);
 
