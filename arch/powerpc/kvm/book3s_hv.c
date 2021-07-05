@@ -447,6 +447,7 @@ static void init_vpa(struct kvm_vcpu *vcpu, struct lppaca *vpa)
 {
 	vpa->__old_status |= LPPACA_OLD_SHARED_PROC;
 	vpa->yield_count = cpu_to_be32(1);
+	vpa->idle_hint = cpu_to_be32(0);
 }
 
 static int set_vpa(struct kvm_vcpu *vcpu, struct kvmppc_vpa *v,
@@ -913,7 +914,16 @@ static int kvm_arch_vcpu_yield_to(struct kvm_vcpu *target)
 
 void kvmppc_idle_hint_set(struct kvm_vcpu *vcpu, int idle_hint)
 {
+	struct lppaca *lppaca;
+
+	if (!vcpu) return;
 	trace_printk("t102: setting hint =%d vcpu address=%p\n", idle_hint, &vcpu);
+	
+	//spin_lock(&vcpu->arch.vpa_update_lock);
+	lppaca = (struct lppaca *)vcpu->arch.vpa.pinned_addr;
+	if (lppaca)
+		lppaca->idle_hint = cpu_to_be32(1);
+	//spin_unlock(&vcpu->arch.vpa_update_lock);
 }
 
 static int kvmppc_get_yield_count(struct kvm_vcpu *vcpu)
@@ -2806,6 +2816,30 @@ static int on_primary_thread(void)
 		}
 	}
 	return 1;
+}
+
+void flagvcpu(struct kvm *kvm, int cpu, int flag)
+{
+	int i;
+	struct kvm_vcpu *vcpu;
+
+	kvm_for_each_vcpu(i, vcpu, kvm) {
+	trace_printk("t9: cpu=%d flag=%d kvm=%d\n", cpu, flag, prev_cpu_of_kvm(vcpu));
+		if (cpu == prev_cpu_of_kvm(vcpu)) {
+			trace_printk("t8: cpu=%d flag=%d\n", cpu, flag);
+			kvmppc_idle_hint_set(vcpu, flag);
+		}
+	}
+}
+
+void flagit(int cpu, int flag)
+{
+	struct kvm *kvm;
+	struct kvm *tmp;
+
+	list_for_each_entry_safe(kvm, tmp, &vm_list, vm_list) {
+		flagvcpu(kvm, cpu, flag);
+	}
 }
 
 /*

@@ -7,6 +7,8 @@ extern void kvmppc_idle_hint_set(struct kvm_vcpu *vcpu, int idle_hint);
 
 extern int idle_hint_is_active;
 
+extern void flagit(int cpu, int flag);
+
 static inline int prev_cpu_of_kvm(struct kvm_vcpu *vcpu)
 {
 	struct pid *pid;
