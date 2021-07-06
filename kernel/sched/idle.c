@@ -257,13 +257,24 @@ exit_idle:
 static void flag_idle_hint(int cpu, int flag)
 {
 	struct kvm_vcpu *pos;
+	int cpud = 1;
 
-	spin_lock(&per_cpu(idle_hint_subscribers_lock, cpu));
-	list_for_each_entry(pos, &per_cpu(idle_hint_subscribers, cpu),
-			    idle_hint_subscribers) {
-		kvmppc_idle_hint_set(pos, flag);
+	if (cpu > 0 && cpu <10)
+		cpud = cpu;
+	else return;
+
+	if(!idle_hint_is_active)
+		return;
+	
+	flagit(cpu, flag);
+/*
+	list_for_each_entry(pos, &per_cpu(idle_hint_subscribers, cpud),idle_hint_subscribers) {
+		if (pos)
+			trace_printk("t26: kvmppc, subsriber list, flag=%d for pos->cpu=%d\n", flag, pos->cpu);
+		//else
+		//	trace_printk("t21: kvmppc, subsriber list, flag=%d for pos->cpu=%%d\n", flag);
 	}
-	spin_unlock(&per_cpu(idle_hint_subscribers_lock, cpu));
+*/
 }
 
 /*
@@ -303,6 +314,7 @@ static void do_idle(void)
 			arch_cpu_idle_dead();
 		}
 
+		//trace_printk("t11: setting flag 1 for cpu=%d\n", cpu);
 		flag_idle_hint(cpu, 1);
 		arch_cpu_idle_enter();
 		rcu_nocb_flush_deferred_wakeup();
