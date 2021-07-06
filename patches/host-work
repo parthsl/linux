@@ -1,0 +1,11 @@
+Bottom: afad39d81a6081e37d0c71add90d20d1ce916b2d
+Top:    afad39d81a6081e37d0c71add90d20d1ce916b2d
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2021-07-06 15:33:48 +0530
+
+powerpc/book3s_hv: Add new idle-hint attribute in VPA region
+
+
+---
+
+
