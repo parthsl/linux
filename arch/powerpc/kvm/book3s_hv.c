@@ -2815,25 +2815,25 @@ static int on_primary_thread(void)
 	return 1;
 }
 
-void flagvcpu(struct kvm *kvm, int cpu, int flag)
+void set_idle_hint_for_kvm(struct kvm *kvm, int cpu, int value)
 {
 	int i;
 	struct kvm_vcpu *vcpu;
 
 	kvm_for_each_vcpu(i, vcpu, kvm) {
 		if (cpu == prev_cpu_of_kvm(vcpu)) {
-			kvmppc_idle_hint_set(vcpu, flag);
+			kvmppc_idle_hint_set(vcpu, value);
 		}
 	}
 }
 
-void flagit(int cpu, int flag)
+void set_idle_hint(int cpu, int value)
 {
 	struct kvm *kvm;
 	struct kvm *tmp;
 
 	list_for_each_entry_safe(kvm, tmp, &vm_list, vm_list) {
-		flagvcpu(kvm, cpu, flag);
+		set_idle_hint_for_kvm(kvm, cpu, value);
 	}
 }
 
