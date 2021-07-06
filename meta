@@ -1,10 +1,10 @@
 Version: 1
-Previous: 603c4ba4cdf30f7005949dffa53c9463399062bd
-Head: b9a384e778a3a2ba16c4bae7058403cc5a36ce80
+Previous: 9600ce37db9683dbe6aa28f4a15f5ffa0f099656
+Head: 7db791a2a31aa8197a316b44790ead37b2879881
 Applied:
   powerpc-book3s_hv-add-new-idle: b9a384e778a3a2ba16c4bae7058403cc5a36ce80
+  guest: 7db791a2a31aa8197a316b44790ead37b2879881
 Unapplied:
-  guest: 4b01ceab2921c835ba8393259132943c4069f0a8
   debug-bits: d70339713e036e5c664c9d60d3cd143e908761c0
   guest-work: 09e2a987e87f10ec09e9207f663eca1e57f677e0
 Hidden:
