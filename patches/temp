@@ -1,5 +1,5 @@
 Bottom: 16a28578367c1c2a347829fb552f1efdfde51e67
-Top:    16a28578367c1c2a347829fb552f1efdfde51e67
+Top:    6f57ae3f70259132821561c3a0ff43c5b383001d
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2021-07-06 16:25:42 +0530
 
@@ -8,4 +8,6 @@ temp
 
 ---
 
-
+arch/powerpc/include/asm/idle_hint.h | 2 +-
+ arch/powerpc/kvm/book3s_hv.c         | 8 ++++----
+ 2 files changed, 5 insertions(+), 5 deletions(-)
