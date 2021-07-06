@@ -1,15 +1,10 @@
 Version: 1
-Previous: 4fc134b0cbce079736d7bbb1eebf2fb3811a4bba
-Head: 675bf0f38c2fb2898c42d0ea99b23456efa5d32d
+Previous: 8e0ba89a0aec1f0ed2713697185c77a3e7dae3cd
+Head: e69d5544475f5162ebd906e1e5a8f7a1c5f39457
 Applied:
   guest-work: ec45f4e122d29a34e319048928f5407b2dec0454
   host-work: d685fce5b2a03f82a697c86807cde1d7ce24f608
   set-clear-idle-hint-in-do_idle: 21bb4576b35bf9b54e6b6ada8725cd9fcd7b4700
-  debug-bits: f179afbcb578b35ab52ffd90d5bfeca552a4a282
-  remove-spinlocks-temp: 0db9a34f2b4a127ebae0dd28a432566f49805b7a
-  irough: b1979c0040fc06cb662e64cdcaf05be4ec69d0ec
-  to-be-merged: c838e200364647b97266d35dae12e25a658fb45b
-  walk-through-all-vcpus-of-all: 91c4297cf48fe816edff60f6be37a9a8f799924a
-  small-fix: 675bf0f38c2fb2898c42d0ea99b23456efa5d32d
+  debug-bits: e69d5544475f5162ebd906e1e5a8f7a1c5f39457
 Unapplied:
 Hidden:
