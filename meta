@@ -1,9 +1,8 @@
 Version: 1
-Previous: eef29e3ece0b762746db9bde92ce32cfa8b51fd8
-Head: 6962968cc12c1f0cedcfae9eb847e1839b874b6b
+Previous: 0424185ba3a098606779ae876625b381f1a0d390
+Head: 17047706b9994e6c290024a3fa8b8f99733b48cf
 Applied:
   debug-bits: e91bc2f0083d08c1e7c5e6673a4c23f73d9cb875
-  guest-work: 94c1cb557b1d17d08854cefc3ba1ad37e2bba07b
-  refresh-temp: 6962968cc12c1f0cedcfae9eb847e1839b874b6b
+  guest-work: 17047706b9994e6c290024a3fa8b8f99733b48cf
 Unapplied:
 Hidden:
