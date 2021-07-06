@@ -1,9 +1,8 @@
 Version: 1
-Previous: 360bb62fe10b0620cfb7063735b019e90d7f26f0
-Head: bd96a93c0add2f9a9d300a196c9a2901b2b303e5
+Previous: 603c4ba4cdf30f7005949dffa53c9463399062bd
+Head: b9a384e778a3a2ba16c4bae7058403cc5a36ce80
 Applied:
-  host-work: 238672f53f3c1aa941a63b0d3d2c3ebd4b13448a
-  temp: bd96a93c0add2f9a9d300a196c9a2901b2b303e5
+  powerpc-book3s_hv-add-new-idle: b9a384e778a3a2ba16c4bae7058403cc5a36ce80
 Unapplied:
   guest: 4b01ceab2921c835ba8393259132943c4069f0a8
   debug-bits: d70339713e036e5c664c9d60d3cd143e908761c0
