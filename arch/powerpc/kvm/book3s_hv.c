@@ -447,6 +447,7 @@ static void init_vpa(struct kvm_vcpu *vcpu, struct lppaca *vpa)
 {
 	vpa->__old_status |= LPPACA_OLD_SHARED_PROC;
 	vpa->yield_count = cpu_to_be32(1);
+	vpa->idle_hint = cpu_to_be32(0);
 }
 
 static int set_vpa(struct kvm_vcpu *vcpu, struct kvmppc_vpa *v,
@@ -909,6 +910,17 @@ static int kvm_arch_vcpu_yield_to(struct kvm_vcpu *target)
 	spin_unlock(&vcore->lock);
 
 	return kvm_vcpu_yield_to(target);
+}
+
+void kvmppc_idle_hint_set(struct kvm_vcpu *vcpu, int idle_hint)
+{
+	struct lppaca *lppaca;
+
+	if (!vcpu) return;
+
+	lppaca = (struct lppaca *)vcpu->arch.vpa.pinned_addr;
+	if (lppaca)
+		lppaca->idle_hint = cpu_to_be32(idle_hint);
 }
 
 static int kvmppc_get_yield_count(struct kvm_vcpu *vcpu)
@@ -2801,6 +2813,38 @@ static int on_primary_thread(void)
 		}
 	}
 	return 1;
+}
+
+void set_idle_hint_for_kvm(struct kvm *kvm, int cpu, int value)
+{
+	int i;
+	struct kvm_vcpu *vcpu;
+
+	kvm_for_each_vcpu(i, vcpu, kvm) {
+		if (cpu == prev_cpu_of_kvm(vcpu)) {
+			kvmppc_idle_hint_set(vcpu, value);
+		}
+	}
+}
+
+void set_idle_hint(int cpu, int value)
+{
+	struct kvm *kvm;
+	struct kvm *tmp;
+
+	list_for_each_entry_safe(kvm, tmp, &vm_list, vm_list) {
+		set_idle_hint_for_kvm(kvm, cpu, value);
+	}
+}
+
+/*
+ * Each physical CPUs keeps track of vCPUs which have performed VM_EXIT or
+ * are CEDEd. This vCPUs are subscribed to each physical CPUs which keeps the
+ * vpa region updated with the idleness hint.
+ */
+static void init_idle_hint(void)
+{
+	idle_hint_is_active = 1;
 }
 
 /*
@@ -5814,6 +5858,7 @@ static int kvmppc_book3s_init_hv(void)
 	init_default_hcalls();
 
 	init_vcore_lists();
+	init_idle_hint();
 
 	r = kvmppc_mmu_hv_init();
 	if (r)
