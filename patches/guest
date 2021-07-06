@@ -1,0 +1,18 @@
+Bottom: f1a8b2d2dc8f01f03c96493e17b0604bd9e4307b
+Top:    f1a8b2d2dc8f01f03c96493e17b0604bd9e4307b
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2021-07-06 15:41:43 +0530
+
+kernel/idle: Update and use idle-hint in VPA region
+
+In guest, Set idle_hint to 1 when the prev_cpu of a vCPU goes into idle state,
+similarly set idle_hint to 0 when exiting an idle state.
+
+Since the idle_hint is in VPA region, the available_idle_cpu() in guest can
+read this region every time to find if a vCPU can be scheduled instantly by
+the hypervsior or not.
+
+
+---
+
+
