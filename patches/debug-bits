@@ -1,4 +1,4 @@
-Bottom: f1a8b2d2dc8f01f03c96493e17b0604bd9e4307b
+Bottom: 16a28578367c1c2a347829fb552f1efdfde51e67
 Top:    6bf1220abdf7e01fc51996b76b7d12a8c64e79bd
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2021-07-06 12:51:30 +0530
@@ -8,8 +8,6 @@ debug-bits
 
 ---
 
-arch/powerpc/include/asm/paravirt.h | 12 ++++++++++--
- include/linux/kvm_host.h            |  2 ++
- kernel/sched/idle.c                 | 11 +++++++++++
- virt/kvm/kvm_main.c                 |  2 ++
- 4 files changed, 25 insertions(+), 2 deletions(-)
+include/linux/kvm_host.h | 2 ++
+ virt/kvm/kvm_main.c      | 2 ++
+ 2 files changed, 4 insertions(+)
