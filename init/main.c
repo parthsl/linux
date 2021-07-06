@@ -127,6 +127,8 @@ bool early_boot_irqs_disabled __read_mostly;
 enum system_states system_state __read_mostly;
 EXPORT_SYMBOL(system_state);
 
+int idle_hint_is_active = 0;
+
 /*
  * Boot command-line arguments
  */
