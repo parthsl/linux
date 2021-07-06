@@ -2824,7 +2824,6 @@ void flagvcpu(struct kvm *kvm, int cpu, int flag)
 	struct kvm_vcpu *vcpu;
 
 	kvm_for_each_vcpu(i, vcpu, kvm) {
-	trace_printk("t9: cpu=%d flag=%d kvm=%d\n", cpu, flag, prev_cpu_of_kvm(vcpu));
 		if (cpu == prev_cpu_of_kvm(vcpu)) {
 			trace_printk("t8: cpu=%d flag=%d\n", cpu, flag);
 			kvmppc_idle_hint_set(vcpu, flag);
