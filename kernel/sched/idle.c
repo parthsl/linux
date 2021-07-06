@@ -299,6 +299,7 @@ static void do_idle(void)
 			arch_cpu_idle_dead();
 		}
 
+		//trace_printk("t11: setting flag 1 for cpu=%d\n", cpu);
 		flag_idle_hint(cpu, 1);
 		arch_cpu_idle_enter();
 		rcu_nocb_flush_deferred_wakeup();
