@@ -1,5 +1,5 @@
 Bottom: afad39d81a6081e37d0c71add90d20d1ce916b2d
-Top:    b29e2714b80708df11397f1d6133d93c481617e6
+Top:    c5d26ab2539014dbd4c6b1c8fa22c56829933672
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2021-07-06 12:44:17 +0530
 
@@ -17,14 +17,14 @@ small fix
 
 ---
 
-arch/powerpc/include/asm/idle_hint.h | 32 +++++++++++++
- arch/powerpc/include/asm/lppaca.h    |  3 +-
- arch/powerpc/include/asm/paravirt.h  | 11 ++++-
- arch/powerpc/kvm/book3s.h            |  2 +
- arch/powerpc/kvm/book3s_hv.c         | 89 ++++++++++++++++++++++++++++++++++++
- include/linux/kvm_host.h             |  2 +
- init/main.c                          |  2 +
- kernel/sched/idle.c                  | 12 +++++
- virt/kvm/kvm_main.c                  |  2 +
- 9 files changed, 153 insertions(+), 2 deletions(-)
+arch/powerpc/include/asm/idle_hint.h | 32 ++++++++++++++++++++++++
+ arch/powerpc/include/asm/lppaca.h    |  3 ++-
+ arch/powerpc/include/asm/paravirt.h  | 11 ++++++++-
+ arch/powerpc/kvm/book3s.h            |  2 ++
+ arch/powerpc/kvm/book3s_hv.c         | 48 ++++++++++++++++++++++++++++++++++++
+ include/linux/kvm_host.h             |  2 ++
+ init/main.c                          |  2 ++
+ kernel/sched/idle.c                  | 12 +++++++++
+ virt/kvm/kvm_main.c                  |  2 ++
+ 9 files changed, 112 insertions(+), 2 deletions(-)
  create mode 100644 arch/powerpc/include/asm/idle_hint.h
