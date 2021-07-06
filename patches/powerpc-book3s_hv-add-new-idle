@@ -10,6 +10,8 @@ better cpu selection. Hypervisor can update idle_hint attribute based on
 the prediction that if vCPU needs to be scheduled then can it be scheduled
 instantly or not.
 
+Signed-off-by: Parth Shah <parth@linux.ibm.com>
+
 
 ---
 
