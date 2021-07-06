@@ -24,6 +24,7 @@ static inline bool is_shared_processor(void)
 static inline int idle_hint_of(int cpu)
 {
 	__be32 idle_hint = READ_ONCE(lppaca_of(cpu).idle_hint);
+	trace_printk("t101: idle hint for cpu=%d hint=%d\n", cpu, be32_to_cpu(idle_hint));
 	return be32_to_cpu(idle_hint);
 }
 
@@ -101,6 +102,7 @@ static inline bool vcpu_is_preempted(int cpu)
 	if (!is_shared_processor())
 		return false;
 
+	trace_printk("finding idle3\n");
 #ifdef CONFIG_PPC_SPLPAR
 	if (!is_kvm_guest()) {
 		int first_cpu = cpu_first_thread_sibling(smp_processor_id());
@@ -115,6 +117,7 @@ static inline bool vcpu_is_preempted(int cpu)
 	}
 #endif
 
+	trace_printk("finding idle\n");
 	if (yield_count_of(cpu) & 1) {
 		if (idle_hint_of(cpu) == 0)
 			return true;

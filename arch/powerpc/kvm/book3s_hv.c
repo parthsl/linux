@@ -917,6 +917,7 @@ void kvmppc_idle_hint_set(struct kvm_vcpu *vcpu, int idle_hint)
 	struct lppaca *lppaca;
 
 	if (!vcpu) return;
+	trace_printk("t102: setting hint =%d vcpu address=%p\n", idle_hint, &vcpu);
 
 	lppaca = (struct lppaca *)vcpu->arch.vpa.pinned_addr;
 	if (lppaca)
@@ -2822,6 +2823,7 @@ void set_idle_hint_for_kvm(struct kvm *kvm, int cpu, int value)
 
 	kvm_for_each_vcpu(i, vcpu, kvm) {
 		if (cpu == prev_cpu_of_kvm(vcpu)) {
+			trace_printk("t8: cpu=%d flag=%d\n", cpu, flag);
 			kvmppc_idle_hint_set(vcpu, value);
 		}
 	}
@@ -2845,6 +2847,7 @@ void set_idle_hint(int cpu, int value)
 static void init_idle_hint(void)
 {
 	idle_hint_is_active = 1;
+	trace_printk("setting idle_hint\n");
 }
 
 /*
