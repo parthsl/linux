@@ -5,6 +5,12 @@ Date:   2021-07-06 16:29:57 +0530
 
 powerpc/book3s_hv: Add new idle-hint attribute in VPA region
 
+In lppaca region, add a new attribute idle_hint which can allow guest scheduler for
+better cpu selection. Hypervisor can update idle_hint attribute based on
+the prediction that if vCPU needs to be scheduled then can it be scheduled
+instantly or not.
+
+
 ---
 
 arch/powerpc/include/asm/idle_hint.h | 28 ++++++++++++++++++++++
