@@ -1,7 +1,8 @@
 Version: 1
-Previous: d0472c6355a6ed4f66ee40c92850d08ff5850877
-Head: 009c9aa5be652675a06d5211e1640e02bbb1c33d
+Previous: c042df5b79d786422ddb53e01f8454c6463d721c
+Head: 5bc38cc1f56fe7c26507ed8af89975ad96151d20
 Applied:
+  debug-bits: 5bc38cc1f56fe7c26507ed8af89975ad96151d20
 Unapplied:
   guest-work: 7caa3b0f935f632ebb0ac1650b81c68a27d74182
 Hidden:
