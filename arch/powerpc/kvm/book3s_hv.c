@@ -919,11 +919,9 @@ void kvmppc_idle_hint_set(struct kvm_vcpu *vcpu, int idle_hint)
 	if (!vcpu) return;
 	trace_printk("t102: setting hint =%d vcpu address=%p\n", idle_hint, &vcpu);
 	
-	//spin_lock(&vcpu->arch.vpa_update_lock);
 	lppaca = (struct lppaca *)vcpu->arch.vpa.pinned_addr;
 	if (lppaca)
-		lppaca->idle_hint = cpu_to_be32(1);
-	//spin_unlock(&vcpu->arch.vpa_update_lock);
+		lppaca->idle_hint = cpu_to_be32(idle_hint);
 }
 
 static int kvmppc_get_yield_count(struct kvm_vcpu *vcpu)

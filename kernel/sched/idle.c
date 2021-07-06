@@ -256,25 +256,10 @@ exit_idle:
 
 static void flag_idle_hint(int cpu, int flag)
 {
-	struct kvm_vcpu *pos;
-	int cpud = 1;
-
-	if (cpu > 0 && cpu <10)
-		cpud = cpu;
-	else return;
-
 	if(!idle_hint_is_active)
 		return;
 	
 	flagit(cpu, flag);
-/*
-	list_for_each_entry(pos, &per_cpu(idle_hint_subscribers, cpud),idle_hint_subscribers) {
-		if (pos)
-			trace_printk("t26: kvmppc, subsriber list, flag=%d for pos->cpu=%d\n", flag, pos->cpu);
-		//else
-		//	trace_printk("t21: kvmppc, subsriber list, flag=%d for pos->cpu=%%d\n", flag);
-	}
-*/
 }
 
 /*
