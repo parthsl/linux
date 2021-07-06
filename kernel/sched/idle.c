@@ -7,6 +7,7 @@
  *        tasks which are handled in sched/fair.c )
  */
 #include "sched.h"
+#include <asm/idle_hint.h>
 
 #include <trace/events/power.h>
 
@@ -253,6 +254,14 @@ exit_idle:
 		local_irq_enable();
 }
 
+static void flag_idle_hint(int cpu, int flag)
+{
+	if(!idle_hint_is_active)
+		return;
+
+	flagit(cpu, flag);
+}
+
 /*
  * Generic idle loop implementation
  *
@@ -290,6 +299,8 @@ static void do_idle(void)
 			arch_cpu_idle_dead();
 		}
 
+		//trace_printk("t11: setting flag 1 for cpu=%d\n", cpu);
+		flag_idle_hint(cpu, 1);
 		arch_cpu_idle_enter();
 		rcu_nocb_flush_deferred_wakeup();
 
@@ -306,6 +317,7 @@ static void do_idle(void)
 			cpuidle_idle_call();
 		}
 		arch_cpu_idle_exit();
+		flag_idle_hint(cpu, 0);
 	}
 
 	/*
