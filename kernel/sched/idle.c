@@ -258,7 +258,7 @@ static void flag_idle_hint(int cpu, int flag)
 {
 	if(!idle_hint_is_active)
 		return;
-	
+
 	flagit(cpu, flag);
 }
 
