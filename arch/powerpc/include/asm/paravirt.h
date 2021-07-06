@@ -118,8 +118,10 @@ static inline bool vcpu_is_preempted(int cpu)
 #endif
 
 	trace_printk("finding idle\n");
-	if (idle_hint_of(cpu)==0 && yield_count_of(cpu) & 1)
-		return true;
+	if (yield_count_of(cpu) & 1) {
+		if (idle_hint_of(cpu) == 0)
+			return true;
+	}
 	return false;
 }
 
