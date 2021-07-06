@@ -1,6 +1,13 @@
 Version: 1
-Previous: None
+Previous: 72df1532b7e3d2422d1f2fb4f4863c9464afb42b
 Head: 675bf0f38c2fb2898c42d0ea99b23456efa5d32d
 Applied:
+  set-clear-idle-hint-in-do_idle: 21bb4576b35bf9b54e6b6ada8725cd9fcd7b4700
+  debug-bits: f179afbcb578b35ab52ffd90d5bfeca552a4a282
+  remove-spinlocks-temp: 0db9a34f2b4a127ebae0dd28a432566f49805b7a
+  irough: b1979c0040fc06cb662e64cdcaf05be4ec69d0ec
+  to-be-merged: c838e200364647b97266d35dae12e25a658fb45b
+  walk-through-all-vcpus-of-all: 91c4297cf48fe816edff60f6be37a9a8f799924a
+  small-fix: 675bf0f38c2fb2898c42d0ea99b23456efa5d32d
 Unapplied:
 Hidden:

@@ -1,0 +1,13 @@
+Bottom: da7188e1499c2b0dbc15cc0a3ecd0e1c760d4fc6
+Top:    f1db43ef70921bab6ba54d33acb1d3197e504e8e
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2021-06-25 11:38:26 +0530
+
+remove spinlocks temp
+
+
+---
+
+arch/powerpc/kvm/book3s_hv.c | 6 ------
+ kernel/sched/idle.c          | 2 --
+ 2 files changed, 8 deletions(-)
