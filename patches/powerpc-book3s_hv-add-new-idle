@@ -1,5 +1,5 @@
 Bottom: afad39d81a6081e37d0c71add90d20d1ce916b2d
-Top:    1f964dc765c77be1ec80f575d3400c66a5919ab8
+Top:    64a8f0e7e8406ce260916509e8f45354632e4dce
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2021-07-06 16:29:57 +0530
 
@@ -15,10 +15,9 @@ Signed-off-by: Parth Shah <parth@linux.ibm.com>
 
 ---
 
-arch/powerpc/include/asm/idle_hint.h | 28 ++++++++++++++++++++++
+arch/powerpc/include/asm/idle_hint.h | 28 ++++++++++++++++++++++++++++
  arch/powerpc/include/asm/lppaca.h    |  3 ++-
  arch/powerpc/kvm/book3s.h            |  2 ++
- arch/powerpc/kvm/book3s_hv.c         | 45 ++++++++++++++++++++++++++++++++++++
- init/main.c                          |  2 ++
- 5 files changed, 79 insertions(+), 1 deletion(-)
+ arch/powerpc/kvm/book3s_hv.c         | 34 ++++++++++++++++++++++++++++++++++
+ 4 files changed, 66 insertions(+), 1 deletion(-)
  create mode 100644 arch/powerpc/include/asm/idle_hint.h
