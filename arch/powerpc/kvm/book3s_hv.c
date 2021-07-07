@@ -2838,16 +2838,6 @@ void set_idle_hint(int cpu, int value)
 }
 
 /*
- * Each physical CPUs keeps track of vCPUs which have performed VM_EXIT or
- * are CEDEd. This vCPUs are subscribed to each physical CPUs which keeps the
- * vpa region updated with the idleness hint.
- */
-static void init_idle_hint(void)
-{
-	idle_hint_is_active = 1;
-}
-
-/*
  * A list of virtual cores for each physical CPU.
  * These are vcores that could run but their runner VCPU tasks are
  * (or may be) preempted.
@@ -5858,7 +5848,6 @@ static int kvmppc_book3s_init_hv(void)
 	init_default_hcalls();
 
 	init_vcore_lists();
-	init_idle_hint();
 
 	r = kvmppc_mmu_hv_init();
 	if (r)
