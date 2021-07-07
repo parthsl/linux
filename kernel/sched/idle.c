@@ -254,18 +254,6 @@ exit_idle:
 		local_irq_enable();
 }
 
-static void mark_idle_hint(int cpu, int flag)
-{
-	/*
-	 * ToDo: idle hint is acitve only when there is atleast one guest
-	 * running
-	 */
-	if(!idle_hint_is_active)
-		return;
-
-	set_idle_hint(cpu, flag);
-}
-
 /*
  * Generic idle loop implementation
  *
@@ -303,7 +291,7 @@ static void do_idle(void)
 			arch_cpu_idle_dead();
 		}
 
-		mark_idle_hint(cpu, 1);
+		set_idle_hint(cpu, 1);
 		arch_cpu_idle_enter();
 		rcu_nocb_flush_deferred_wakeup();
 
@@ -320,7 +308,7 @@ static void do_idle(void)
 			cpuidle_idle_call();
 		}
 		arch_cpu_idle_exit();
-		mark_idle_hint(cpu, 0);
+		set_idle_hint(cpu, 0);
 	}
 
 	/*
