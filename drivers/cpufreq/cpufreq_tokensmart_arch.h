@@ -68,7 +68,9 @@ static void build_arch_topology(struct cpufreq_policy *policy)
 {
 	unsigned int iter;
 	struct cpufreq_policy *iterator;
+
 	topology.cpus_per_policy = 0;
+	topology.nr_policies = 0;
 
 	// Find total policies in the systems
 	list_for_each_entry(iterator, &policy->policy_list, policy_list){

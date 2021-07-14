@@ -233,8 +233,6 @@ static void tg_start(struct cpufreq_policy *policy)
 {
 	int cpu;
 
-	topology.nr_policies = 0;
-
 	if(policy->cpu==0)
 	{
 		build_arch_topology(policy);
