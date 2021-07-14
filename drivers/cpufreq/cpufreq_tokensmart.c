@@ -119,7 +119,7 @@ unsigned int max_of(struct avg_load_per_quad avgload)
 	return max_load;
 }
 
-void calc_mips(struct tgdbs *tgg, int cpu, int tid)
+void calculate_cpu_mips(struct tgdbs *tgg, int cpu, int tid)
 {
 	u64 ips;
 	u64 time_passed;
@@ -151,18 +151,23 @@ void calc_mips(struct tgdbs *tgg, int cpu, int tid)
 	tgg->mips_updated = 1;
 }
 
-void calc_policy_mips(struct tgdbs *tgg, int cpu, int first_quad_cpu)
+void update_mips(struct tgdbs *tgg, int cpu, int first_quad_cpu)
 {
-	int tid = cpu - first_quad_cpu;
+	int tid;
 
 	mutex_lock(&policy_mips_lock);
-	for (cpu = first_quad_cpu; cpu < (first_quad_cpu + CPUS_PER_FD); cpu++)
-		calc_mips(tgg, cpu, tid);
+	/* Calculate MIPS for all CPUs in the policy*/
+	for (tid = 0; tid < CPUS_PER_FD; tid++)
+		calculate_cpu_mips(tgg, first_quad_cpu + tid, tid);
 
+	/*
+	 * Consider maximum value of MIPS in any CPU as representative value
+	 * for this policy
+	 */
 	tgg->policy_mips = tgg->cpu_mips[0];
-	for(cpu = first_quad_cpu; cpu < (first_quad_cpu + CPUS_PER_FD); cpu++)
-		if (tgg->policy_mips < tgg->cpu_mips[tid])
-			tgg->policy_mips = tgg->cpu_mips[tid];
+	for(cpu = first_quad_cpu; cpu < CPUS_PER_FD; cpu++)
+		if (tgg->policy_mips < tgg->cpu_mips[cpu])
+			tgg->policy_mips = tgg->cpu_mips[cpu];
 	mutex_unlock(&policy_mips_lock);
 }
 
@@ -196,14 +201,14 @@ static void tg_update(struct cpufreq_policy *policy)
 
 	avg_load_per_quad[first_thread_in_quad].load[(policy->cpu-first_thread_in_quad)/policies_per_fd] = load;
 
-	/* Calculate MIPS value for this policy */
-	calc_policy_mips(tgg, policy->cpu, first_thread_in_quad);
-
 	// Token passing is for only first thread in quad
 	if(policy->cpu != first_thread_in_quad) {
 		__cpufreq_driver_target(policy, min_f, CPUFREQ_RELATION_C);
 		return;
 	}
+
+	/* Calculate MIPS value for this policy */
+	update_mips(tgg, policy->cpu, first_thread_in_quad);
 
 	/* 1. Computation Phase */
 	load = max_of(avg_load_per_quad[first_thread_in_quad]);
