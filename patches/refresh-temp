@@ -1,0 +1,11 @@
+Bottom: 6d2703038fced65f90075026b71668754e3e3c31
+Top:    f2a3d4aae82f2e089d8fe711ba995827c176ed3f
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2021-07-22 12:11:16 +0530
+
+Refresh of powerpc-smp-c-modify-parsing
+
+---
+
+arch/powerpc/kernel/smp.c | 6 ------
+ 1 file changed, 6 deletions(-)
