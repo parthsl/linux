@@ -1,5 +1,5 @@
 Bottom: 447c7fcc0523a26fd731705fa57dc0de5eee4e58
-Top:    316d32dbacaf02990260881ad87c26a1a848643d
+Top:    f3ae745e51fc586240801e887c9f8b0136b18017
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2021-07-22 11:11:30 +0530
 
@@ -10,5 +10,5 @@ Make new l3 cache map
 
 arch/powerpc/include/asm/smp.h  |  1 +
  arch/powerpc/kernel/cacheinfo.c |  2 +-
- arch/powerpc/kernel/smp.c       | 38 +++++++++++++++++++++++++++++++-------
- 3 files changed, 33 insertions(+), 8 deletions(-)
+ arch/powerpc/kernel/smp.c       | 40 ++++++++++++++++++++++++++++++++--------
+ 3 files changed, 34 insertions(+), 9 deletions(-)
