@@ -78,6 +78,7 @@ struct task_struct *secondary_current;
 bool has_big_cores;
 bool coregroup_enabled;
 bool thread_group_shares_l2;
+bool thread_group_shares_l3;
 
 DEFINE_PER_CPU(cpumask_var_t, cpu_sibling_map);
 DEFINE_PER_CPU(cpumask_var_t, cpu_smallcore_map);
@@ -101,7 +102,8 @@ enum {
 
 #define MAX_THREAD_LIST_SIZE	8
 #define THREAD_GROUP_SHARE_L1   1
-#define THREAD_GROUP_SHARE_L2   2
+#define THREAD_GROUP_SHARE_L2	2
+#define THREAD_GROUP_SHARE_L3	3
 struct thread_groups {
 	unsigned int property;
 	unsigned int nr_groups;
@@ -110,7 +112,7 @@ struct thread_groups {
 };
 
 /* Maximum number of properties that groups of threads within a core can share */
-#define MAX_THREAD_GROUP_PROPERTIES 2
+#define MAX_THREAD_GROUP_PROPERTIES 3
 
 struct thread_groups_list {
 	unsigned int nr_properties;
@@ -130,6 +132,12 @@ DEFINE_PER_CPU(cpumask_var_t, thread_group_l1_cache_map);
  * L2-cache.
  */
 DEFINE_PER_CPU(cpumask_var_t, thread_group_l2_cache_map);
+
+/*
+ * On P10, thread_group_l3_cache_map for each CPU is equal to the
+ * thread_group_l2_cache_map
+ */
+DEFINE_PER_CPU(cpumask_var_t, thread_group_l3_cache_map);
 
 /* SMP operations for this machine */
 struct smp_ops_t *smp_ops;
@@ -811,7 +819,17 @@ static int parse_thread_groups(struct device_node *dn,
 
 		for (j = 0; j < total_threads; j++)
 			tg->thread_list[j] = thread_list[j];
-		i = i + 3 + total_threads;
+
+		/*
+		 * On P10, property of L3 is same as property of L2. Hence,
+		 * build thread_groups for L3 by reading property "2" but with
+		 * modified tg->property flag to differentiate between L2
+		 * cachemap and L3 cachemap.
+		 */
+		if (property_idx == 3)
+			tg->property = 3;
+		if (property_idx != 2)
+			i = i + 3 + total_threads;
 	}
 
 	tglp->nr_properties = property_idx;
@@ -898,10 +916,12 @@ static int __init init_thread_group_cache_map(int cpu, int cache_property)
 	cpumask_var_t *mask = NULL;
 
 	if (cache_property != THREAD_GROUP_SHARE_L1 &&
-	    cache_property != THREAD_GROUP_SHARE_L2)
+	    cache_property != THREAD_GROUP_SHARE_L2 &&
+	    cache_property != THREAD_GROUP_SHARE_L3)
 		return -EINVAL;
 
 	tg = get_thread_groups(cpu, cache_property, &err);
+
 	if (!tg)
 		return err;
 
@@ -916,6 +936,8 @@ static int __init init_thread_group_cache_map(int cpu, int cache_property)
 		mask = &per_cpu(thread_group_l1_cache_map, cpu);
 	else if (cache_property == THREAD_GROUP_SHARE_L2)
 		mask = &per_cpu(thread_group_l2_cache_map, cpu);
+	else if (cache_property == THREAD_GROUP_SHARE_L3)
+		mask = &per_cpu(thread_group_l3_cache_map, cpu);
 
 	zalloc_cpumask_var_node(mask, GFP_KERNEL, cpu_to_node(cpu));
 
@@ -1028,6 +1050,17 @@ static int __init init_big_cores(void)
 
 	thread_group_shares_l2 = true;
 	pr_debug("L2 cache only shared by the threads in the small core\n");
+
+	for_each_possible_cpu(cpu) {
+		int err = init_thread_group_cache_map(cpu, THREAD_GROUP_SHARE_L3);
+
+		if (err)
+			return err;
+	}
+
+	thread_group_shares_l3 = true;
+	pr_debug("L3 cache only shared by the threads in the small core\n");
+
 	return 0;
 }
 
