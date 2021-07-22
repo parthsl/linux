@@ -1032,7 +1032,7 @@ static int __init init_big_cores(void)
 	has_big_cores = true;
 
 	for_each_possible_cpu(cpu) {
-		int err = init_thread_group_cache_map(cpu, THREAD_GROUP_SHARE_L2_L3);
+		int err = init_thread_group_cache_map(cpu, THREAD_GROUP_SHARE_L2);
 
 		if (err)
 			return err;
