@@ -902,12 +902,6 @@ static int __init init_thread_group_cache_map(int cpu, int cache_property)
 	    cache_property != THREAD_GROUP_SHARE_L3)
 		return -EINVAL;
 
-	/*
-	 * On P10 fused-core system, the L3 cache is shared between threads of a
-	 * small core only, but the "ibm,thread-groups" property is indicated as
-	 * "2" only which is interpreted as the thread-groups sharing both L2
-	 * and L3 caches.
-	 */
 	tg = get_thread_groups(cpu, cache_property, &err);
 
 	if (!tg)
