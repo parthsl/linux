@@ -35,6 +35,7 @@ extern int *chip_id_lookup_table;
 
 DECLARE_PER_CPU(cpumask_var_t, thread_group_l1_cache_map);
 DECLARE_PER_CPU(cpumask_var_t, thread_group_l2_cache_map);
+DECLARE_PER_CPU(cpumask_var_t, thread_group_l3_cache_map);
 
 #ifdef CONFIG_SMP
 
