@@ -112,7 +112,7 @@ struct thread_groups {
 };
 
 /* Maximum number of properties that groups of threads within a core can share */
-#define MAX_THREAD_GROUP_PROPERTIES 2
+#define MAX_THREAD_GROUP_PROPERTIES 3
 
 struct thread_groups_list {
 	unsigned int nr_properties;
@@ -808,7 +808,10 @@ static int parse_thread_groups(struct device_node *dn,
 
 		for (j = 0; j < total_threads; j++)
 			tg->thread_list[j] = thread_list[j];
-		i = i + 3 + total_threads;
+
+		/* On P10, cachemap of L2 is similar to cachemap of L3 */
+		if (!strcmp(cur_cpu_spec->platform, "power10") || property_idx != 2)
+			i = i + 3 + total_threads;
 	}
 
 	tglp->nr_properties = property_idx;
@@ -899,18 +902,7 @@ static int __init init_thread_group_cache_map(int cpu, int cache_property)
 	    cache_property != THREAD_GROUP_SHARE_L3)
 		return -EINVAL;
 
-	/*
-	 * On P10 fused-core system, the L3 cache is shared between threads of a
-	 * small core only, but the "ibm,thread-groups" property is indicated as
-	 * "2" only which is interpreted as the thread-groups sharing both L2
-	 * and L3 caches.
-	 * Hence, pass THREAD_GROUP_SHARE_L2 only even for cpus in L3 cache to
-	 * match the property attribute.
-	 */
-	if (cache_property == THREAD_GROUP_SHARE_L3)
-		tg = get_thread_groups(cpu, THREAD_GROUP_SHARE_L2, &err);
-	else
-		tg = get_thread_groups(cpu, cache_property, &err);
+	tg = get_thread_groups(cpu, cache_property, &err);
 
 	if (!tg)
 		return err;
