@@ -894,16 +894,16 @@ out:
 	return tg;
 }
 
-static void update_mask_from_threadgroup(cpumask_var_t *mask, struct
+static int update_mask_from_threadgroup(cpumask_var_t *mask, struct
 		thread_groups *tg, int cpu, int cpu_group_start)
 {
 	int first_thread = cpu_first_thread_sibling(cpu);
-	int i;
+	int i, i_group_start;
 
 	zalloc_cpumask_var_node(mask, GFP_KERNEL, cpu_to_node(cpu));
 
 	for (i = first_thread; i < first_thread + threads_per_core; i++) {
-		int i_group_start = get_cpu_thread_group_start(i, tg);
+		i_group_start = get_cpu_thread_group_start(i, tg);
 
 		if (unlikely(i_group_start == -1)) {
 			WARN_ON_ONCE(1);
@@ -913,12 +913,12 @@ static void update_mask_from_threadgroup(cpumask_var_t *mask, struct
 		if (i_group_start == cpu_group_start)
 			cpumask_set_cpu(i, *mask);
 	}
+
+	return 0;
 }
 
 static int __init init_thread_group_cache_map(int cpu, int cache_property)
-
 {
-	int first_thread = cpu_first_thread_sibling(cpu);
 	int i, cpu_group_start = -1, err = 0;
 	struct thread_groups *tg = NULL;
 	cpumask_var_t *mask = NULL;
