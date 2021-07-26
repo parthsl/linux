@@ -1,0 +1,12 @@
+Bottom: 036673c5490ef34f5f455ccc46bff6a37fd82b07
+Top:    6651959fbb04fa38c4f02c9a5358f795a6bd428c
+Author: Parth Shah <parth@linux.ibm.com>
+Date:   2021-07-26 07:31:37 -0500
+
+temp
+
+
+---
+
+arch/powerpc/kernel/smp.c | 78 +++++++++++++++++++++--------------------------
+ 1 file changed, 34 insertions(+), 44 deletions(-)

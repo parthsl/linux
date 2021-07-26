@@ -1,6 +1,8 @@
 Version: 1
-Previous: f6fc44cf51f111c25dd5f1e3798bcd63ec73a9a8
+Previous: 6fe8e755796f04ec9ddc3a7a76be14f8f79c0671
 Head: 378e158304d6628a01369d54deaf6fb871f3735f
 Applied:
+  powerpc-smp-use-existing-l2: 555db385b67d60f440e69e5b5d350749fed702fd
+  temp: 378e158304d6628a01369d54deaf6fb871f3735f
 Unapplied:
 Hidden:
