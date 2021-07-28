@@ -1,7 +1,7 @@
 Bottom: 3aae3fc7b61584f976860d37baf25acd98ec470f
-Top:    036673c5490ef34f5f455ccc46bff6a37fd82b07
+Top:    09963ba975a43ed57a883468df7dae7bc0afed16
 Author: Parth Shah <parth@linux.ibm.com>
-Date:   2021-07-22 01:52:58 -0500
+Date:   2021-07-28 15:54:46 +0530
 
 powerpc/smp: Use existing L2 cache_map cpumask to find L3 cache siblings
 
@@ -13,10 +13,9 @@ L3 and use the L2 cache map itself to find the presence of L3 siblings.
 
 Signed-off-by: Parth Shah <parth@linux.ibm.com>
 
-
 ---
 
-arch/powerpc/include/asm/smp.h  |  3 +++
- arch/powerpc/kernel/cacheinfo.c |  3 +++
- arch/powerpc/kernel/smp.c       | 41 +++++++++++++++++++++++++++++++++++++----
- 3 files changed, 43 insertions(+), 4 deletions(-)
+arch/powerpc/include/asm/smp.h  |  3 ++
+ arch/powerpc/kernel/cacheinfo.c |  3 ++
+ arch/powerpc/kernel/smp.c       | 68 ++++++++++++++++++++++++++++-------------
+ 3 files changed, 52 insertions(+), 22 deletions(-)
