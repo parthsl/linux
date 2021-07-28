@@ -111,7 +111,7 @@ struct thread_groups {
 };
 
 /* Maximum number of properties that groups of threads within a core can share */
-#define MAX_THREAD_GROUP_PROPERTIES 3
+#define MAX_THREAD_GROUP_PROPERTIES 2
 
 struct thread_groups_list {
 	unsigned int nr_properties;
