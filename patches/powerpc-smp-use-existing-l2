@@ -1,5 +1,5 @@
 Bottom: 3aae3fc7b61584f976860d37baf25acd98ec470f
-Top:    09963ba975a43ed57a883468df7dae7bc0afed16
+Top:    3abcb1cc822c298e4340bafa76c2715a184ec7ee
 Author: Parth Shah <parth@linux.ibm.com>
 Date:   2021-07-28 15:54:46 +0530
 
@@ -18,5 +18,5 @@ Signed-off-by: Parth Shah <parth@linux.ibm.com>
 
 arch/powerpc/include/asm/smp.h  |  3 ++
  arch/powerpc/kernel/cacheinfo.c |  3 ++
- arch/powerpc/kernel/smp.c       | 68 ++++++++++++++++++++++++++++-------------
- 3 files changed, 52 insertions(+), 22 deletions(-)
+ arch/powerpc/kernel/smp.c       | 66 ++++++++++++++++++++++++++++-------------
+ 3 files changed, 51 insertions(+), 21 deletions(-)
