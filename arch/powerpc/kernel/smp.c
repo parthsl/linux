@@ -818,6 +818,7 @@ static int parse_thread_groups(struct device_node *dn,
 
 		for (j = 0; j < total_threads; j++)
 			tg->thread_list[j] = thread_list[j];
+		i = i + 3 + total_threads;
 	}
 
 	tglp->nr_properties = property_idx;
